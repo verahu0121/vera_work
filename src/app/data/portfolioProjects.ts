@@ -1,12 +1,28 @@
 export type ProjectCategory = "ai-product" | "ux-design";
 export type ProjectStatus = "draft" | "published";
 
+export interface ProjectSectionImage {
+  id: string;
+  key?: string;
+  src: string;
+  alt?: string;
+}
+
+export function getProjectSectionImageSrc(image: ProjectSectionImage) {
+  if (image.key) {
+    return `/api/admin/object-image?key=${encodeURIComponent(image.key)}`;
+  }
+
+  return image.src;
+}
+
 export interface ProjectSection {
   id: string;
   title: string;
   subtitle: string;
   content?: string;
   image?: string;
+  images?: ProjectSectionImage[];
 }
 
 export interface ProjectDetailHero {
@@ -47,6 +63,25 @@ export function getProjectDetailHero(project: PortfolioProject): ProjectDetailHe
     subtitleText: project.detailHero?.subtitleText ?? project.englishTitle,
     subtitleColor: project.detailHero?.subtitleColor ?? "#adadad",
   };
+}
+
+export function getProjectSectionImages(project: PortfolioProject, sectionIndex: number): ProjectSectionImage[] {
+  const section = project.sections[sectionIndex];
+  if (!section) return [];
+
+  if (section.images && section.images.length > 0) {
+    return section.images;
+  }
+
+  if (sectionIndex === 0 && project.images.length > 0) {
+    return project.images.map((src, index) => ({
+      id: `legacy-${project.id}-${index + 1}`,
+      src,
+      alt: `${project.title} ${index + 1}`,
+    }));
+  }
+
+  return [];
 }
 
 export const PORTFOLIO_PROJECTS_STORAGE_KEY = "vera-portfolio-projects";

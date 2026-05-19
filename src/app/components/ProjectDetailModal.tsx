@@ -1,6 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { getProjectDetailHero, type PortfolioProject } from "../data/portfolioProjects";
+import {
+  getProjectDetailHero,
+  getProjectSectionImageSrc,
+  getProjectSectionImages,
+  type PortfolioProject,
+} from "../data/portfolioProjects";
 
 // Icons are passed as paths or raw SVG strings
 const ICONS = {
@@ -59,9 +64,25 @@ function GalleryNav({ current, total, onPrev, onNext }: { current: number, total
   );
 }
 
-function RightNavLink({ num, title, subtitle, active }: { num: string, title: string, subtitle: string, active?: boolean }) {
+function RightNavLink({
+  num,
+  title,
+  subtitle,
+  active,
+  onClick,
+}: {
+  num: string;
+  title: string;
+  subtitle: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
   return (
-    <div className={`flex items-start gap-4 cursor-pointer group ${active ? 'opacity-100' : 'opacity-50 hover:opacity-80 transition-opacity'}`}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-start gap-4 cursor-pointer group text-left ${active ? 'opacity-100' : 'opacity-50 hover:opacity-80 transition-opacity'}`}
+    >
       <div className="w-[56px] h-[56px] flex items-center justify-center text-[21px] font-bold text-white/80">
         {num}
       </div>
@@ -69,7 +90,7 @@ function RightNavLink({ num, title, subtitle, active }: { num: string, title: st
         <div className={`text-[16px] font-bold ${active ? 'text-white' : 'text-white/50'}`}>{title}</div>
         <div className={`text-[12px] ${active ? 'text-white/50' : 'text-white/30'}`}>{subtitle}</div>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -78,9 +99,27 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
     const idx = projects.findIndex(p => p.id === initialProjectId);
     return idx === -1 ? 0 : idx;
   });
+  const [activeSectionId, setActiveSectionId] = useState<string>("");
 
   const currentProject = projects[currentIndex];
   const detailHero = getProjectDetailHero(currentProject);
+  const gallerySections = useMemo(() => {
+    const sectionsWithImages = currentProject.sections
+      .map((section, index) => ({
+        ...section,
+        images: getProjectSectionImages(currentProject, index),
+      }))
+      .filter((section) => section.images.length > 0);
+
+    if (sectionsWithImages.length > 0) {
+      return sectionsWithImages;
+    }
+
+    return currentProject.sections.slice(0, 1).map((section) => ({
+      ...section,
+      images: [],
+    }));
+  }, [currentProject]);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + projects.length) % projects.length);
@@ -95,6 +134,46 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
     const contentArea = document.getElementById('project-modal-content');
     if (contentArea) contentArea.scrollTop = 0;
   }, [currentIndex]);
+
+  useEffect(() => {
+    setActiveSectionId(gallerySections[0]?.id ?? "");
+  }, [gallerySections, currentIndex]);
+
+  useEffect(() => {
+    const contentArea = document.getElementById('project-modal-content');
+    if (!contentArea || gallerySections.length === 0) return;
+
+    const handleScroll = () => {
+      const containerTop = contentArea.getBoundingClientRect().top;
+      const nextActiveSection =
+        gallerySections
+          .map((section) => {
+            const element = document.getElementById(`project-section-${currentProject.id}-${section.id}`);
+            if (!element) return null;
+            return {
+              id: section.id,
+              offset: element.getBoundingClientRect().top - containerTop,
+            };
+          })
+          .filter((section): section is { id: string; offset: number } => Boolean(section))
+          .filter((section) => section.offset <= 120)
+          .sort((a, b) => b.offset - a.offset)[0]?.id ?? gallerySections[0].id;
+
+      setActiveSectionId(nextActiveSection);
+    };
+
+    handleScroll();
+    contentArea.addEventListener('scroll', handleScroll, { passive: true });
+    return () => contentArea.removeEventListener('scroll', handleScroll);
+  }, [currentProject.id, gallerySections]);
+
+  const handleSectionClick = (sectionId: string) => {
+    const sectionElement = document.getElementById(`project-section-${currentProject.id}-${sectionId}`);
+    if (!sectionElement) return;
+
+    sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveSectionId(sectionId);
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex bg-[rgba(0,0,0,0.49)] animate-in fade-in duration-300">
@@ -126,8 +205,23 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
 
         {/* Project Images */}
         <div className="flex flex-col">
-          {currentProject.images.map((img, idx) => (
-            <img key={idx} src={img} alt={`${currentProject.title} ${idx + 1}`} className="w-full h-auto" />
+          {gallerySections.map((section) => (
+            <section
+              key={`${currentProject.id}-${section.id}`}
+              id={`project-section-${currentProject.id}-${section.id}`}
+              className="scroll-mt-6"
+            >
+              <div className="flex flex-col">
+                {section.images.map((image) => (
+                  <img
+                    key={image.id}
+                    src={getProjectSectionImageSrc(image)}
+                    alt={image.alt || `${currentProject.title} ${section.id}`}
+                    className="w-full h-auto"
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       </div>
@@ -152,13 +246,14 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
 
         {/* Module Navigation */}
         <div className="flex flex-col gap-4">
-          {currentProject.sections.map((section, idx) => (
+          {gallerySections.map((section) => (
             <RightNavLink 
               key={section.id} 
               num={section.id} 
               title={section.title} 
               subtitle={section.subtitle} 
-              active={idx === 0} 
+              active={activeSectionId === section.id}
+              onClick={() => handleSectionClick(section.id)}
             />
           ))}
         </div>

@@ -1,18 +1,22 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Frame6, Icon } from "../../imports/VerasLibertisle/VerasLibertisle";
 import {
   getProjectDetailHero,
+  getProjectSectionImageSrc,
+  getProjectSectionImages,
   sortPortfolioProjects,
   type PortfolioProject,
   type ProjectCategory,
   type ProjectSection,
+  type ProjectSectionImage,
   type ProjectStatus,
 } from "../data/portfolioProjects";
 
 const ADMIN_PASSWORD = "hyq980121";
 const SUCCESS_TRANSITION_MS = 3000;
 
-type FilterCategory = "all" | ProjectCategory;
+type FilterCategory = ProjectCategory;
 
 function CornerDecoration({ className, transform }: { className?: string; transform?: string }) {
   return (
@@ -71,9 +75,9 @@ function MetricCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-[28px] border border-black/6 bg-white/90 px-5 py-4 shadow-[0_18px_50px_rgba(26,28,28,0.06)]">
+    <div className="flex h-full flex-col rounded-[28px] border border-black/6 bg-white/90 px-5 py-3 shadow-[0_18px_50px_rgba(26,28,28,0.06)]">
       <div className="text-[11px] uppercase tracking-[2.4px] text-[#7d7d84]">{label}</div>
-      <div className="mt-3 flex items-end justify-between gap-3">
+      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
         <div className="font-['Quantum',sans-serif] text-[28px] tracking-[-1px] text-[#1a1c1c]">{value}</div>
         <div className={`h-[10px] w-[52px] rounded-full ${accent}`} />
       </div>
@@ -114,16 +118,28 @@ function EditorActionButton({
 }
 
 function SectionCard({
+  projectId,
   section,
   index,
+  uploading,
   onChange,
   onRemove,
+  onUploadImage,
+  onRemoveImage,
+  onMoveImage,
 }: {
+  projectId: string;
   section: ProjectSection;
   index: number;
+  uploading?: boolean;
   onChange: (nextSection: ProjectSection) => void;
   onRemove: () => void;
+  onUploadImage: (file: File) => void;
+  onRemoveImage: (imageId: string) => void;
+  onMoveImage: (imageId: string, direction: "up" | "down") => void;
 }) {
+  const sectionImages = section.images ?? [];
+
   return (
     <div className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-4 shadow-[0_12px_32px_rgba(26,28,28,0.04)]">
       <div className="mb-4 flex items-center justify-between gap-4">
@@ -131,13 +147,41 @@ function SectionCard({
           <div className="text-[11px] uppercase tracking-[2.2px] text-[#8a8a90]">Section {index + 1}</div>
           <div className="mt-1 font-['Quantum',sans-serif] text-[18px] text-[#1a1c1c]">{section.id}</div>
         </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="rounded-full border border-[#f06449]/20 bg-[#fff3ef] px-3 py-2 text-[11px] uppercase tracking-[1.8px] text-[#f06449] transition-colors hover:bg-[#ffe6de]"
-        >
-          Remove
-        </button>
+        <div className="flex items-center gap-2">
+          <label
+            className={`flex size-[40px] cursor-pointer items-center justify-center rounded-full border transition-colors ${
+              uploading
+                ? "border-black/8 bg-[#f2f0eb] text-[#b1b1b7]"
+                : "border-[#03c9c3]/18 bg-[#effbfa] text-[#039f9a] hover:bg-[#def7f5]"
+            }`}
+            aria-label={uploading ? "Uploading image" : "Add image"}
+            title={uploading ? "Uploading image" : "Add image"}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 5V19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <path d="M5 12H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/jpg"
+              className="hidden"
+              disabled={uploading}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                onUploadImage(file);
+                event.currentTarget.value = "";
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="rounded-full border border-[#f06449]/20 bg-[#fff3ef] px-3 py-2 text-[11px] uppercase tracking-[1.8px] text-[#f06449] transition-colors hover:bg-[#ffe6de]"
+          >
+            Remove
+          </button>
+        </div>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
         <label className="flex flex-col gap-2">
@@ -165,17 +209,74 @@ function SectionCard({
           />
         </label>
       </div>
+      <div className="mt-4 flex flex-wrap gap-3">
+        {sectionImages.length === 0 ? (
+          <div className="rounded-[16px] border border-dashed border-black/10 bg-[#faf8f4] px-4 py-5 text-[12px] leading-[22px] text-[#8f8f96]">
+            这个 section 还没有图片。上传后会直接进入前台详情页长图流。
+          </div>
+        ) : (
+          sectionImages.map((image, imageIndex) => (
+            <div key={image.id} className="group relative h-[92px] w-[92px] shrink-0 overflow-hidden rounded-[18px] bg-[#f0ede8]">
+              <img
+                src={getProjectSectionImageSrc(image)}
+                alt={image.alt || `${projectId} ${section.id} ${imageIndex + 1}`}
+                className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(26,28,28,0.04)_0%,rgba(26,28,28,0.12)_100%)] opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+              <button
+                type="button"
+                aria-label="Remove image"
+                title="Remove image"
+                onClick={() => onRemoveImage(image.id)}
+                className="absolute right-[8px] top-[8px] flex size-[24px] items-center justify-center rounded-full bg-[rgba(255,243,239,0.92)] text-[#f06449] opacity-0 transition-all duration-200 hover:bg-[#fff3ef] group-hover:translate-y-0 group-hover:opacity-100 translate-y-[-4px]"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </button>
+              <div className="absolute inset-x-[8px] bottom-[8px] flex items-center justify-center gap-2 opacity-0 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 translate-y-[6px]">
+                <button
+                  type="button"
+                  aria-label="Move image left"
+                  title="Move image left"
+                  disabled={imageIndex === 0}
+                  onClick={() => onMoveImage(image.id, "up")}
+                  className="flex size-[24px] items-center justify-center rounded-full bg-[rgba(255,255,255,0.9)] text-[#4d4f52] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[rgba(255,255,255,0.45)] disabled:text-[#b9bcc0]"
+                >
+                  <svg width="10" height="10" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M3 7L7 3V11L3 7Z" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Move image right"
+                  title="Move image right"
+                  disabled={imageIndex === sectionImages.length - 1}
+                  onClick={() => onMoveImage(image.id, "down")}
+                  className="flex size-[24px] items-center justify-center rounded-full bg-[rgba(255,255,255,0.9)] text-[#4d4f52] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[rgba(255,255,255,0.45)] disabled:text-[#b9bcc0]"
+                >
+                  <svg width="10" height="10" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M11 7L7 11V3L11 7Z" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
 
 function createEmptyProject(projects: PortfolioProject[]): PortfolioProject {
   const now = new Date().toISOString();
+  const nextAIOrder = projects.filter((project) => project.category === "ai-product").length + 1;
   return {
     id: `project-${Date.now()}`,
     category: "ai-product",
     status: "draft",
-    order: projects.length + 1,
+    order: nextAIOrder,
     title: "新项目标题",
     englishTitle: "NEW PROJECT TITLE",
     date: "2026.01-2026.12",
@@ -184,9 +285,9 @@ function createEmptyProject(projects: PortfolioProject[]): PortfolioProject {
     images: [],
     tags: ["NEW", "CASE"],
     sections: [
-      { id: "01", title: "项目背景", subtitle: "background" },
-      { id: "02", title: "设计过程", subtitle: "process" },
-      { id: "03", title: "最终产出", subtitle: "outcome" },
+      { id: "01", title: "项目背景", subtitle: "background", images: [] },
+      { id: "02", title: "设计过程", subtitle: "process", images: [] },
+      { id: "03", title: "最终产出", subtitle: "outcome", images: [] },
     ],
     createdAt: now,
     updatedAt: now,
@@ -209,9 +310,32 @@ function cloneProject(project: PortfolioProject) {
     ...project,
     tags: [...project.tags],
     images: [...project.images],
-    sections: project.sections.map((section) => ({ ...section })),
+    sections: project.sections.map((section, sectionIndex) => ({
+      ...section,
+      images: getProjectSectionImages(project, sectionIndex).map((image) => ({ ...image })),
+    })),
     detailHero: { ...getProjectDetailHero(project) },
   };
+}
+
+async function uploadSectionImageAsset(projectId: string, sectionId: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("projectId", projectId);
+  formData.append("sectionId", sectionId);
+
+  const response = await fetch("/api/admin/upload-image", {
+    method: "POST",
+    body: formData,
+  });
+
+  const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error(payload?.error || "Upload failed.");
+  }
+
+  return payload as ProjectSectionImage;
 }
 
 export function AdminDashboard({
@@ -231,10 +355,10 @@ export function AdminDashboard({
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isBackHovered, setIsBackHovered] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id ?? "");
-  const [search, setSearch] = useState("");
-  const [filterCategory, setFilterCategory] = useState<FilterCategory>("all");
+  const [filterCategory, setFilterCategory] = useState<FilterCategory>("ai-product");
   const [draftProject, setDraftProject] = useState<PortfolioProject | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [uploadingSectionIds, setUploadingSectionIds] = useState<string[]>([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -269,22 +393,29 @@ export function AdminDashboard({
     return () => window.clearTimeout(unlockTimer);
   }, [status]);
 
-  const filteredProjects = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    return sortPortfolioProjects(
-      projects.filter((project) => {
-        const matchesCategory = filterCategory === "all" || project.category === filterCategory;
-        const matchesKeyword =
-          keyword.length === 0 ||
-          project.title.toLowerCase().includes(keyword) ||
-          project.englishTitle.toLowerCase().includes(keyword);
-        return matchesCategory && matchesKeyword;
-      }),
-    );
-  }, [filterCategory, projects, search]);
+  const filteredProjects = useMemo(
+    () =>
+      sortPortfolioProjects(
+        projects.filter((project) => project.category === filterCategory),
+      ),
+    [filterCategory, projects],
+  );
+
+  useEffect(() => {
+    if (filteredProjects.length === 0) {
+      if (selectedProjectId) {
+        setSelectedProjectId("");
+      }
+      return;
+    }
+
+    if (!filteredProjects.some((project) => project.id === selectedProjectId)) {
+      setSelectedProjectId(filteredProjects[0].id);
+    }
+  }, [filteredProjects, selectedProjectId]);
 
   const selectedProject =
-    projects.find((project) => project.id === selectedProjectId) ?? filteredProjects[0] ?? projects[0] ?? null;
+    filteredProjects.find((project) => project.id === selectedProjectId) ?? filteredProjects[0] ?? null;
 
   useEffect(() => {
     setDraftProject(selectedProject ? cloneProject(selectedProject) : null);
@@ -349,8 +480,43 @@ export function AdminDashboard({
     const nextProject = createEmptyProject(projects);
     onProjectsChange((currentProjects) => sortPortfolioProjects([...currentProjects, nextProject]));
     setSelectedProjectId(nextProject.id);
-    setFilterCategory("all");
-    setSearch("");
+    setFilterCategory(nextProject.category);
+  };
+
+  const handleMoveProject = (projectId: string, direction: "up" | "down") => {
+    if (!projectId) return;
+
+    onProjectsChange((currentProjects) => {
+      const categoryProjects = sortPortfolioProjects(
+        currentProjects.filter((project) => project.category === filterCategory),
+      );
+      const currentIndex = categoryProjects.findIndex((project) => project.id === projectId);
+      if (currentIndex === -1) return currentProjects;
+
+      const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= categoryProjects.length) return currentProjects;
+
+      const reorderedProjects = [...categoryProjects];
+      const [movedProject] = reorderedProjects.splice(currentIndex, 1);
+      reorderedProjects.splice(targetIndex, 0, movedProject);
+
+      const nextOrderById = new Map(
+        reorderedProjects.map((project, index) => [project.id, index + 1] as const),
+      );
+      const now = new Date().toISOString();
+
+      return sortPortfolioProjects(
+        currentProjects.map((project) =>
+          project.category === filterCategory
+            ? {
+                ...project,
+                order: nextOrderById.get(project.id) ?? project.order,
+                updatedAt: project.id === projectId ? now : project.updatedAt,
+              }
+            : project,
+        ),
+      );
+    });
   };
 
   const handleDeleteProject = () => {
@@ -359,6 +525,81 @@ export function AdminDashboard({
       currentProjects.filter((project) => project.id !== selectedProject.id),
     );
     setIsDeleteConfirmOpen(false);
+  };
+
+  const handleUploadSectionImage = async (sectionIndex: number, file: File) => {
+    if (!editableProject) return;
+
+    const section = editableProject.sections[sectionIndex];
+    if (!section) return;
+
+    const sectionUploadKey = `${editableProject.id}:${section.id}`;
+    setUploadingSectionIds((current) => [...current, sectionUploadKey]);
+
+    try {
+      const uploadedImage = await uploadSectionImageAsset(editableProject.id, section.id, file);
+      updateDraftProject((project) => ({
+        ...project,
+        sections: project.sections.map((currentSection, currentIndex) =>
+          currentIndex === sectionIndex
+            ? {
+                ...currentSection,
+                images: [...(currentSection.images ?? []), uploadedImage],
+              }
+            : currentSection,
+        ),
+        updatedAt: new Date().toISOString(),
+      }));
+      toast.success("Image uploaded");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Upload failed.");
+    } finally {
+      setUploadingSectionIds((current) => current.filter((item) => item !== sectionUploadKey));
+    }
+  };
+
+  const handleRemoveSectionImage = (sectionIndex: number, imageId: string) => {
+    updateDraftProject((project) => ({
+      ...project,
+      sections: project.sections.map((section, currentIndex) =>
+        currentIndex === sectionIndex
+          ? {
+              ...section,
+              images: (section.images ?? []).filter((image) => image.id !== imageId),
+            }
+          : section,
+      ),
+      updatedAt: new Date().toISOString(),
+    }));
+  };
+
+  const handleMoveSectionImage = (
+    sectionIndex: number,
+    imageId: string,
+    direction: "up" | "down",
+  ) => {
+    updateDraftProject((project) => ({
+      ...project,
+      sections: project.sections.map((section, currentIndex) => {
+        if (currentIndex !== sectionIndex) return section;
+
+        const images = [...(section.images ?? [])];
+        const imageIndex = images.findIndex((image) => image.id === imageId);
+        if (imageIndex === -1) return section;
+
+        const targetIndex = direction === "up" ? imageIndex - 1 : imageIndex + 1;
+        if (targetIndex < 0 || targetIndex >= images.length) return section;
+
+        const [movedImage] = images.splice(imageIndex, 1);
+        images.splice(targetIndex, 0, movedImage);
+
+        return {
+          ...section,
+          images,
+        };
+      }),
+      updatedAt: new Date().toISOString(),
+    }));
   };
 
   const totalPublished = projects.filter((project) => project.status === "published").length;
@@ -398,27 +639,28 @@ export function AdminDashboard({
     );
   };
 
-  const renderDashboardShell = (preview = false) => (
-    <div
-      aria-hidden={preview || undefined}
-      className={
-        preview
-          ? `absolute inset-0 z-0 flex items-center justify-center pointer-events-none transition-all duration-[2200ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-              status === "success" ? "opacity-100" : "opacity-0"
-            }`
-          : "flex h-screen w-full items-center justify-center overflow-hidden bg-[#f3efe7] text-[#1a1c1c]"
-      }
-    >
+  const renderDashboardShell = (preview = false) => {
+    return (
       <div
-        className="relative h-[960px] w-[1440px] shrink-0 origin-center overflow-hidden px-[40px] py-[32px]"
-        style={{ transform: `scale(${scale})` }}
+        aria-hidden={preview || undefined}
+        className={
+          preview
+            ? `absolute inset-0 z-0 flex items-center justify-center pointer-events-none transition-all duration-[2200ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                status === "success" ? "opacity-100" : "opacity-0"
+              }`
+            : "flex h-screen w-full items-center justify-center overflow-hidden bg-[#f3efe7] text-[#1a1c1c]"
+        }
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(3,255,247,0.12),transparent_22%),radial-gradient(circle_at_90%_0%,rgba(240,100,73,0.10),transparent_16%),linear-gradient(180deg,#f8f5ef_0%,#f2ede5_100%)]" />
-        <div className={`relative z-10 flex h-full flex-col gap-6 transition-opacity duration-700 ${preview ? "opacity-[0.96]" : "opacity-100"}`}>
-          <header className="grid grid-cols-[1.2fr_1fr] gap-6">
+        <div
+          className="relative h-[960px] w-[1440px] shrink-0 origin-center overflow-hidden px-[40px] py-[32px]"
+          style={{ transform: `scale(${scale})` }}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(3,255,247,0.12),transparent_22%),radial-gradient(circle_at_90%_0%,rgba(240,100,73,0.10),transparent_16%),linear-gradient(180deg,#f8f5ef_0%,#f2ede5_100%)]" />
+          <div className={`relative z-10 flex h-full flex-col gap-6 transition-opacity duration-700 ${preview ? "opacity-[0.96]" : "opacity-100"}`}>
+          <header className="grid grid-cols-[minmax(0,1fr)_460px] items-start gap-6">
             <div className="rounded-[36px] border border-black/6 bg-white/88 p-7 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
               <div className="flex items-start justify-between gap-6">
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="text-[11px] uppercase tracking-[3px] text-[#7d7d84]">Admin Dashboard</div>
                   {showPreviewSkeleton ? (
                     <div className="mt-3 space-y-4">
@@ -428,10 +670,10 @@ export function AdminDashboard({
                     </div>
                   ) : (
                     <>
-                      <h1 className="mt-3 font-['Quantum',sans-serif] text-[42px] uppercase leading-[44px] tracking-[-1px] text-[#1a1c1c]">
-                        Project Control Center
+                      <h1 className="mt-3 whitespace-nowrap font-['Quantum',sans-serif] text-[42px] uppercase leading-[44px] tracking-[-1px] text-[#1a1c1c]">
+                        Admin Dashboard
                       </h1>
-                      <p className="mt-4 max-w-[620px] font-['OPPOSans:Light',sans-serif] text-[15px] leading-[30px] text-[#474747]">
+                      <p className="mt-4 max-w-[760px] font-['OPPOSans:Light',sans-serif] text-[15px] leading-[30px] text-[#474747]">
                         统一维护 AI Product 与 UX Design 项目资料。这里编辑的标题、说明、封面图、详情图与章节结构会直接驱动前台展示。
                       </p>
                     </>
@@ -450,13 +692,13 @@ export function AdminDashboard({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid h-full w-full self-stretch grid-cols-2 gap-4">
               {showPreviewSkeleton ? (
                 <>
                   {["Published", "Drafts", "AI Product", "UX Design"].map((label, index) => (
-                    <div key={label} className="rounded-[28px] border border-black/6 bg-white/90 px-5 py-4 shadow-[0_18px_50px_rgba(26,28,28,0.06)]">
+                    <div key={label} className="flex h-full flex-col rounded-[28px] border border-black/6 bg-white/90 px-5 py-4 shadow-[0_18px_50px_rgba(26,28,28,0.06)]">
                       <div className="text-[11px] uppercase tracking-[2.4px] text-[#7d7d84]">{label}</div>
-                      <div className="mt-3 flex items-end justify-between gap-3">
+                      <div className="mt-auto flex items-end justify-between gap-3 pt-6">
                         <div className="h-[28px] w-[44px] rounded-full bg-black/10" />
                         <div className={`h-[10px] w-[52px] rounded-full ${index % 2 === 0 ? "bg-[#03c9c3]/45" : "bg-[#f3a67d]/55"}`} />
                       </div>
@@ -474,7 +716,7 @@ export function AdminDashboard({
             </div>
           </header>
 
-          <div className="grid min-h-0 flex-1 grid-cols-[320px_minmax(0,1fr)_320px] gap-6">
+          <div className="grid min-h-0 flex-1 grid-cols-[320px_minmax(0,1fr)] gap-6">
             <aside className="flex min-h-0 flex-col rounded-[36px] border border-black/6 bg-white/88 p-5 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
@@ -492,15 +734,8 @@ export function AdminDashboard({
               </div>
 
               <div className="grid gap-3">
-                <input
-                  value={search}
-                  readOnly={preview}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search project title..."
-                  className="rounded-[18px] border border-black/8 bg-[#faf8f4] px-4 py-3 text-[13px] outline-none transition-colors focus:border-[#03c9c3]/45"
-                />
-                <div className="grid grid-cols-3 gap-2">
-                  {(["all", "ai-product", "ux-design"] as const).map((category) => (
+                <div className="grid grid-cols-2 gap-2">
+                  {(["ai-product", "ux-design"] as const).map((category) => (
                     <button
                       key={category}
                       type="button"
@@ -512,7 +747,7 @@ export function AdminDashboard({
                           : "bg-[#f4efe8] text-[#6d6d73] hover:bg-[#ece6de]"
                       }`}
                     >
-                      {category === "all" ? "All" : category === "ai-product" ? "AI" : "UX"}
+                      {category === "ai-product" ? "AI" : "UX"}
                     </button>
                   ))}
                 </div>
@@ -539,38 +774,83 @@ export function AdminDashboard({
                       </div>
                     ))
                   : filteredProjects.map((project) => (
-                      <button
+                      <div
                         key={project.id}
-                        type="button"
-                        disabled={preview}
-                        onClick={() => setSelectedProjectId(project.id)}
+                        role="button"
+                        tabIndex={preview ? -1 : 0}
+                        onClick={() => {
+                          if (!preview) setSelectedProjectId(project.id);
+                        }}
+                        onKeyDown={(event) => {
+                          if (preview) return;
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedProjectId(project.id);
+                          }
+                        }}
                         className={`w-full rounded-[24px] border p-4 text-left transition-all disabled:pointer-events-none ${
                           dashboardProject?.id === project.id
                             ? "border-[#03c9c3]/28 bg-[#eefbf9] shadow-[0_18px_36px_rgba(3,201,195,0.12)]"
                             : "border-black/6 bg-[#fbfaf7] hover:border-black/12 hover:bg-white"
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="text-[10px] uppercase tracking-[2px] text-[#7d7d84]">
-                            {project.category === "ai-product" ? "AI Product" : "UX Design"}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="text-[10px] uppercase tracking-[2px] text-[#7d7d84]">
+                                {project.category === "ai-product" ? "AI Product" : "UX Design"}
+                              </div>
+                              <div
+                                className={`rounded-full px-2.5 py-1 text-[9px] uppercase tracking-[1.8px] ${
+                                  project.status === "published"
+                                    ? "bg-[#effbfa] text-[#039f9a]"
+                                    : "bg-[#fff3ef] text-[#f06449]"
+                                }`}
+                              >
+                                {project.status}
+                              </div>
+                            </div>
+                            <div className="mt-3 font-['Quantum',sans-serif] text-[18px] uppercase leading-[22px] text-[#1a1c1c]">
+                              {project.title}
+                            </div>
+                            <div className="mt-2 line-clamp-2 font-['OPPOSans:Light',sans-serif] text-[12px] leading-[22px] text-[#5f5f65]">
+                              {project.description}
+                            </div>
                           </div>
-                          <div
-                            className={`rounded-full px-2.5 py-1 text-[9px] uppercase tracking-[1.8px] ${
-                              project.status === "published"
-                                ? "bg-[#effbfa] text-[#039f9a]"
-                                : "bg-[#fff3ef] text-[#f06449]"
-                            }`}
-                          >
-                            {project.status}
+                          <div className="flex shrink-0 self-stretch flex-col justify-center gap-2">
+                            <button
+                              type="button"
+                              aria-label="Move up"
+                              title="Move up"
+                              disabled={preview || filteredProjects[0]?.id === project.id}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleMoveProject(project.id, "up");
+                              }}
+                              className="flex size-[34px] items-center justify-center rounded-full border border-black/8 bg-white text-[#7d7d84] transition-colors hover:bg-[#f4efe8] disabled:cursor-not-allowed disabled:border-black/6 disabled:bg-[#f4efe8] disabled:text-[#b2b2b8]"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <path d="M7 3L11 7H3L7 3Z" fill="currentColor" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              aria-label="Move down"
+                              title="Move down"
+                              disabled={preview || filteredProjects[filteredProjects.length - 1]?.id === project.id}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleMoveProject(project.id, "down");
+                              }}
+                              className="flex size-[34px] items-center justify-center rounded-full border border-black/8 bg-white text-[#7d7d84] transition-colors hover:bg-[#f4efe8] disabled:cursor-not-allowed disabled:border-black/6 disabled:bg-[#f4efe8] disabled:text-[#b2b2b8]"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                <path d="M7 11L3 7H11L7 11Z" fill="currentColor" />
+                              </svg>
+                            </button>
                           </div>
                         </div>
-                        <div className="mt-3 font-['Quantum',sans-serif] text-[18px] uppercase leading-[22px] text-[#1a1c1c]">
-                          {project.title}
-                        </div>
-                        <div className="mt-2 line-clamp-2 font-['OPPOSans:Light',sans-serif] text-[12px] leading-[22px] text-[#5f5f65]">
-                          {project.description}
-                        </div>
-                      </button>
+                      </div>
                     ))}
               </div>
             </aside>
@@ -597,15 +877,6 @@ export function AdminDashboard({
                         <div className="h-[66px] rounded-[16px] bg-white" />
                         <div className="h-[66px] rounded-[16px] bg-white" />
                         <div className="h-[156px] rounded-[20px] bg-white md:col-span-2" />
-                      </div>
-                    </section>
-
-                    <section className="rounded-[28px] border border-black/7 bg-[#fbfaf7] p-5">
-                      <div className="mb-4 text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Media & Tags</div>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="h-[66px] rounded-[16px] bg-white md:col-span-2" />
-                        <div className="h-[66px] rounded-[16px] bg-white" />
-                        <div className="h-[156px] rounded-[20px] bg-white" />
                       </div>
                     </section>
 
@@ -757,172 +1028,222 @@ export function AdminDashboard({
                     </div>
                   </div>
 
-                  <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-2">
-                    <section className="rounded-[28px] border border-black/7 bg-[#fbfaf7] p-5">
-                      <div className="mb-4 text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Basic Information</div>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <label className="flex flex-col gap-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Category</span>
-                          <select
-                            value={editableProject.category}
-                            disabled={preview}
-                            onChange={(event) => handleCategoryChange(event.target.value as ProjectCategory)}
-                            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[13px] outline-none focus:border-[#03c9c3]/50 disabled:pointer-events-none"
-                          >
-                            <option value="ai-product">AI Product</option>
-                            <option value="ux-design">UX Design</option>
-                          </select>
-                        </label>
-                        <label className="flex flex-col gap-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Status</span>
-                          <select
-                            value={editableProject.status}
-                            disabled={preview}
-                            onChange={(event) => handleStatusChange(event.target.value as ProjectStatus)}
-                            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[13px] outline-none focus:border-[#03c9c3]/50 disabled:pointer-events-none"
-                          >
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                          </select>
-                        </label>
-                        <label className="flex flex-col gap-2 md:col-span-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Title</span>
-                          <input
-                            value={editableProject.title}
-                            readOnly={preview}
-                            onChange={(event) => handleFieldChange("title", event.target.value)}
-                            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-2 md:col-span-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">English Title</span>
-                          <input
-                            value={editableProject.englishTitle}
-                            readOnly={preview}
-                            onChange={(event) => handleFieldChange("englishTitle", event.target.value)}
-                            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Date Range</span>
-                          <input
-                            value={editableProject.date}
-                            readOnly={preview}
-                            onChange={(event) => handleFieldChange("date", event.target.value)}
-                            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Order</span>
-                          <input
-                            type="number"
-                            value={editableProject.order}
-                            readOnly={preview}
-                            onChange={(event) => handleFieldChange("order", Number(event.target.value) || 0)}
-                            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-2 md:col-span-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Description</span>
-                          <textarea
-                            value={editableProject.description}
-                            readOnly={preview}
-                            onChange={(event) => handleFieldChange("description", event.target.value)}
-                            rows={5}
-                            className="resize-none rounded-[20px] border border-black/8 bg-white px-4 py-4 text-[14px] leading-[28px] outline-none focus:border-[#03c9c3]/50"
-                          />
-                        </label>
-                      </div>
-                    </section>
+                  <div className="min-h-0 flex-1 overflow-hidden pr-2">
+                    <div className="grid h-full min-h-0 gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
+                      <div className="h-full min-h-0 space-y-5 overflow-y-auto pr-2">
+                        <section className="rounded-[28px] border border-black/7 bg-[#fbfaf7] p-5">
+                          <div className="mb-4 text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Basic Information</div>
+                          <div className="grid gap-4">
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Category</span>
+                              <select
+                                value={editableProject.category}
+                                disabled={preview}
+                                onChange={(event) => handleCategoryChange(event.target.value as ProjectCategory)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[13px] outline-none focus:border-[#03c9c3]/50 disabled:pointer-events-none"
+                              >
+                                <option value="ai-product">AI Product</option>
+                                <option value="ux-design">UX Design</option>
+                              </select>
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Status</span>
+                              <select
+                                value={editableProject.status}
+                                disabled={preview}
+                                onChange={(event) => handleStatusChange(event.target.value as ProjectStatus)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[13px] outline-none focus:border-[#03c9c3]/50 disabled:pointer-events-none"
+                              >
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                              </select>
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Title</span>
+                              <input
+                                value={editableProject.title}
+                                readOnly={preview}
+                                onChange={(event) => handleFieldChange("title", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">English Title</span>
+                              <input
+                                value={editableProject.englishTitle}
+                                readOnly={preview}
+                                onChange={(event) => handleFieldChange("englishTitle", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Date Range</span>
+                              <input
+                                value={editableProject.date}
+                                readOnly={preview}
+                                onChange={(event) => handleFieldChange("date", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Tags</span>
+                              <input
+                                value={editableProject.tags.join(", ")}
+                                readOnly={preview}
+                                onChange={(event) =>
+                                  handleFieldChange(
+                                    "tags",
+                                    event.target.value
+                                      .split(",")
+                                      .map((tag) => tag.trim())
+                                      .filter(Boolean),
+                                  )
+                                }
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Description</span>
+                              <textarea
+                                value={editableProject.description}
+                                readOnly={preview}
+                                onChange={(event) => handleFieldChange("description", event.target.value)}
+                                rows={5}
+                                className="resize-none rounded-[20px] border border-black/8 bg-white px-4 py-4 text-[14px] leading-[28px] outline-none focus:border-[#03c9c3]/50"
+                              />
+                            </label>
+                          </div>
+                        </section>
 
-                    <section className="rounded-[28px] border border-black/7 bg-[#fbfaf7] p-5">
-                      <div className="mb-4 text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Media & Tags</div>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <label className="flex flex-col gap-2 md:col-span-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Cover Image URL</span>
-                          <input
-                            value={editableProject.coverImage}
-                            readOnly={preview}
-                            onChange={(event) => handleFieldChange("coverImage", event.target.value)}
-                            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Tags</span>
-                          <input
-                            value={editableProject.tags.join(", ")}
-                            readOnly={preview}
-                            onChange={(event) =>
-                              handleFieldChange(
-                                "tags",
-                                event.target.value
-                                  .split(",")
-                                  .map((tag) => tag.trim())
-                                  .filter(Boolean),
-                              )
+                        <section className="rounded-[28px] border border-black/7 bg-[#fbfaf7] p-5">
+                          <div className="mb-4 text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Case Study Hero</div>
+                          <div className="grid gap-4">
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Top Label Text</span>
+                              <input
+                                value={getProjectDetailHero(editableProject).eyebrowText}
+                                readOnly={preview}
+                                onChange={(event) => handleDetailHeroChange("eyebrowText", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Background Color</span>
+                              <input
+                                value={getProjectDetailHero(editableProject).backgroundColor}
+                                readOnly={preview}
+                                onChange={(event) => handleDetailHeroChange("backgroundColor", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                                placeholder="#070621"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Top Label Color</span>
+                              <input
+                                value={getProjectDetailHero(editableProject).eyebrowColor}
+                                readOnly={preview}
+                                onChange={(event) => handleDetailHeroChange("eyebrowColor", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                                placeholder="#e0e0e0"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Hero Title Text</span>
+                              <input
+                                value={getProjectDetailHero(editableProject).titleText}
+                                readOnly={preview}
+                                onChange={(event) => handleDetailHeroChange("titleText", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Hero Title Color</span>
+                              <input
+                                value={getProjectDetailHero(editableProject).titleColor}
+                                readOnly={preview}
+                                onChange={(event) => handleDetailHeroChange("titleColor", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                                placeholder="#fd6d59"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Hero Subtitle Text</span>
+                              <input
+                                value={getProjectDetailHero(editableProject).subtitleText}
+                                readOnly={preview}
+                                onChange={(event) => handleDetailHeroChange("subtitleText", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                              />
+                            </label>
+                            <label className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Hero Subtitle Color</span>
+                              <input
+                                value={getProjectDetailHero(editableProject).subtitleColor}
+                                readOnly={preview}
+                                onChange={(event) => handleDetailHeroChange("subtitleColor", event.target.value)}
+                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                                placeholder="#adadad"
+                              />
+                            </label>
+                          </div>
+                        </section>
+
+                      </div>
+
+                      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-black/7 bg-[#fbfaf7] p-5">
+                        <div className="mb-4 flex items-center justify-between gap-4">
+                          <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Detail Sections</div>
+                          <button
+                            type="button"
+                            disabled={preview}
+                            onClick={() =>
+                              handleFieldChange("sections", [
+                                ...editableProject.sections,
+                                {
+                                  id: `0${editableProject.sections.length + 1}`,
+                                  title: "新增章节",
+                                  subtitle: "new section",
+                                  images: [],
+                                },
+                              ])
                             }
-                            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
-                          />
-                        </label>
-                        <label className="flex flex-col gap-2">
-                          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Gallery Images</span>
-                          <textarea
-                            value={getTextAreaValue(editableProject.images)}
-                            readOnly={preview}
-                            onChange={(event) => handleFieldChange("images", parseLineList(event.target.value))}
-                            rows={5}
-                            className="resize-none rounded-[20px] border border-black/8 bg-white px-4 py-4 text-[14px] leading-[24px] outline-none focus:border-[#03c9c3]/50"
-                            placeholder="One image URL per line"
-                          />
-                        </label>
-                      </div>
-                    </section>
-
-                    <section className="rounded-[28px] border border-black/7 bg-[#fbfaf7] p-5">
-                      <div className="mb-4 flex items-center justify-between gap-4">
-                        <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Detail Sections</div>
-                        <button
-                          type="button"
-                          disabled={preview}
-                          onClick={() =>
-                            handleFieldChange("sections", [
-                              ...editableProject.sections,
-                              {
-                                id: `0${editableProject.sections.length + 1}`,
-                                title: "新增章节",
-                                subtitle: "new section",
-                              },
-                            ])
-                          }
-                          className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5] disabled:pointer-events-none"
-                        >
-                          Add Section
-                        </button>
-                      </div>
-                      <div className="space-y-4">
-                        {editableProject.sections.map((section, index) => (
-                          <SectionCard
-                            key={`${editableProject.id}-${index}-${section.id}`}
-                            section={section}
-                            index={index}
-                            onChange={(nextSection) => {
-                              handleFieldChange(
-                                "sections",
-                                editableProject.sections.map((currentSection, currentIndex) =>
-                                  currentIndex === index ? nextSection : currentSection,
-                                ),
-                              );
-                            }}
-                            onRemove={() => {
-                              handleFieldChange(
-                                "sections",
-                                editableProject.sections.filter((_, currentIndex) => currentIndex !== index),
-                              );
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </section>
+                            className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5] disabled:pointer-events-none"
+                          >
+                            Add Section
+                          </button>
+                        </div>
+                        <div className="min-h-0 space-y-4 overflow-y-auto pr-1">
+                          {editableProject.sections.map((section, index) => (
+                            <SectionCard
+                              key={`${editableProject.id}-${index}-${section.id}`}
+                              projectId={editableProject.id}
+                              section={section}
+                              index={index}
+                              uploading={uploadingSectionIds.includes(`${editableProject.id}:${section.id}`)}
+                              onChange={(nextSection) => {
+                                handleFieldChange(
+                                  "sections",
+                                  editableProject.sections.map((currentSection, currentIndex) =>
+                                    currentIndex === index ? nextSection : currentSection,
+                                  ),
+                                );
+                              }}
+                              onRemove={() => {
+                                handleFieldChange(
+                                  "sections",
+                                  editableProject.sections.filter((_, currentIndex) => currentIndex !== index),
+                                );
+                              }}
+                              onUploadImage={(file) => handleUploadSectionImage(index, file)}
+                              onRemoveImage={(imageId) => handleRemoveSectionImage(index, imageId)}
+                              onMoveImage={(imageId, direction) =>
+                                handleMoveSectionImage(index, imageId, direction)
+                              }
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -932,96 +1253,6 @@ export function AdminDashboard({
               )}
             </main>
 
-            <aside className="min-h-0 rounded-[36px] border border-black/6 bg-white/88 p-5 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
-              {showPreviewSkeleton ? (
-                <div className="flex h-full min-h-0 flex-col">
-                  <div className="mb-5">
-                    <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Live Preview</div>
-                    <div className="mt-2 font-['Quantum',sans-serif] text-[24px] uppercase text-[#1a1c1c]">Card Snapshot</div>
-                  </div>
-
-                  <div className="rounded-[30px] border border-black/7 bg-[#f7f3ed] p-4 shadow-[0_18px_40px_rgba(26,28,28,0.05)]">
-                    <div className="h-[210px] overflow-hidden rounded-[20px] bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(236,231,223,0.9)_100%)]" />
-                    <div className="mt-4 h-[10px] w-[132px] rounded-full bg-black/8" />
-                    <div className="mt-3 h-[24px] w-[78%] rounded-full bg-black/10" />
-                    <div className="mt-3 h-[10px] w-[92%] rounded-full bg-black/6" />
-                    <div className="mt-2 h-[10px] w-[84%] rounded-full bg-black/5" />
-                    <div className="mt-4 flex gap-2">
-                      <div className="h-[30px] w-[62px] rounded-full bg-white" />
-                      <div className="h-[30px] w-[76px] rounded-full bg-white" />
-                    </div>
-                  </div>
-
-                  <div className="mt-5 min-h-0 flex-1 rounded-[30px] border border-black/7 bg-[#fbfaf7] p-4">
-                    <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Section Outline</div>
-                    <div className="mt-4 space-y-3 overflow-y-auto pr-1">
-                      {previewSections.map((index) => (
-                        <div key={`preview-outline-${index}`} className="rounded-[20px] border border-black/7 bg-white p-4">
-                          <div className="h-[10px] w-[48px] rounded-full bg-black/8" />
-                          <div className="mt-2 h-[18px] w-[88px] rounded-full bg-black/10" />
-                          <div className="mt-2 h-[10px] w-[72px] rounded-full bg-black/6" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : editableProject ? (
-                <div className="flex h-full min-h-0 flex-col">
-                  <div className="mb-5">
-                    <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Live Preview</div>
-                    <div className="mt-2 font-['Quantum',sans-serif] text-[24px] uppercase text-[#1a1c1c]">Card Snapshot</div>
-                  </div>
-
-                  <div className="rounded-[30px] border border-black/7 bg-[#f7f3ed] p-4 shadow-[0_18px_40px_rgba(26,28,28,0.05)]">
-                    <div className="h-[210px] overflow-hidden rounded-[20px] bg-[#ece7df]">
-                      {editableProject.coverImage || editableProject.images[0] ? (
-                        <img
-                          src={editableProject.coverImage || editableProject.images[0]}
-                          alt={editableProject.title}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-[12px] uppercase tracking-[2px] text-[#99979d]">
-                          No Cover Image
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-4 text-[10px] uppercase tracking-[2px] text-[#7d7d84]">
-                      {editableProject.category === "ai-product" ? "AI Product" : "UX Design"} / {editableProject.date}
-                    </div>
-                    <div className="mt-3 font-['Quantum',sans-serif] text-[24px] uppercase leading-[28px] text-[#1a1c1c]">
-                      {editableProject.title}
-                    </div>
-                    <div className="mt-3 line-clamp-5 font-['OPPOSans:Light',sans-serif] text-[13px] leading-[24px] text-[#53535a]">
-                      {editableProject.description}
-                    </div>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {editableProject.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-white px-3 py-2 text-[10px] uppercase tracking-[1.6px] text-[#5e5e64] shadow-[0_8px_20px_rgba(26,28,28,0.04)]"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-5 min-h-0 flex-1 rounded-[30px] border border-black/7 bg-[#fbfaf7] p-4">
-                    <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Section Outline</div>
-                    <div className="mt-4 space-y-3 overflow-y-auto pr-1">
-                      {editableProject.sections.map((section) => (
-                        <div key={`${editableProject.id}-${section.id}`} className="rounded-[20px] border border-black/7 bg-white p-4">
-                          <div className="text-[10px] uppercase tracking-[2px] text-[#7d7d84]">{section.id}</div>
-                          <div className="mt-2 font-['Quantum',sans-serif] text-[17px] text-[#1a1c1c]">{section.title}</div>
-                          <div className="mt-1 text-[12px] uppercase tracking-[1.6px] text-[#8e8e94]">{section.subtitle}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </aside>
           </div>
 
           {!preview && isDeleteConfirmOpen && editableProject ? (
@@ -1053,10 +1284,11 @@ export function AdminDashboard({
               </div>
             </div>
           ) : null}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   if (!isUnlocked) {
     const panelStateClass =
