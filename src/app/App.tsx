@@ -15,17 +15,17 @@ import {
 } from "./data/portfolioProjects";
 
 function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHover: (index: number) => void, onLeave: () => void }) {
-  const customCursor = `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='6' fill='%2303fff7'/%3E%3C/svg%3E") 6 6, auto`;
+  const customCursor = `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='6' fill='%23004997'/%3E%3C/svg%3E") 6 6, auto`;
 
   return (
     <>
       <div 
         onMouseEnter={() => onHover(0)}
         onMouseLeave={onLeave}
-        className={`transition-all duration-500 ease-in-out -translate-y-1/2 absolute content-stretch flex flex-col gap-[10px] items-end right-[395.17px] top-[calc(50%+18.5px)] w-[181px] origin-right ${activeIndex === 0 ? 'opacity-100 scale-110 drop-shadow-[0_0_15px_rgba(3,255,247,0.8)]' : 'opacity-20 scale-100'}`}
+        className={`transition-all duration-500 ease-in-out -translate-y-1/2 absolute content-stretch flex flex-col gap-[10px] items-end right-[395.17px] top-[calc(50%+18.5px)] w-[181px] origin-right ${activeIndex === 0 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
         style={{ cursor: customCursor }}
       >
-        <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-end leading-[0] not-italic relative shrink-0 text-[#03fff7] text-[16px] text-right tracking-[-1px] uppercase w-full">
+        <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-end leading-[0] not-italic relative shrink-0 text-[#004997] text-[16px] text-right tracking-[-1px] uppercase w-full">
           <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
             <p className="leading-[16px]">AI Product</p>
           </div>
@@ -36,7 +36,7 @@ function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHove
         <div className="relative shrink-0 w-full">
           <div className="flex flex-row items-center justify-end size-full">
             <div className="content-stretch flex items-center justify-end px-[2px] relative w-full">
-              <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#b1b1b1] text-[10px] text-right uppercase whitespace-nowrap">
+              <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#96a1b6] text-[10px] text-right uppercase whitespace-nowrap">
                 <p className="leading-[15px]">ux设计项目</p>
               </div>
             </div>
@@ -46,10 +46,10 @@ function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHove
       <div 
         onMouseEnter={() => onHover(1)}
         onMouseLeave={onLeave}
-        className={`transition-all duration-500 ease-in-out absolute content-stretch flex flex-col gap-[10px] items-start justify-center right-[864.17px] top-[553px] w-[181px] origin-left ${activeIndex === 1 ? 'opacity-100 scale-110 drop-shadow-[0_0_15px_rgba(3,255,247,0.8)]' : 'opacity-20 scale-100'}`}
+        className={`transition-all duration-500 ease-in-out absolute content-stretch flex flex-col gap-[10px] items-start justify-center right-[864.17px] top-[553px] w-[181px] origin-left ${activeIndex === 1 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
         style={{ cursor: customCursor }}
       >
-        <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-start justify-center leading-[0] not-italic relative shrink-0 text-[#03fff7] text-[16px] tracking-[-1px] uppercase w-full">
+        <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-start justify-center leading-[0] not-italic relative shrink-0 text-[#004997] text-[16px] tracking-[-1px] uppercase w-full">
           <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
             <p className="leading-[16px]">AI Product</p>
           </div>
@@ -60,7 +60,7 @@ function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHove
         <div className="relative shrink-0 w-full">
           <div className="flex flex-row items-center size-full">
             <div className="content-stretch flex items-center px-[2px] relative w-full">
-              <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#b1b1b1] text-[10px] text-right uppercase whitespace-nowrap">
+              <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#96a1b6] text-[10px] text-right uppercase whitespace-nowrap">
                 <p className="leading-[15px]">ux设计项目</p>
               </div>
             </div>
@@ -70,10 +70,10 @@ function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHove
       <div 
         onMouseEnter={() => onHover(2)}
         onMouseLeave={onLeave}
-        className={`transition-all duration-500 ease-in-out -translate-x-1/2 absolute content-stretch flex flex-col gap-[10px] items-center left-[calc(50%-79.5px)] top-[91px] w-[181px] origin-top ${activeIndex === 2 ? 'opacity-100 scale-110 drop-shadow-[0_0_15px_rgba(3,255,247,0.8)]' : 'opacity-20 scale-100'}`}
+        className={`transition-all duration-500 ease-in-out -translate-x-1/2 absolute content-stretch flex flex-col gap-[10px] items-center left-[calc(50%-79.5px)] top-[91px] w-[181px] origin-top ${activeIndex === 2 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
         style={{ cursor: customCursor }}
       >
-        <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-center leading-[0] not-italic relative shrink-0 text-[#03fff7] text-[16px] text-center tracking-[-1px] uppercase w-full">
+        <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-center leading-[0] not-italic relative shrink-0 text-[#004997] text-[16px] text-center tracking-[-1px] uppercase w-full">
           <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
             <p className="leading-[16px]">AI Product</p>
           </div>
@@ -84,7 +84,7 @@ function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHove
         <div className="relative shrink-0 w-full">
           <div className="flex flex-row items-center justify-center size-full">
             <div className="content-stretch flex items-center justify-center px-[2px] relative w-full">
-              <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#b1b1b1] text-[10px] text-right uppercase whitespace-nowrap">
+              <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#96a1b6] text-[10px] text-right uppercase whitespace-nowrap">
                 <p className="leading-[15px]">ux设计项目</p>
               </div>
             </div>
@@ -194,7 +194,7 @@ export default function App() {
   };
 
   return (
-    <div className={`w-full h-screen flex overflow-hidden relative transition-colors duration-500 ${(currentView === 'resume' || currentView === 'ai-product' || currentView === 'ux-design') ? 'bg-[#E6E6E6]' : 'bg-[#151419]'}`}>
+    <div className="w-full h-screen flex overflow-hidden relative transition-colors duration-500 bg-[#E6E6E6]">
       <Toaster 
         position="top-left" 
         expand={false} 
@@ -217,16 +217,6 @@ export default function App() {
           pointerEvents: 'none',
         }}
       />
-      {currentView === 'home' && (
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-40 mix-blend-soft-light"
-          style={{ 
-            backgroundImage: 'url("https://images.unsplash.com/photo-1770795263316-f302a878ee64?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkYXJrJTIwYWJzdHJhY3QlMjBtaW5pbWFsaXN0JTIwdGV4dHVyZSUyMGJhY2tncm91bmQlMjBibGFja3xlbnwxfHx8fDE3NzU3MTg2MjR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral")',
-            backgroundSize: 'cover'
-          }}
-        />
-      )}
-      
       <AnimatePresence initial={false}>
         {currentView !== 'admin-dashboard' && (
           <motion.div
@@ -234,7 +224,7 @@ export default function App() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -36 }}
             transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-            className={`w-[256px] h-full absolute top-0 left-0 z-40 overflow-y-auto overflow-x-hidden transition-all duration-500 ${(currentView === 'resume' || currentView === 'ai-product' || currentView === 'ux-design') ? 'bg-[#E6E6E6]' : 'bg-[rgba(249,249,249,0.05)] backdrop-blur-[12px] border-r border-white/5'}`}
+            className="w-[256px] h-full absolute top-0 left-0 z-40 overflow-y-auto overflow-x-hidden transition-all duration-500 bg-[rgba(230,230,230,0.5)] backdrop-blur-[2px]"
           >
             <MainSidebar 
               currentView={currentView}
@@ -287,7 +277,7 @@ export default function App() {
                 <Footer onAdminDashboardClick={openAdminDashboard} />
                 <Frame6 isHovered={isIconHovered || isContactPopupOpen} />
                 <div 
-                  className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-300 bg-[#151419] ${(isIconHovered || isContactPopupOpen) ? 'opacity-60' : 'opacity-0'}`} 
+                  className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-300 bg-[rgba(230,230,230,0.72)] ${(isIconHovered || isContactPopupOpen) ? 'opacity-100' : 'opacity-0'}`} 
                   aria-hidden="true" 
                 />
                 <Labels activeIndex={activeIndex} onHover={handleHover} onLeave={handleLeave} />

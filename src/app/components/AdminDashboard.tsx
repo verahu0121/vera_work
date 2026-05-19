@@ -25,7 +25,7 @@ function CornerDecoration({ className, transform }: { className?: string; transf
         <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 33 33">
           <path
             d="M33 22.041C27.1702 22.522 22.523 27.1702 22.042 33H18.0322C18.5281 24.96 24.96 18.5271 33 18.0312V22.041Z"
-            fill="#03FFF7"
+            fill="#004E8D"
           />
         </svg>
       </div>
@@ -709,7 +709,7 @@ export function AdminDashboard({
                 <>
                   <MetricCard label="Published" value={totalPublished} accent="bg-[#03c9c3]" />
                   <MetricCard label="Drafts" value={totalDrafts} accent="bg-[#f3a67d]" />
-                  <MetricCard label="AI Product" value={totalAI} accent="bg-[#03fff7]" />
+                  <MetricCard label="AI Product" value={totalAI} accent="bg-[#7ba6d7]" />
                   <MetricCard label="UX Design" value={totalUX} accent="bg-[#f06449]" />
                 </>
               )}
@@ -1293,23 +1293,23 @@ export function AdminDashboard({
   if (!isUnlocked) {
     const panelStateClass =
       status === "success"
-        ? "border-[#03fff7] shadow-[0_0_40px_0_rgba(3,255,247,0.16),8px_8px_24px_0_rgba(3,255,247,0.12),inset_4px_4px_8px_0_rgba(3,255,247,0.24)]"
+        ? "border-[#004e8d] shadow-[8px_8px_24px_0_rgba(0,105,209,0.1),inset_4px_4px_8px_0_rgba(0,105,209,0.1)]"
         : status === "error"
-        ? "border-[#ff6b8a] shadow-[0_0_24px_0_rgba(255,107,138,0.14),8px_8px_24px_0_rgba(3,255,247,0.08),inset_4px_4px_8px_0_rgba(3,255,247,0.18)]"
-        : "border-[#00a6a1] shadow-[8px_8px_24px_0_rgba(3,255,247,0.1),inset_4px_4px_8px_0_rgba(3,255,247,0.2)]";
+        ? "border-[#d78ea0] shadow-[8px_8px_24px_0_rgba(215,142,160,0.12),inset_4px_4px_8px_0_rgba(0,105,209,0.08)]"
+        : "border-[#004e8d] shadow-[8px_8px_24px_0_rgba(0,105,209,0.1),inset_4px_4px_8px_0_rgba(0,105,209,0.1)]";
 
     const inputStateClass = isFocused
-      ? "border-[#03fff7]/45 bg-[rgba(3,255,247,0.08)] shadow-[0_0_24px_0_rgba(3,255,247,0.12),inset_0_0_0_1px_rgba(3,255,247,0.08)]"
+      ? "border-[#004e8d]/30 bg-[rgba(0,0,0,0.06)] shadow-[inset_0_0_0_1px_rgba(0,78,141,0.08)]"
       : status === "success"
-        ? "border-[#03fff7]/35 bg-[rgba(3,255,247,0.06)]"
+        ? "border-[#004e8d]/24 bg-[rgba(0,78,141,0.04)]"
         : status === "error"
         ? "border-[#ff6b8a]/45 bg-[rgba(255,107,138,0.06)]"
         : password.trim().length > 0
-          ? "border-[#03fff7]/20 bg-[rgba(255,255,255,0.06)]"
-          : "border-transparent bg-[rgba(255,255,255,0.05)]";
+          ? "border-[#004e8d]/16 bg-[rgba(0,0,0,0.04)]"
+          : "border-transparent bg-[rgba(0,0,0,0.05)]";
 
     return (
-      <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-[#151419] text-[#1a1c1c]">
+      <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-[#e6e6e6] text-[#1a1c1c]">
         <LightDiffuseSweep active={status === "success"} />
         {renderDashboardShell(true)}
         <div
@@ -1337,7 +1337,7 @@ export function AdminDashboard({
           </div>
 
           <div
-            className={`absolute right-[100px] top-[320px] h-[200px] w-[430px] overflow-hidden rounded-[32px] border bg-[rgba(21,20,25,0.5)] backdrop-blur-[24px] transition-all duration-[3000ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${panelStateClass} ${shouldShake ? "animate-[shake_0.45s_ease-in-out]" : ""} ${
+            className={`absolute right-[100px] top-[320px] h-[200px] w-[430px] overflow-hidden rounded-[32px] border bg-[#e6e6e6]/96 backdrop-blur-[24px] transition-all duration-[3000ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${panelStateClass} ${shouldShake ? "animate-[shake_0.45s_ease-in-out]" : ""} ${
               status === "success" ? "translate-x-[-24px] scale-[1.02] opacity-0" : "translate-x-0 scale-100 opacity-100"
             }`}
           >
@@ -1350,12 +1350,12 @@ export function AdminDashboard({
               <div className="flex h-[64px] w-full items-center justify-center px-[40px]">
                 <p className={`font-['Manrope:Bold',sans-serif] text-[12px] font-bold uppercase tracking-[1.44px] transition-colors duration-500 ${
                   status === "success"
-                    ? "text-[#c9fffd]"
+                    ? "text-[#004e8d]"
                     : status === "error"
                       ? "text-[#ff9bb0]"
-                      : "text-[#03fff7]"
+                      : "text-[#004e8d]"
                 }`}>
-                  {status === "success" ? "Welcome Back Home (#^.^#)" : "Welcome Back Home (#^.^#)"}
+                  {status === "success" ? "Welcome to Vera’s Libertisle ！" : "Welcome to Vera’s Libertisle ！"}
                 </p>
               </div>
 
@@ -1385,20 +1385,20 @@ export function AdminDashboard({
                       readOnly={status === "success"}
                       className={`h-full w-full border-0 bg-transparent text-center font-['Manrope:Light',sans-serif] text-[12px] font-light tracking-[1.44px] outline-none transition-colors duration-300 placeholder:text-center ${
                         status === "success"
-                          ? "text-[#d6ffff] placeholder:text-transparent"
+                          ? "text-[#6c6c6c] placeholder:text-transparent"
                           : password.trim().length > 0
-                          ? "text-[#e6ffff] placeholder:text-[#6f6f75]/0"
-                          : "text-[#b1b1b1] placeholder:text-[#b1b1b1]/50"
+                          ? "text-[#6c6c6c] placeholder:text-[#6f6f75]/0"
+                          : "text-[#6c6c6c] placeholder:text-[#6c6c6c]/50"
                       }`}
                     />
                   </div>
                   <p
                     className={`text-center font-['Manrope:Light',sans-serif] text-[10px] tracking-[1.2px] uppercase transition-all duration-[3000ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
                       status === "success"
-                        ? "text-[#bafffc] opacity-0"
+                        ? "text-[#96a1b6] opacity-0"
                         : status === "error"
                           ? "text-[#ff9bb0]"
-                          : "text-[#7a7a80]"
+                          : "text-[#96a1b6]"
                     }`}
                   >
                     {status === "success"

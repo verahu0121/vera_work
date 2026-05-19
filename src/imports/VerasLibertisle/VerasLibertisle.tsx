@@ -81,7 +81,7 @@ function Link2({ onClick }: { onClick?: () => void }) {
       <button
         type="button"
         onClick={onClick}
-        className="flex flex-col font-['Inter:Regular',sans-serif] font-normal h-[17px] justify-center leading-[0] not-italic relative shrink-0 text-[#6c6c6c] text-[11px] tracking-[1.1px] uppercase whitespace-nowrap cursor-pointer transition-colors hover:text-[#03fff7]"
+        className="flex flex-col font-['Inter:Regular',sans-serif] font-normal h-[17px] justify-center leading-[0] not-italic relative shrink-0 text-[#6c6c6c] text-[11px] tracking-[1.1px] uppercase whitespace-nowrap cursor-pointer transition-colors hover:text-[#004e8d]"
       >
         <p className="leading-[16.5px]">Admin Dashboard</p>
       </button>
@@ -155,41 +155,41 @@ export function Frame6({
             <g filter="url(#filter2_g_2_118)" id="Star 1">
               <path
                 d={svgPaths.p1c1ddb80}
-                fill="var(--fill-0, #3D3D3D)"
+                fill="var(--fill-0, #96A1B6)"
               />
               <path
                 d={svgPaths.p1c1ddb80}
-                stroke="var(--stroke-0, #3D3D3D)"
+                stroke="var(--stroke-0, #96A1B6)"
               />
             </g>
             <g filter="url(#filter3_g_2_118)" id="Star 3">
               <path
                 d={svgPaths.p34d95680}
-                fill="var(--fill-0, #3D3D3D)"
+                fill="var(--fill-0, #96A1B6)"
               />
               <path
                 d={svgPaths.p34d95680}
-                stroke="var(--stroke-0, #3D3D3D)"
+                stroke="var(--stroke-0, #96A1B6)"
               />
             </g>
             <g filter="url(#filter4_g_2_118)" id="Star 2">
               <path
                 d={svgPaths.p32ce2b80}
-                fill="var(--fill-0, #B1B1B1)"
+                fill="var(--fill-0, #96A1B6)"
               />
               <path
                 d={svgPaths.p32ce2b80}
-                stroke="var(--stroke-0, #B1B1B1)"
+                stroke="var(--stroke-0, #96A1B6)"
               />
             </g>
             <g filter="url(#filter5_g_2_118)" id="Star 4">
               <path
                 d={svgPaths.p45e7a80}
-                fill="var(--fill-0, #B1B1B1)"
+                fill="var(--fill-0, #96A1B6)"
               />
               <path
                 d={svgPaths.p45e7a80}
-                stroke="var(--stroke-0, #B1B1B1)"
+                stroke="var(--stroke-0, #96A1B6)"
               />
             </g>
             <g
@@ -201,32 +201,24 @@ export function Frame6({
                 transformOrigin: "450px 450px",
               }}
             >
-              <g
-                filter="url(#filter6_g_2_118)"
-                id="Ellipse 56"
-                opacity="0.3"
-              >
+              <g filter="url(#filter6_g_2_118)" id="Ellipse 56">
                 <path
                   d={svgPaths.pfe92200}
-                  stroke="var(--stroke-0, #98FFFC)"
+                  stroke="var(--stroke-0, #004E8D)"
                   strokeWidth="2"
                 />
               </g>
-              <g filter="url(#filter7_g_2_118)" id="Ellipse 57">
+              <g filter="url(#filter7_g_2_118)" id="Ellipse 57" opacity="0.6">
                 <path
                   d={svgPaths.p1d09180}
-                  stroke="var(--stroke-0, #98FFFC)"
+                  stroke="var(--stroke-0, #004E8D)"
                   strokeWidth="2"
                 />
               </g>
-              <g
-                filter="url(#filter8_g_2_118)"
-                id="Ellipse 58"
-                opacity="0.6"
-              >
+              <g filter="url(#filter8_g_2_118)" id="Ellipse 58" opacity="0.3">
                 <path
                   d={svgPaths.p2a14bb00}
-                  stroke="var(--stroke-0, #98FFFC)"
+                  stroke="var(--stroke-0, #004E8D)"
                   strokeWidth="2"
                 />
               </g>
@@ -234,9 +226,9 @@ export function Frame6({
                 <circle
                   cx="0"
                   cy="0"
-                  fill="var(--fill-0, #151419)"
+                  fill="var(--fill-0, #E6E6E6)"
                   r="6"
-                  stroke="var(--stroke-0, #98FFFC)"
+                  stroke="var(--stroke-0, #004E8D)"
                 />
                 <animateMotion
                   dur="12s"
@@ -248,9 +240,9 @@ export function Frame6({
                 <circle
                   cx="0"
                   cy="0"
-                  fill="var(--fill-0, #151419)"
+                  fill="var(--fill-0, #E6E6E6)"
                   r="6"
-                  stroke="var(--stroke-0, #98FFFC)"
+                  stroke="var(--stroke-0, #004E8D)"
                 />
                 <animateMotion
                   dur="16s"
@@ -262,9 +254,9 @@ export function Frame6({
                 <circle
                   cx="0"
                   cy="0"
-                  fill="var(--fill-0, #151419)"
+                  fill="var(--fill-0, #E6E6E6)"
                   r="6"
-                  stroke="var(--stroke-0, #98FFFC)"
+                  stroke="var(--stroke-0, #004E8D)"
                 />
                 <animateMotion
                   dur="14s"
@@ -276,9 +268,9 @@ export function Frame6({
                 <circle
                   cx="0"
                   cy="0"
-                  fill="var(--fill-0, #151419)"
+                  fill="var(--fill-0, #E6E6E6)"
                   r="6"
-                  stroke="var(--stroke-0, #98FFFC)"
+                  stroke="var(--stroke-0, #004E8D)"
                 />
                 <animateMotion
                   dur="16s"
@@ -338,7 +330,7 @@ export function Frame6({
                 result="noise1Clipped"
               />
               <feFlood
-                floodColor="#151419"
+                floodColor="#C7D5EA"
                 result="color1Flood"
               />
               <feComposite
@@ -400,7 +392,7 @@ export function Frame6({
                 result="noise1Clipped"
               />
               <feFlood
-                floodColor="#151419"
+                floodColor="#C7D5EA"
                 result="color1Flood"
               />
               <feComposite
@@ -688,15 +680,15 @@ export function Frame6({
               id="paint0_radial_2_118"
               r="1"
             >
-              <stop stopColor="#03FFF7" />
+              <stop stopColor="#004E8D" />
               <stop
                 offset="0.4"
-                stopColor="#03FFF7"
+                stopColor="#004E8D"
                 stopOpacity="0.3"
               />
               <stop
                 offset="1"
-                stopColor="#03FFF7"
+                stopColor="#004E8D"
                 stopOpacity="0"
               />
             </radialGradient>
@@ -777,7 +769,7 @@ export function Frame5({
 }) {
   const data = LIST_DATA[activeIndex] || LIST_DATA[0];
   return (
-    <div className="-translate-y-1/2 absolute content-stretch flex flex-col gap-[33px] items-start leading-[0] left-[1057px] text-[#b1b1b1] top-[calc(50%+0.5px)] w-[183px] whitespace-nowrap">
+    <div className="-translate-y-1/2 absolute content-stretch flex flex-col gap-[33px] items-start leading-[0] left-[1057px] text-[#1d1d1d] top-[calc(50%+0.5px)] w-[183px] whitespace-nowrap">
       {data.map((item, idx) => (
         <ListItem
           key={`${activeIndex}-${idx}`}
@@ -846,583 +838,583 @@ export function Icon({
             <g id="Vector">
               <path
                 d={svgPaths.p3263a500}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3509db10}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3f9c3000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1c3f2280}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2a561040}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p226a4e00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 clipRule="evenodd"
                 d={svgPaths.p328be100}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
                 fillRule="evenodd"
               />
               <path
                 d={svgPaths.p26c9c400}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3add4540}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3705b800}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p6eab000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p208d7f00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 clipRule="evenodd"
                 d={svgPaths.p33b5af0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
                 fillRule="evenodd"
               />
               <path
                 d={svgPaths.p31981c80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p64b500}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3bd8ef00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p302ad000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p219e9380}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3bc00900}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p22cf9b00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3ed0aeb0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p27d0c000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p15d91a00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3bb33900}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p8e44640}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1d038e00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1a275300}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p32650600}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pa8a5400}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1eb213c0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p16b50ef0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p237846c0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2a177400}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p26a90580}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2bd61880}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p275fed80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p27463ff1}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1c50a800}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1558ab80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p366e0b00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p24354f80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pf2b54e0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p172d7280}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1c4a4c80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p30fe37f0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1f258f00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pda486f1}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1e10b000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p938d5a0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p247f4700}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3b006a40}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1b511c00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p13aaf000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p359c15f0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p201c5700}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3cb39200}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pd89ce00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pb4bc5c0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p37b5b180}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p383b3df0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p26d8580}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2ee3ef80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p10f38480}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pfa3ca00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p140d0300}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pee58600}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2cc43f00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2fd28780}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2970c8b0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2c4bce00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p115b2200}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2f8f7e00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1de08880}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3fe1ea00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pa11f670}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2994dd80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p204d6240}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 clipRule="evenodd"
                 d={svgPaths.p3153ff00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
                 fillRule="evenodd"
               />
               <path
                 d={svgPaths.p318c3f00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2b8edb00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p4ab4000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3e8ab980}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p172394a0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p386e3f80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pb683900}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pc356500}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p216729f0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p160ba700}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p350e1e00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3969ea00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pe6cad00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3e8bd3f0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p17025a80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p459a980}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3430780}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p34e3eb30}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p191be100}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2f606b00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 clipRule="evenodd"
                 d={svgPaths.p23354a00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
                 fillRule="evenodd"
               />
               <path
                 d={svgPaths.p378a000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1f264800}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1ff72a80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p18ff0d00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p33e9a500}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2ee32370}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p136f6090}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3422f000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3eda2070}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2ae86100}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p17d59000}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p128ad300}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3cd8fb80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p31e481f2}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p21c6e180}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pfe94d00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2c97ef00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1ec1fe80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p1a9c83f0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p11896f70}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3729c680}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p20b9c00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p23d152f0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p12f4280}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p31cc8700}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p27fe5700}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p2ad0cc00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3d9b7480}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p3d803700}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p220da4e0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p13eb9f00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p17be1300}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p20bc7c00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p92db300}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p38cb8680}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pde1efc0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p23803380}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p31878cc0}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p34bc2200}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pbe00c00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p120cf300}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p8a1ee00}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.p30e52d80}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
               <path
                 d={svgPaths.pf962500}
-                fill="var(--fill-0, #03FFF7)"
+                fill="var(--fill-0, #004E8D)"
               />
             </g>
           </g>
@@ -1435,15 +1427,15 @@ export function Icon({
               id="paint0_radial_2_115"
               r="1"
             >
-              <stop stopColor="#03FFF7" stopOpacity="0.2" />
+              <stop stopColor="#004E8D" stopOpacity="0.2" />
               <stop
                 offset="0.4"
-                stopColor="#03FFF7"
+                stopColor="#004E8D"
                 stopOpacity="0.06"
               />
               <stop
                 offset="1"
-                stopColor="#03FFF7"
+                stopColor="#004E8D"
                 stopOpacity="0"
               />
             </radialGradient>
@@ -1457,10 +1449,10 @@ export function Icon({
             >
               <stop
                 offset="0.614939"
-                stopColor="#80FFFB"
+                stopColor="#7BA6D7"
                 stopOpacity="0"
               />
-              <stop offset="1" stopColor="#80FFFB" />
+              <stop offset="1" stopColor="#7BA6D7" />
             </radialGradient>
           </defs>
         </svg>
@@ -1488,11 +1480,11 @@ function NavItem({
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
-  let textColor = isResumeView ? "#B1B1B1" : "#b1b1b1";
+  let textColor = isResumeView ? "#B1B1B1" : "#96A1B6";
   if (isActive)
-    textColor = isResumeView ? "#1D1D1D" : "#03fff7";
+    textColor = isResumeView ? "#1D1D1D" : "#004997";
   else if (isHovered)
-    textColor = isResumeView ? "#939393" : "#98fffc";
+    textColor = isResumeView ? "#939393" : "#6F88AF";
 
   const cursorStyle =
     useCustomCursor || (title === "Contact Me" && isResumeView)
@@ -1619,8 +1611,7 @@ export function MainSidebar({
   const isResumeView = currentView === "resume";
   const isAIProductView = currentView === "ai-product";
   const isUXDesignView = currentView === "ux-design";
-  const isLightMode =
-    isResumeView || isAIProductView || isUXDesignView;
+  const isLightMode = true;
   const [showContactPopup, setShowContactPopup] =
     useState(false);
 
