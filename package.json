@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "dev:server": "node --import tsx server/src/server.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1049.0",
     "@aws-sdk/s3-request-presigner": "^3.1049.0",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/multipart": "^10.0.0",
     "@fontsource/inter": "^5.2.8",
     "@fontsource/manrope": "^5.2.8",
     "@fontsource/noto-sans": "^5.2.10",
@@ -47,17 +50,21 @@
     "@radix-ui/react-toggle": "1.1.2",
     "@radix-ui/react-toggle-group": "1.1.2",
     "@radix-ui/react-tooltip": "1.1.8",
+    "bcrypt": "^6.0.0",
     "busboy": "^1.6.0",
     "canvas-confetti": "1.9.4",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
     "date-fns": "3.6.0",
+    "dotenv": "^17.4.2",
     "embla-carousel-react": "8.6.0",
+    "fastify": "^5.8.5",
     "input-otp": "1.4.2",
     "lucide-react": "0.487.0",
     "motion": "12.23.24",
     "next-themes": "0.4.6",
+    "pg": "^8.21.0",
     "react-day-picker": "8.10.1",
     "react-dnd": "16.0.1",
     "react-dnd-html5-backend": "16.0.1",
@@ -75,8 +82,12 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
+    "@types/bcrypt": "^6.0.0",
+    "@types/node": "^25.9.1",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
     "vite": "6.3.5"
   },
   "peerDependencies": {

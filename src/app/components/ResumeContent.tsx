@@ -5,124 +5,161 @@ import { UxCase } from "./UxCase";
 import { Education } from "./Education";
 import imgVeraPortrait from "figma:asset/c2a725be084d36e42b2de03b1df60b14cc7638a2.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { type ResumeContentData } from "../data/resumeContent";
 
-function VeraPortrait() {
+function VeraPortrait({ src }: { src?: string }) {
   return (
-    <div className="flex-[1_0_0] min-h-px min-w-px relative w-full" data-name="Vera portrait">
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 overflow-hidden">
-          <ImageWithFallback alt="" className="absolute h-full left-[-16.67%] max-w-none top-0 w-[133.33%]" src={imgVeraPortrait} />
-        </div>
-        <div className="absolute bg-white inset-0 mix-blend-saturation" />
-      </div>
+    <div className="relative size-full overflow-hidden" data-name="Vera portrait">
+      <ImageWithFallback
+        alt=""
+        className="absolute inset-0 size-full object-cover object-center"
+        src={src || imgVeraPortrait}
+      />
     </div>
   );
 }
 
-function Background() {
+function Background({ portraitImage }: { portraitImage?: string }) {
   return (
-    <div className="bg-[#eee] content-stretch flex flex-col h-[384px] items-start justify-center overflow-clip relative shrink-0 w-[288px]" data-name="Background">
-      <VeraPortrait />
+    <div
+      className="relative h-[384px] w-[288px] shrink-0 overflow-hidden bg-[#eee]"
+      data-name="Background"
+    >
+      <VeraPortrait src={portraitImage} />
     </div>
   );
 }
 
-function Heading() {
+function Heading({ chineseName, englishName }: { chineseName: string; englishName: string }) {
   return (
     <div className="content-stretch flex gap-[8px] items-start leading-[0] relative shrink-0 text-[48px] text-black w-full whitespace-nowrap" data-name="Heading 2">
       <div className="flex flex-col font-['OPPOSans:Bold',sans-serif] justify-center not-italic relative shrink-0">
-        <p className="leading-[48px]">胡雨琪</p>
+        <p className="leading-[48px]">{chineseName}</p>
       </div>
       <div className="flex flex-col font-['OPPOSans:Bold',sans-serif] justify-center not-italic relative shrink-0">
         <p className="leading-[48px]">·</p>
       </div>
       <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold justify-center relative shrink-0">
-        <p className="leading-[48px]">VERA</p>
+        <p className="leading-[48px]">{englishName}</p>
       </div>
     </div>
   );
 }
 
-function Container1() {
+function Container1({ roleSubtitle }: { roleSubtitle: string }) {
   return (
     <div className="content-stretch flex flex-col items-start relative shrink-0 w-full" data-name="Container">
       <div className="flex flex-col font-['Manrope:Regular',sans-serif] font-normal justify-center leading-[0] relative shrink-0 text-[#5e5e5e] text-[18px] tracking-[1.8px] uppercase w-full">
-        <p className="leading-[28px]">{`AI Product Manager & Experience Designer`}</p>
+        <p className="leading-[28px]">{roleSubtitle}</p>
       </div>
     </div>
   );
 }
 
-function Frame() {
+function Frame({
+  chineseName,
+  englishName,
+  roleSubtitle,
+}: {
+  chineseName: string;
+  englishName: string;
+  roleSubtitle: string;
+}) {
   return (
     <div className="content-stretch flex flex-col gap-[8px] items-start relative shrink-0 w-full">
-      <Heading />
-      <Container1 />
+      <Heading chineseName={chineseName} englishName={englishName} />
+      <Container1 roleSubtitle={roleSubtitle} />
     </div>
   );
 }
 
-function Heading1() {
+function Heading1({ aboutLabel }: { aboutLabel: string }) {
   return (
     <div className="content-stretch flex flex-col items-start relative shrink-0 w-full" data-name="Heading 3">
       <div className="flex flex-col font-['Manrope:Regular',sans-serif] font-normal justify-center leading-[0] relative shrink-0 text-[#5e5e5e] text-[11px] tracking-[3.3px] uppercase w-full">
-        <p className="leading-[16.5px]">About Me</p>
+        <p className="leading-[16.5px]">{aboutLabel}</p>
       </div>
     </div>
   );
 }
 
-function Container3() {
+function Container3({ aboutTextEn }: { aboutTextEn: string }) {
   return (
     <div className="content-stretch flex flex-col items-start pb-[0.75px] relative shrink-0 w-full" data-name="Container">
       <div className="flex flex-col font-['Manrope:Regular',sans-serif] font-normal justify-center leading-[0] relative shrink-0 text-[#1a1c1c] text-[14px] text-justify w-full">
-        <p className="leading-[24px]">{`As an AI Product Manager & Experience Designer, I don’t just build products or design interfaces. I translate complex intelligence into human-centered experiences, turning technical possibilities into real, gentle value for people.`}</p>
+        <p className="leading-[24px]">{aboutTextEn}</p>
       </div>
     </div>
   );
 }
 
-function Container4() {
+function Container4({ aboutTextZh }: { aboutTextZh: string }) {
   return (
     <div className="content-stretch flex flex-col items-start relative shrink-0 w-full" data-name="Container">
       <div className="flex flex-col font-['OPPOSans:Regular',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#1a1c1c] text-[14px] text-justify uppercase w-full">
-        <p className="leading-[24px]">作为 AI 产品经理与体验设计师，我不只是构建产品、设计界面。我用产品逻辑梳理复杂的脉络，用体验设计打磨每一个细节，将ai能力转化为以人为中心、可感易用的产品，把技术的可能性，变成真正贴近人、服务人、温暖人的实用价值。</p>
+        <p className="leading-[24px]">{aboutTextZh}</p>
       </div>
     </div>
   );
 }
 
-function Container2() {
+function Container2({
+  aboutLabel,
+  aboutTextEn,
+  aboutTextZh,
+}: {
+  aboutLabel: string;
+  aboutTextEn: string;
+  aboutTextZh: string;
+}) {
   return (
     <div className="content-stretch flex flex-col gap-[14.8px] items-start pt-[39px] relative shrink-0 w-full" data-name="Container">
-      <Heading1 />
-      <Container3 />
-      <Container4 />
+      <Heading1 aboutLabel={aboutLabel} />
+      <Container3 aboutTextEn={aboutTextEn} />
+      <Container4 aboutTextZh={aboutTextZh} />
     </div>
   );
 }
 
-function Container() {
+function Container({ profile }: { profile: ResumeContentData["profile"] }) {
   return (
     <div className="flex-[1_0_0] min-h-px min-w-px relative self-stretch" data-name="Container">
       <div className="content-stretch flex flex-col items-start justify-between py-[16px] relative size-full">
-        <Frame />
-        <Container2 />
+        <Frame
+          chineseName={profile.chineseName}
+          englishName={profile.englishName}
+          roleSubtitle={profile.roleSubtitle}
+        />
+        <Container2
+          aboutLabel={profile.aboutLabel}
+          aboutTextEn={profile.aboutTextEn}
+          aboutTextZh={profile.aboutTextZh}
+        />
       </div>
     </div>
   );
 }
 
-function ProfileHeaderSection() {
+function ProfileHeaderSection({ profile }: { profile: ResumeContentData["profile"] }) {
   return (
     <div className="flex flex-col lg:flex-row gap-[64px] items-start max-w-[1024px] min-w-full lg:min-w-[864px] relative shrink-0 w-full" data-name="Profile Header Section">
-      <Background />
-      <Container />
+      <Background portraitImage={profile.portraitImage} />
+      <Container profile={profile} />
     </div>
   );
 }
 
-export function ResumeContent({ activeTab, onActiveSectionChange }: { activeTab: string, onActiveSectionChange?: (tab: string) => void }) {
+export function ResumeContent({
+  activeTab,
+  onActiveSectionChange,
+  content,
+  onOpenLinkedProject,
+}: {
+  activeTab: string,
+  onActiveSectionChange?: (tab: string) => void
+  content: ResumeContentData
+  onOpenLinkedProject?: (projectId: string) => void
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const aboutMeRef = useRef<HTMLDivElement>(null);
   const aiProductsRef = useRef<HTMLDivElement>(null);
@@ -235,20 +272,20 @@ export function ResumeContent({ activeTab, onActiveSectionChange }: { activeTab:
     <div ref={containerRef} className="w-full h-full overflow-y-auto overflow-x-hidden scroll-smooth custom-scrollbar">
       <div className="max-w-[1280px] mx-auto flex flex-col items-center">
         <div className="flex flex-col gap-[72px] items-start px-[40px] md:px-[80px] py-[72px] relative w-full lg:w-[1024px]" ref={aboutMeRef}>
-          <ProfileHeaderSection />
+          <ProfileHeaderSection profile={content.profile} />
           <div className="flex flex-col items-stretch relative w-full">
-            <BentoGrid />
+            <BentoGrid content={content.experienceGrid} onOpenLinkedProject={onOpenLinkedProject} />
           </div>
         </div>
       </div>
       <div ref={aiProductsRef} className="w-full">
-        <AiProducts />
+        <AiProducts content={content.aiProducts} />
       </div>
       <div ref={uxCaseRef} className="w-full">
-        <UxCase />
+        <UxCase content={content.uxCase} />
       </div>
       <div ref={educationRef} className="w-full">
-        <Education />
+        <Education content={content.education} />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from "motion/react";
 import { MainSidebar, Footer, Frame6, Frame5, Icon } from "../imports/VerasLibertisle/VerasLibertisle";
 import { ContactPopup } from "./components/ContactPopup";
@@ -6,13 +6,76 @@ import { ResumeContent } from "./components/ResumeContent";
 import { AIProductContent } from "./components/AIProductContent";
 import { UXDesignContent } from "./components/UXDesignContent";
 import { AdminDashboard } from "./components/AdminDashboard";
-import { Toaster } from "sonner";
+import { PasswordAccessCard } from "./components/PasswordAccessCard";
+import { ResumeProjectDetailView } from "./components/ResumeProjectDetailView";
+import { Toaster, toast } from "sonner";
 import {
-  PORTFOLIO_PROJECTS_STORAGE_KEY,
-  SEED_PORTFOLIO_PROJECTS,
   sortPortfolioProjects,
   type PortfolioProject,
 } from "./data/portfolioProjects";
+import {
+  DEFAULT_AUTH_SETTINGS,
+  type AuthSettings,
+} from "./data/authSettings";
+import {
+  DEFAULT_RESUME_CONTENT,
+  type ResumeContentData,
+} from "./data/resumeContent";
+
+const SITE_SUCCESS_TRANSITION_MS = 2400;
+const SITE_WELCOME_GRID_ITEMS = Array.from({ length: 30 }, (_, index) => index);
+
+const primarySectionTransition = {
+  initial: { opacity: 0, y: 18, filter: "blur(10px)" },
+  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
+  exit: { opacity: 0, y: -12, filter: "blur(10px)" },
+  transition: { duration: 0.48, ease: [0.22, 1, 0.36, 1] },
+} as const;
+
+function SiteWelcomeTransition() {
+  return (
+    <motion.div
+      key="site-welcome"
+      initial={{ opacity: 0, scale: 1.02 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.995, filter: "blur(8px)" }}
+      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#e6e6e6]"
+    >
+      <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+        <div
+          className="grid"
+          style={{
+            width: "1257.667px",
+            height: "850px",
+            rowGap: "120px",
+            columnGap: "142px",
+            gridTemplateRows: "repeat(5,minmax(0,1fr))",
+            gridTemplateColumns: "repeat(6,minmax(0,1fr))",
+          }}
+        >
+          {SITE_WELCOME_GRID_ITEMS.map((item) => (
+            <div
+              key={item}
+              className="flex items-center justify-center"
+              style={{
+                backgroundImage: "url('/islandVector.svg')",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                backgroundSize: "92px 65px",
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.58)_0%,rgba(230,230,230,0.18)_34%,rgba(230,230,230,0)_68%)]" />
+      <div className="relative z-10 -translate-y-[8px] text-center font-['Manrope:ExtraBold',sans-serif] text-[64px] font-extrabold uppercase tracking-[5.12px] text-[#004e8d]">
+        <p className="leading-[84px]">Welcome To</p>
+        <p className="leading-[84px]">Vera’s Libertisle</p>
+      </div>
+    </motion.div>
+  );
+}
 
 function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHover: (index: number) => void, onLeave: () => void }) {
   const customCursor = `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='6' fill='%23004997'/%3E%3C/svg%3E") 6 6, auto`;
@@ -97,6 +160,12 @@ function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHove
 
 export default function App() {
   const [scale, setScale] = useState(1);
+  const [isSiteUnlocked, setIsSiteUnlocked] = useState(false);
+  const [siteSessionChecked, setSiteSessionChecked] = useState(false);
+  const [sitePassword, setSitePassword] = useState("");
+  const [sitePasswordError, setSitePasswordError] = useState(false);
+  const [isSitePasswordFocused, setIsSitePasswordFocused] = useState(false);
+  const [siteGatePhase, setSiteGatePhase] = useState<"locked" | "welcome">("locked");
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [isIconHovered, setIsIconHovered] = useState(false);
@@ -104,7 +173,11 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard'>('home');
   const [activeResumeSubItem, setActiveResumeSubItem] = useState<string>('about me');
   const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
-  const [portfolioProjects, setPortfolioProjects] = useState<PortfolioProject[]>(SEED_PORTFOLIO_PROJECTS);
+  const [portfolioProjects, setPortfolioProjects] = useState<PortfolioProject[]>([]);
+  const [projectsHydrated, setProjectsHydrated] = useState(false);
+  const [authSettings, setAuthSettings] = useState<AuthSettings>(DEFAULT_AUTH_SETTINGS);
+  const [resumeContent, setResumeContent] = useState<ResumeContentData>(DEFAULT_RESUME_CONTENT);
+  const [resumeLinkedProjectId, setResumeLinkedProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isHovering || (currentView !== 'home')) return;
@@ -137,29 +210,224 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
+  const handleSiteUnlock = async () => {
     try {
-      const stored = window.localStorage.getItem(PORTFOLIO_PROJECTS_STORAGE_KEY);
-      if (!stored) return;
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        setPortfolioProjects(sortPortfolioProjects(parsed));
+      const response = await fetch("/api/admin/verify-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          target: "platform",
+          password: sitePassword,
+        }),
+      });
+
+      if (!response.ok) {
+        setSitePasswordError(true);
+        return;
       }
+
+      setSitePasswordError(false);
+      setIsSitePasswordFocused(false);
+      setSiteGatePhase("welcome");
     } catch (error) {
-      console.error("Failed to read portfolio projects from storage", error);
+      console.error("Failed to verify platform password", error);
+      setSitePasswordError(true);
     }
+  };
+
+  useEffect(() => {
+    if (siteGatePhase !== "welcome") return;
+
+    const unlockTimer = window.setTimeout(() => {
+      setIsSiteUnlocked(true);
+    }, SITE_SUCCESS_TRANSITION_MS);
+
+    return () => window.clearTimeout(unlockTimer);
+  }, [siteGatePhase]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPlatformSession = async () => {
+      try {
+        const response = await fetch("/api/admin/session");
+        if (!response.ok) {
+          throw new Error("Failed to fetch session state.");
+        }
+
+        const payload = (await response.json()) as {
+          platformAuthenticated?: boolean;
+        };
+
+        if (!cancelled && payload.platformAuthenticated) {
+          setIsSiteUnlocked(true);
+        }
+      } catch (error) {
+        console.error("Failed to read platform session", error);
+      } finally {
+        if (!cancelled) {
+          setSiteSessionChecked(true);
+        }
+      }
+    };
+
+    loadPlatformSession();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        PORTFOLIO_PROJECTS_STORAGE_KEY,
-        JSON.stringify(sortPortfolioProjects(portfolioProjects)),
-      );
-    } catch (error) {
-      console.error("Failed to persist portfolio projects", error);
+    let cancelled = false;
+
+    const loadResumeContent = async () => {
+      try {
+        const response = await fetch("/api/admin/resume");
+        if (!response.ok) {
+          throw new Error("Failed to fetch resume content.");
+        }
+
+        const nextContent = (await response.json()) as ResumeContentData;
+        if (!cancelled) {
+          setResumeContent({
+            ...DEFAULT_RESUME_CONTENT,
+            ...nextContent,
+            profile: {
+              ...DEFAULT_RESUME_CONTENT.profile,
+              ...(nextContent.profile ?? {}),
+            },
+            experienceGrid: {
+              ...DEFAULT_RESUME_CONTENT.experienceGrid,
+              ...(nextContent.experienceGrid ?? {}),
+              experiences:
+                nextContent.experienceGrid?.experiences ??
+                DEFAULT_RESUME_CONTENT.experienceGrid.experiences,
+              projectSets:
+                nextContent.experienceGrid?.projectSets ??
+                DEFAULT_RESUME_CONTENT.experienceGrid.projectSets,
+            },
+            education: {
+              ...DEFAULT_RESUME_CONTENT.education,
+              ...(nextContent.education ?? {}),
+              awards:
+                nextContent.education?.awards ?? DEFAULT_RESUME_CONTENT.education.awards,
+            },
+          });
+        }
+      } catch (error) {
+        console.error("Failed to read resume content from backend", error);
+      }
+    };
+
+    loadResumeContent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAuthSettings = async () => {
+      try {
+        const response = await fetch("/api/admin/auth-settings");
+        if (!response.ok) {
+          throw new Error("Failed to fetch auth settings.");
+        }
+
+        const nextSettings = (await response.json()) as AuthSettings;
+        if (!cancelled) {
+          setAuthSettings({
+            ...DEFAULT_AUTH_SETTINGS,
+            ...nextSettings,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to read auth settings from backend", error);
+      }
+    };
+
+    loadAuthSettings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProjects = async () => {
+      try {
+        const response = await fetch("/api/admin/projects");
+        if (!response.ok) {
+          throw new Error("Failed to fetch portfolio projects.");
+        }
+
+        const nextProjects = sortPortfolioProjects((await response.json()) as PortfolioProject[]);
+
+        if (!cancelled) {
+          setPortfolioProjects(nextProjects);
+          setProjectsHydrated(true);
+        }
+      } catch (error) {
+        console.error("Failed to read portfolio projects from backend", error);
+        if (!cancelled) {
+          setProjectsHydrated(true);
+        }
+      }
+    };
+
+    loadProjects();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const persistProjects = useCallback(async (nextProjects: PortfolioProject[]) => {
+    const response = await fetch("/api/admin/projects", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        projects: sortPortfolioProjects(nextProjects),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to persist portfolio projects.");
     }
-  }, [portfolioProjects]);
+
+    const savedProjects = sortPortfolioProjects((await response.json()) as PortfolioProject[]);
+    setPortfolioProjects(savedProjects);
+    return savedProjects;
+  }, []);
+
+  const persistResumeContent = useCallback(async (nextContent: ResumeContentData) => {
+    const response = await fetch("/api/admin/resume", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content: nextContent,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to persist resume content.");
+    }
+
+    const savedContent = (await response.json()) as ResumeContentData;
+    setResumeContent(savedContent);
+    return savedContent;
+  }, []);
 
   const aiProductProjects = useMemo(
     () =>
@@ -181,17 +449,127 @@ export default function App() {
     [portfolioProjects],
   );
 
-  const openAdminDashboard = () => {
-    setTransitionDirection(1);
-    setCurrentView('admin-dashboard');
+  const viewOrder: Record<'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard', number> = {
+    home: 0,
+    resume: 1,
+    'ai-product': 2,
+    'ux-design': 3,
+    'admin-dashboard': 4,
+  };
+
+  const navigateToView = (
+    nextView: 'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard',
+  ) => {
+    if (nextView === currentView) return;
+
+    setTransitionDirection(viewOrder[nextView] >= viewOrder[currentView] ? 1 : -1);
+    setCurrentView(nextView);
     setIsContactPopupOpen(false);
+    if (nextView !== 'home') {
+      setIsIconHovered(false);
+    }
+  };
+
+  const openAdminDashboard = () => {
+    navigateToView('admin-dashboard');
+  };
+
+  const openAIProductFromHome = () => {
+    navigateToView('ai-product');
+    setActiveIndex(0);
+  };
+
+  const openLinkedResumeProject = (projectId: string) => {
+    const targetProject = portfolioProjects.find(
+      (project) => project.id === projectId && project.status === "published",
+    );
+
+    if (!targetProject) {
+      toast.error("Linked project unavailable");
+      return;
+    }
+
+    setResumeLinkedProjectId(projectId);
   };
 
   const returnHomeFromAdmin = () => {
-    setTransitionDirection(-1);
-    setCurrentView('home');
-    setIsContactPopupOpen(false);
+    navigateToView('home');
   };
+
+  if (!siteSessionChecked) {
+    return <div className="h-screen w-full bg-[#e6e6e6]" />;
+  }
+
+  if (!isSiteUnlocked) {
+    const inputStateClass = sitePasswordError
+      ? "border-[#d78ea0]/55 bg-[rgba(255,107,138,0.06)] shadow-[inset_0_0_0_1px_rgba(255,107,138,0.18)]"
+      : isSitePasswordFocused
+        ? "border-[#004e8d]/30 bg-[rgba(0,0,0,0.05)] shadow-[inset_0_0_0_1px_rgba(0,78,141,0.12)]"
+        : "border-transparent bg-[rgba(0,0,0,0.05)]";
+
+    return (
+      <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-[#e6e6e6] text-[#1a1c1c]">
+        <AnimatePresence mode="wait" initial={false}>
+          {siteGatePhase === "locked" ? (
+            <motion.div
+              key="site-password"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, filter: "blur(8px)" }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="relative h-[832px] w-[1280px] shrink-0 origin-center overflow-hidden"
+              style={{ transform: `scale(${scale})` }}
+            >
+              <Frame6 isHovered={false} className="absolute left-[-72px] top-[-41px]" />
+              <Icon
+                isHovered={false}
+                isActive={false}
+                className="absolute left-[317px] top-[348px] pointer-events-none"
+              />
+
+              <div className="absolute right-[100px] top-[320px]">
+                <PasswordAccessCard
+                  title={authSettings.platformWelcomeText}
+                  value={sitePassword}
+                  placeholder="Please Enter Your Password"
+                  helperText=""
+                  panelClassName="border-[#004e8d] bg-[#e6e6e6]/96 shadow-[8px_8px_24px_0_rgba(0,105,209,0.1)]"
+                  titleClassName="leading-[14px] whitespace-nowrap"
+                  inputClassName={inputStateClass}
+                  inputFieldClassName={
+                    sitePassword.trim().length > 0
+                      ? "leading-[14px] text-[#6c6c6c] placeholder:text-transparent"
+                      : "leading-[14px] text-[#6c6c6c]/50 placeholder:text-[#6c6c6c]/50"
+                  }
+                  onChange={(value) => {
+                    setSitePassword(value);
+                    if (sitePasswordError) setSitePasswordError(false);
+                  }}
+                  onFocus={() => setIsSitePasswordFocused(true)}
+                  onBlur={() => setIsSitePasswordFocused(false)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      handleSiteUnlock();
+                    }
+                  }}
+                />
+              </div>
+            </motion.div>
+          ) : (
+            <SiteWelcomeTransition key="site-welcome-shell" />
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
+  const resumeLinkedProject =
+    resumeLinkedProjectId == null
+      ? null
+      : portfolioProjects.find(
+          (project) => project.id === resumeLinkedProjectId && project.status === "published",
+        ) ?? null;
 
   return (
     <div className="w-full h-screen flex overflow-hidden relative transition-colors duration-500 bg-[#E6E6E6]">
@@ -229,14 +607,12 @@ export default function App() {
             <MainSidebar 
               currentView={currentView}
               onViewChange={(view) => {
-                setCurrentView(view as any);
-                setIsContactPopupOpen(false); // Close popup when switching views
+                navigateToView(view as 'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard');
               }}
               isContactActive={isContactPopupOpen} 
               onContactClick={() => setIsContactPopupOpen(!isContactPopupOpen)} 
               onHomeClick={() => {
-                setCurrentView('home');
-                setIsContactPopupOpen(false); // Ensure closed on home click
+                navigateToView('home');
               }}
               activeResumeSubItem={activeResumeSubItem}
               onResumeSubItemClick={setActiveResumeSubItem}
@@ -277,7 +653,7 @@ export default function App() {
                 <Footer onAdminDashboardClick={openAdminDashboard} />
                 <Frame6 isHovered={isIconHovered || isContactPopupOpen} />
                 <div 
-                  className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-300 bg-[rgba(230,230,230,0.72)] ${(isIconHovered || isContactPopupOpen) ? 'opacity-100' : 'opacity-0'}`} 
+                  className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-300 bg-[rgba(230,230,230,0.5)] ${(isIconHovered || isContactPopupOpen) ? 'opacity-100' : 'opacity-0'}`} 
                   aria-hidden="true" 
                 />
                 <Labels activeIndex={activeIndex} onHover={handleHover} onLeave={handleLeave} />
@@ -285,45 +661,52 @@ export default function App() {
                 <Icon 
                   isHovered={isIconHovered} 
                   isActive={isContactPopupOpen}
+                  hoverTextLines={["EXPLORE"]}
                   onMouseEnter={() => setIsIconHovered(true)} 
                   onMouseLeave={() => setIsIconHovered(false)} 
-                  onClick={() => setIsContactPopupOpen(!isContactPopupOpen)}
+                  onClick={() => {
+                    if (isIconHovered) {
+                      openAIProductFromHome();
+                    }
+                  }}
                 />
               </div>
             </motion.div>
           ) : currentView === 'resume' ? (
             <motion.div
               key="resume"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
-              className="flex-1 h-full w-full relative z-10 pl-[256px]"
+              initial={primarySectionTransition.initial}
+              animate={primarySectionTransition.animate}
+              exit={primarySectionTransition.exit}
+              transition={primarySectionTransition.transition}
+              className="absolute inset-0 z-10 pl-[256px] bg-[#e6e6e6]"
             >
               <ResumeContent 
                 activeTab={activeResumeSubItem} 
                 onActiveSectionChange={setActiveResumeSubItem}
+                content={resumeContent}
+                onOpenLinkedProject={openLinkedResumeProject}
               />
             </motion.div>
           ) : currentView === 'ai-product' ? (
             <motion.div
               key="ai-product"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
-              className="flex-1 h-full w-full relative z-10 pl-[256px] overflow-y-auto scrollbar-hide bg-[#e6e6e6]"
+              initial={primarySectionTransition.initial}
+              animate={primarySectionTransition.animate}
+              exit={primarySectionTransition.exit}
+              transition={primarySectionTransition.transition}
+              className="absolute inset-0 z-10 pl-[256px] overflow-y-auto scrollbar-hide bg-[#e6e6e6]"
             >
                <AIProductContent projects={aiProductProjects} />
             </motion.div>
           ) : currentView === 'ux-design' ? (
             <motion.div
               key="ux-design"
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
-              className="flex-1 h-full w-full relative z-10 pl-[256px] overflow-y-auto scrollbar-hide bg-[#e6e6e6]"
+              initial={primarySectionTransition.initial}
+              animate={primarySectionTransition.animate}
+              exit={primarySectionTransition.exit}
+              transition={primarySectionTransition.transition}
+              className="absolute inset-0 z-10 pl-[256px] overflow-y-auto scrollbar-hide bg-[#e6e6e6]"
             >
                <UXDesignContent projects={uxDesignProjects} />
             </motion.div>
@@ -343,15 +726,32 @@ export default function App() {
               transition={{ duration: 0.56, ease: [0.22, 1, 0.36, 1] }}
               className="absolute inset-0 z-10"
             >
-              <AdminDashboard
-                onBack={returnHomeFromAdmin}
-                projects={portfolioProjects}
-                onProjectsChange={setPortfolioProjects}
-              />
+              {projectsHydrated ? (
+                <AdminDashboard
+                  onBack={returnHomeFromAdmin}
+                  projects={portfolioProjects}
+                  onProjectsChange={setPortfolioProjects}
+                  onPersistProjects={persistProjects}
+                  authSettings={authSettings}
+                  onAuthSettingsChange={setAuthSettings}
+                  resumeContent={resumeContent}
+                  onPersistResumeContent={persistResumeContent}
+                />
+              ) : (
+                <div className="flex h-screen w-full items-center justify-center bg-[#f3efe7] text-[12px] uppercase tracking-[2px] text-[#7d7d84]">
+                  Loading project data...
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+      {resumeLinkedProject && (
+        <ResumeProjectDetailView
+          project={resumeLinkedProject}
+          onClose={() => setResumeLinkedProjectId(null)}
+        />
+      )}
     </div>
   );
 }

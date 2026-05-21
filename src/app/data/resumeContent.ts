@@ -1,0 +1,401 @@
+export type ResumeProfile = {
+  portraitImage: string
+  chineseName: string
+  englishName: string
+  roleSubtitle: string
+  aboutLabel: string
+  aboutTextEn: string
+  aboutTextZh: string
+}
+
+export type ResumeExperienceProjectItem = {
+  stableId: string
+  title: string
+  description: string
+  linkedPortfolioProjectId?: string
+}
+
+export type ResumeExperienceProjectSet = {
+  stableId: string
+  experienceStableId: string
+  items: ResumeExperienceProjectItem[]
+}
+
+export type ResumeExperienceItem = {
+  stableId: string
+  numberLabel: string
+  company: string
+  role: string
+  period: string
+}
+
+export type ResumeExperienceGrid = {
+  experiences: ResumeExperienceItem[]
+  projectSets: ResumeExperienceProjectSet[]
+}
+
+export type ResumeEducationAward = {
+  stableId: string
+  date: string
+  title: string
+  description: string
+  image: string
+}
+
+export type ResumeEducation = {
+  quoteLine1: string
+  quoteLine2: string
+  graduatedLabel: string
+  sectionTitle: string
+  sectionSubtitle: string
+  sectionNumber: string
+  schoolPeriod: string
+  schoolName: string
+  major: string
+  className: string
+  degreeType: string
+  degreeLevel: string
+  awards: ResumeEducationAward[]
+}
+
+export type ResumeAiProjectCard = {
+  stableId: string
+  label: string
+  title: string
+  highlightText?: string
+  meta: string
+  image: string
+}
+
+export type ResumeAiRoleCard = {
+  stableId: string
+  breadcrumbs: string[]
+  title: string
+  description: string
+  meta: string
+}
+
+export type ResumeAiContactCard = {
+  brandTitle: string
+  description: string
+  buttonLabel: string
+}
+
+export type ResumeAiProducts = {
+  quoteLine1: string
+  quoteLine2: string
+  timelineLabel: string
+  sectionTitle: string
+  sectionSubtitle: string
+  sectionNumber: string
+  projectCards: ResumeAiProjectCard[]
+  roleCards: ResumeAiRoleCard[]
+  contactCard: ResumeAiContactCard
+}
+
+export type ResumeUxLargeCard = {
+  stableId: string
+  idLabel: string
+  title: string
+  description: string
+  category: string
+  tags: string
+  videoSrc?: string
+  image?: string
+}
+
+export type ResumeUxMediumCard = {
+  stableId: string
+  idLabel: string
+  title: string
+  description: string
+  category: string
+  image: string
+  actionLabel: string
+}
+
+export type ResumeUxCase = {
+  quoteLine1: string
+  quoteLine2: string
+  timelineLabel: string
+  sectionTitle: string
+  sectionSubtitle: string
+  sectionNumber: string
+  largeCards: ResumeUxLargeCard[]
+  mediumCards: ResumeUxMediumCard[]
+}
+
+export type ResumeContentData = {
+  profile: ResumeProfile
+  experienceGrid: ResumeExperienceGrid
+  education: ResumeEducation
+  aiProducts: ResumeAiProducts
+  uxCase: ResumeUxCase
+}
+
+export const DEFAULT_RESUME_CONTENT: ResumeContentData = {
+  profile: {
+    portraitImage: "",
+    chineseName: "胡雨琪",
+    englishName: "VERA",
+    roleSubtitle: "AI Product Manager & Experience Designer",
+    aboutLabel: "About Me",
+    aboutTextEn:
+      "As an AI Product Manager & Experience Designer, I don’t just build products or design interfaces. I translate complex intelligence into human-centered experiences, turning technical possibilities into real, gentle value for people.",
+    aboutTextZh:
+      "作为 AI 产品经理与体验设计师，我不只是构建产品、设计界面。我用产品逻辑梳理复杂的脉络，用体验设计打磨每一个细节，将ai能力转化为以人为中心、可感易用的产品，把技术的可能性，变成真正贴近人、服务人、温暖人的实用价值。",
+  },
+  experienceGrid: {
+    experiences: [
+      {
+        stableId: "resume-exp-01",
+        numberLabel: "01",
+        company: "时代之门科技有限公司",
+        role: "AI PRODUCT MANAGER",
+        period: "2022 — PRESENT",
+      },
+      {
+        stableId: "resume-exp-02",
+        numberLabel: "02",
+        company: "宁波中升估价",
+        role: "PM & UX DESIGNER",
+        period: "2020 — 2022",
+      },
+      {
+        stableId: "resume-exp-03",
+        numberLabel: "03",
+        company: "杉杉商业集团",
+        role: "DESIGN MANAGER",
+        period: "2018 — 2020",
+      },
+    ],
+    projectSets: [
+      {
+        stableId: "resume-project-set-01",
+        experienceStableId: "resume-exp-01",
+        items: [
+          {
+            stableId: "resume-exp-01-project-01",
+            title: "AIEO 创作与分发综合平台",
+            description:
+              "整合主流大模型与内容渠道，搭建全端客户端及统一后台，打造一站式创作分发综合平台。",
+            linkedPortfolioProjectId: "",
+          },
+          {
+            stableId: "resume-exp-01-project-02",
+            title: "鹤元家政2.0智能系统",
+            description:
+              "以 AI 智能体深度赋能 B 端家政，全链路提效降本，重塑家政服务体验与运营效率。",
+            linkedPortfolioProjectId: "",
+          },
+          {
+            stableId: "resume-exp-01-project-03",
+            title: "GEA智能数据工程师项目",
+            description:
+              "前后共计 6 场工作坊高效对齐共识，攻坚跨 BU 协作痛点，输出可落地产品设计方案。",
+            linkedPortfolioProjectId: "",
+          },
+        ],
+      },
+      {
+        stableId: "resume-project-set-02",
+        experienceStableId: "resume-exp-02",
+        items: [
+          {
+            stableId: "resume-exp-02-project-01",
+            title: "中升营销管理系统",
+            description:
+              "从 0-1 搭建 B 端营销管理系统，统筹全流程产品设计，实现营销链路数字化提效。",
+            linkedPortfolioProjectId: "",
+          },
+          {
+            stableId: "resume-exp-02-project-02",
+            title: "中升官网2.0改版",
+            description:
+              "官方门户网页重构，以用户体验为核心，打造具备品牌化、高可用性的官方门户。",
+            linkedPortfolioProjectId: "",
+          },
+          {
+            stableId: "resume-exp-02-project-03",
+            title: "中升SaaS系统重构",
+            description:
+              "主导 SaaS 系统 1.0→2.0 迭代升级，优化产品体验，赋能土地评估业务高效运转。",
+            linkedPortfolioProjectId: "",
+          },
+        ],
+      },
+      {
+        stableId: "resume-project-set-03",
+        experienceStableId: "resume-exp-03",
+        items: [
+          {
+            stableId: "resume-exp-03-project-01",
+            title: "奥莱线上商城小程序",
+            description:
+              "奥莱商城小程序迭代项目，以用户体验为核心，提升购物流程流畅度与转化效率。",
+            linkedPortfolioProjectId: "",
+          },
+          {
+            stableId: "resume-exp-03-project-02",
+            title: "杉杉BI数据分析平台",
+            description:
+              "BI 数据分析平台大版本迭代，优化提升整体视觉与交互体验，简化数据筛选操作流程，赋能高效数据决策。",
+            linkedPortfolioProjectId: "",
+          },
+          {
+            stableId: "resume-exp-03-project-03",
+            title: "杉杉商业业务中台",
+            description:
+              "构建全链路业务中台，贯通人员、商品、营销、财务及订单体系，实现全域协同与高效管控。",
+            linkedPortfolioProjectId: "",
+          },
+        ],
+      },
+    ],
+  },
+  education: {
+    quoteLine1: "“ 学习不会止步于校园，",
+    quoteLine2: "是对外界永怀好奇，是在自我精进中不断前行。”",
+    graduatedLabel: "Graduated in 2020",
+    sectionTitle: "education  教育经历",
+    sectionSubtitle: "全日制本科  |  学士学位",
+    sectionNumber: "03",
+    schoolPeriod: "2016-2020",
+    schoolName: "浙江理工大学",
+    major: "工业设计",
+    className: "卓越工程班",
+    degreeType: "全日制本科",
+    degreeLevel: "学士学位",
+    awards: [
+      {
+        stableId: "resume-award-01",
+        date: "2016年9月",
+        title: "奖项名称1",
+        description:
+          "Focused on the convergence of traditional editorial principles and modern interface paradigms. Awarded for Excellence in Visual Communication.",
+        image: "",
+      },
+      {
+        stableId: "resume-award-02",
+        date: "2017年10月",
+        title: "奖项名称2",
+        description:
+          "Focused on the convergence of traditional editorial principles and modern interface paradigms. Awarded for Excellence in Visual Communication.",
+        image: "",
+      },
+      {
+        stableId: "resume-award-03",
+        date: "2018年11月",
+        title: "奖项名称3",
+        description:
+          "Focused on the convergence of traditional editorial principles and modern interface paradigms. Awarded for Excellence in Visual Communication.",
+        image: "",
+      },
+    ],
+  },
+  aiProducts: {
+    quoteLine1: "“ AI 产品的关键在于：",
+    quoteLine2: "如何在智能时代，契合人类的思考与行为逻辑。”",
+    timelineLabel: "as ai  product manager — from 2025 to 2026",
+    sectionTitle: "AI Products  智能产品探索",
+    sectionSubtitle: "ai产品经理 ｜ 时代之门（上海）科技有限公司",
+    sectionNumber: "01",
+    projectCards: [
+      {
+        stableId: "resume-ai-project-01",
+        label: "AI 产品经理",
+        title: "AIEO ",
+        highlightText: "创作与分发平台",
+        meta: "pc & 小程序客户端 + 后管平台 • 2026",
+        image: "",
+      },
+      {
+        stableId: "resume-ai-project-02",
+        label: "ai产品经理，视觉设计负责人",
+        title: "鹤元家政2.0智能系统",
+        meta: "小程序客户端 + 业务中台 • 2025",
+        image: "",
+      },
+      {
+        stableId: "resume-ai-project-03",
+        label: "ai产品经理，视觉设计负责人",
+        title: "时代之言智能体中心",
+        meta: "pc客户端 + 后管平台 • 2025",
+        image: "",
+      },
+    ],
+    roleCards: [
+      {
+        stableId: "resume-ai-role-01",
+        breadcrumbs: ["who", "what", "why", "how"],
+        title: "角色定位",
+        description: "一句话描述角色定位",
+        meta: "Algorithm • Beta",
+      },
+      {
+        stableId: "resume-ai-role-02",
+        breadcrumbs: ["who", "what", "why", "how"],
+        title: "角色定位",
+        description: "一句话描述角色定位",
+        meta: "Algorithm • Beta",
+      },
+    ],
+    contactCard: {
+      brandTitle: "Vera’s  Libertisle",
+      description: "更多项目，即刻前往Vera的产品创意岛~",
+      buttonLabel: "Get In Touch",
+    },
+  },
+  uxCase: {
+    quoteLine1: "“ 设计不止于形与感，",
+    quoteLine2: "更在于它如何作用于人类经验的长河。”",
+    timelineLabel: "as ux designer — from 2021 to 2024",
+    sectionTitle: "UX Case study  体验设计寻踪",
+    sectionSubtitle: "产品&设计主管 ｜ 宁波中升估价 ｜ 杉杉商业集团",
+    sectionNumber: "02",
+    largeCards: [
+      {
+        stableId: "resume-ux-large-01",
+        idLabel: "001",
+        title: "地方火电厂综合平台",
+        description:
+          "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。",
+        category: "用户体验设计（主管）",
+        tags: "PC端  |  SaaS平台  |  重业务",
+        videoSrc: "/_videos/v1/2c856339829e11d00a0f250acad03dd9bed6253e",
+      },
+      {
+        stableId: "resume-ux-large-02",
+        idLabel: "001",
+        title: "地方火电厂综合平台",
+        description:
+          "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。",
+        category: "用户体验设计（主管）",
+        tags: "PC端  |  SaaS平台  |  重业务",
+        image: "",
+      },
+    ],
+    mediumCards: [
+      {
+        stableId: "resume-ux-medium-01",
+        idLabel: "002",
+        title: "奥莱线上商城小程序",
+        description:
+          "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息。",
+        category: "用户体验设计（主管）",
+        image: "",
+        actionLabel: "VIEW PROTOTYPE",
+      },
+      {
+        stableId: "resume-ux-medium-02",
+        idLabel: "003",
+        title: "中升营销管理系统",
+        description:
+          "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字。",
+        category: "产品经理 & UX设计",
+        image: "",
+        actionLabel: "VIEW PROTOTYPE",
+      },
+    ],
+  },
+}

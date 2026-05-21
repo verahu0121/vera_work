@@ -1,0 +1,138 @@
+{
+  "profile": {
+    "portraitImage": "",
+    "chineseName": "胡雨琪",
+    "englishName": "VERA",
+    "roleSubtitle": "AI Product Manager & Experience Designer",
+    "aboutLabel": "About Me",
+    "aboutTextEn": "As an AI Product Manager & Experience Designer, I don’t just build products or design interfaces. I translate complex intelligence into human-centered experiences, turning technical possibilities into real, gentle value for people.",
+    "aboutTextZh": "作为 AI 产品经理与体验设计师，我不只是构建产品、设计界面。我用产品逻辑梳理复杂的脉络，用体验设计打磨每一个细节，将ai能力转化为以人为中心、可感易用的产品，把技术的可能性，变成真正贴近人、服务人、温暖人的实用价值。"
+  },
+  "experienceGrid": {
+    "experiences": [
+      {
+        "stableId": "resume-exp-01",
+        "numberLabel": "01",
+        "company": "时代之门科技有限公司",
+        "role": "AI PRODUCT MANAGER",
+        "period": "2022 — PRESENT"
+      },
+      {
+        "stableId": "resume-exp-02",
+        "numberLabel": "02",
+        "company": "宁波中升估价",
+        "role": "PM & UX DESIGNER",
+        "period": "2020 — 2022"
+      },
+      {
+        "stableId": "resume-exp-03",
+        "numberLabel": "03",
+        "company": "杉杉商业集团",
+        "role": "DESIGN MANAGER",
+        "period": "2018 — 2020"
+      }
+    ],
+    "projectSets": [
+      {
+        "stableId": "resume-project-set-01",
+        "experienceStableId": "resume-exp-01",
+        "items": [
+          {
+            "stableId": "resume-exp-01-project-01",
+            "title": "AIEO 创作与分发综合平台",
+            "description": "整合主流大模型与内容渠道，搭建全端客户端及统一后台，打造一站式创作分发综合平台。"
+          },
+          {
+            "stableId": "resume-exp-01-project-02",
+            "title": "鹤元家政2.0智能系统",
+            "description": "以 AI 智能体深度赋能 B 端家政，全链路提效降本，重塑家政服务体验与运营效率。"
+          },
+          {
+            "stableId": "resume-exp-01-project-03",
+            "title": "GEA智能数据工程师项目",
+            "description": "前后共计 6 场工作坊高效对齐共识，攻坚跨 BU 协作痛点，输出可落地产品设计方案。"
+          }
+        ]
+      },
+      {
+        "stableId": "resume-project-set-02",
+        "experienceStableId": "resume-exp-02",
+        "items": [
+          {
+            "stableId": "resume-exp-02-project-01",
+            "title": "中升营销管理系统",
+            "description": "从 0-1 搭建 B 端营销管理系统，统筹全流程产品设计，实现营销链路数字化提效。"
+          },
+          {
+            "stableId": "resume-exp-02-project-02",
+            "title": "中升官网2.0改版",
+            "description": "官方门户网页重构，以用户体验为核心，打造具备品牌化、高可用性的官方门户。"
+          },
+          {
+            "stableId": "resume-exp-02-project-03",
+            "title": "中升SaaS系统重构",
+            "description": "主导 SaaS 系统 1.0→2.0 迭代升级，优化产品体验，赋能土地评估业务高效运转。"
+          }
+        ]
+      },
+      {
+        "stableId": "resume-project-set-03",
+        "experienceStableId": "resume-exp-03",
+        "items": [
+          {
+            "stableId": "resume-exp-03-project-01",
+            "title": "奥莱线上商城小程序",
+            "description": "奥莱商城小程序迭代项目，以用户体验为核心，提升购物流程流畅度与转化效率。"
+          },
+          {
+            "stableId": "resume-exp-03-project-02",
+            "title": "杉杉BI数据分析平台",
+            "description": "BI 数据分析平台大版本迭代，优化提升整体视觉与交互体验，简化数据筛选操作流程，赋能高效数据决策。"
+          },
+          {
+            "stableId": "resume-exp-03-project-03",
+            "title": "杉杉商业业务中台",
+            "description": "构建全链路业务中台，贯通人员、商品、营销、财务及订单体系，实现全域协同与高效管控。"
+          }
+        ]
+      }
+    ]
+  },
+  "education": {
+    "quoteLine1": "“ 学习不会止步于校园，",
+    "quoteLine2": "是对外界永怀好奇，是在自我精进中不断前行。”",
+    "graduatedLabel": "Graduated in 2020",
+    "sectionTitle": "education  教育经历",
+    "sectionSubtitle": "全日制本科  |  学士学位",
+    "sectionNumber": "03",
+    "schoolPeriod": "2016-2020",
+    "schoolName": "浙江理工大学",
+    "major": "工业设计",
+    "className": "卓越工程班",
+    "degreeType": "全日制本科",
+    "degreeLevel": "学士学位",
+    "awards": [
+      {
+        "stableId": "resume-award-01",
+        "date": "2016年9月",
+        "title": "奖项名称1",
+        "description": "Focused on the convergence of traditional editorial principles and modern interface paradigms. Awarded for Excellence in Visual Communication.",
+        "image": ""
+      },
+      {
+        "stableId": "resume-award-02",
+        "date": "2017年10月",
+        "title": "奖项名称2",
+        "description": "Focused on the convergence of traditional editorial principles and modern interface paradigms. Awarded for Excellence in Visual Communication.",
+        "image": ""
+      },
+      {
+        "stableId": "resume-award-03",
+        "date": "2018年11月",
+        "title": "奖项名称3",
+        "description": "Focused on the convergence of traditional editorial principles and modern interface paradigms. Awarded for Excellence in Visual Communication.",
+        "image": ""
+      }
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import svgPaths from "../../imports/SelectCases-2/svg-dzdmc49l85";
 import { ProjectDetailModal, ProjectData } from "./ProjectDetailModal";
 
@@ -141,8 +141,24 @@ function ProjectItem({ project, reverse, onOpen }: { project: ProjectData, rever
   );
 }
 
-export function AIProductContent({ projects }: { projects: ProjectData[] }) {
+export function AIProductContent({
+  projects,
+  externalOpenRequest,
+  onExternalOpenHandled,
+}: {
+  projects: ProjectData[];
+  externalOpenRequest?: { projectId: string; requestKey: number } | null;
+  onExternalOpenHandled?: () => void;
+}) {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!externalOpenRequest) return;
+    if (!projects.some((project) => project.id === externalOpenRequest.projectId)) return;
+
+    setSelectedProjectId(externalOpenRequest.projectId);
+    onExternalOpenHandled?.();
+  }, [externalOpenRequest, onExternalOpenHandled, projects]);
 
   return (
     <div className="bg-[#e6e6e6] content-stretch flex flex-col gap-[108px] items-center px-[80px] py-[128px] relative w-full" data-name="select cases">
@@ -165,7 +181,10 @@ export function AIProductContent({ projects }: { projects: ProjectData[] }) {
         <ProjectDetailModal 
           projects={projects} 
           initialProjectId={selectedProjectId} 
-          onClose={() => setSelectedProjectId(null)} 
+          onClose={() => {
+            setSelectedProjectId(null);
+            onExternalOpenHandled?.();
+          }} 
         />
       )}
     </div>

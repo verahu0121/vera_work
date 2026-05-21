@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Frame6, Icon } from "../../imports/VerasLibertisle/VerasLibertisle";
+import { PasswordAccessCard } from "./PasswordAccessCard";
 import {
   getProjectDetailHero,
   getProjectSectionImageSrc,
@@ -12,26 +13,14 @@ import {
   type ProjectSectionImage,
   type ProjectStatus,
 } from "../data/portfolioProjects";
+import { DEFAULT_AUTH_SETTINGS, type AuthSettings } from "../data/authSettings";
+import { type ResumeContentData } from "../data/resumeContent";
+import { ResumeModuleEditor } from "./ResumeModuleEditor";
 
-const ADMIN_PASSWORD = "hyq980121";
 const SUCCESS_TRANSITION_MS = 3000;
 
 type FilterCategory = ProjectCategory;
-
-function CornerDecoration({ className, transform }: { className?: string; transform?: string }) {
-  return (
-    <div className={`absolute size-[33px] ${className ?? ""}`}>
-      <div className="size-full" style={{ transform }}>
-        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 33 33">
-          <path
-            d="M33 22.041C27.1702 22.522 22.523 27.1702 22.042 33H18.0322C18.5281 24.96 24.96 18.5271 33 18.0312V22.041Z"
-            fill="#004E8D"
-          />
-        </svg>
-      </div>
-    </div>
-  );
-}
+type DashboardModule = "security" | "projects" | "resume" | "info";
 
 function LightDiffuseSweep({ active }: { active: boolean }) {
   return (
@@ -82,6 +71,39 @@ function MetricCard({
         <div className={`h-[10px] w-[52px] rounded-full ${accent}`} />
       </div>
     </div>
+  );
+}
+
+function ModuleToggleCard({
+  label,
+  active,
+  onClick,
+  preview = false,
+}: {
+  label: string;
+  active: boolean;
+  onClick?: () => void;
+  preview?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={preview}
+      onClick={onClick}
+      className={`flex h-full w-full items-center justify-center rounded-[28px] border px-5 py-4 text-center shadow-[0_18px_50px_rgba(26,28,28,0.06)] transition-all disabled:pointer-events-none ${
+        active
+          ? "border-[#03c9c3]/28 bg-[#eefbf9] text-[#1a1c1c]"
+          : "border-black/6 bg-white/90 text-[#6d6d73] hover:border-black/10 hover:bg-white"
+      }`}
+    >
+      <span
+        className={`font-['OPPOSans:Medium',sans-serif] text-[16px] uppercase tracking-[2px] ${
+          active ? "text-[#1a1c1c]" : "text-[#6d6d73]"
+        }`}
+      >
+        {label}
+      </span>
+    </button>
   );
 }
 
@@ -139,13 +161,15 @@ function SectionCard({
   onMoveImage: (imageId: string, direction: "up" | "down") => void;
 }) {
   const sectionImages = section.images ?? [];
+  const displayOrder = String(index + 1).padStart(2, "0");
 
   return (
     <div className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-4 shadow-[0_12px_32px_rgba(26,28,28,0.04)]">
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[2.2px] text-[#8a8a90]">Section {index + 1}</div>
-          <div className="mt-1 font-['Quantum',sans-serif] text-[18px] text-[#1a1c1c]">{section.id}</div>
+          <div className="text-[11px] uppercase tracking-[2.2px] text-[#8a8a90]">
+            {`SECTION ${displayOrder}`}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <label
@@ -183,15 +207,7 @@ function SectionCard({
           </button>
         </div>
       </div>
-      <div className="grid gap-3 md:grid-cols-3">
-        <label className="flex flex-col gap-2">
-          <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Section ID</span>
-          <input
-            value={section.id}
-            onChange={(event) => onChange({ ...section, id: event.target.value })}
-            className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[13px] text-[#1a1c1c] outline-none transition-colors focus:border-[#03c9c3]/50"
-          />
-        </label>
+      <div className="grid gap-3 md:grid-cols-2">
         <label className="flex flex-col gap-2">
           <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Title</span>
           <input
@@ -285,9 +301,9 @@ function createEmptyProject(projects: PortfolioProject[]): PortfolioProject {
     images: [],
     tags: ["NEW", "CASE"],
     sections: [
-      { id: "01", title: "项目背景", subtitle: "background", images: [] },
-      { id: "02", title: "设计过程", subtitle: "process", images: [] },
-      { id: "03", title: "最终产出", subtitle: "outcome", images: [] },
+      { stableId: createStableSectionId(), id: "01", title: "项目背景", subtitle: "background", images: [] },
+      { stableId: createStableSectionId(), id: "02", title: "设计过程", subtitle: "process", images: [] },
+      { stableId: createStableSectionId(), id: "03", title: "最终产出", subtitle: "outcome", images: [] },
     ],
     createdAt: now,
     updatedAt: now,
@@ -305,24 +321,40 @@ function parseLineList(value: string) {
     .filter(Boolean);
 }
 
+function createStableSectionId() {
+  return `section-${crypto.randomUUID()}`
+}
+
+function normalizeSectionIdsByOrder(sections: ProjectSection[]) {
+  return sections.map((section, index) => ({
+    ...section,
+    stableId: section.stableId || createStableSectionId(),
+    id: String(index + 1).padStart(2, "0"),
+  }));
+}
+
 function cloneProject(project: PortfolioProject) {
+  const normalizedSections = project.sections.map((section, sectionIndex) => ({
+    ...section,
+    stableId: section.stableId || section.id || createStableSectionId(),
+    id: String(sectionIndex + 1).padStart(2, "0"),
+    images: getProjectSectionImages(project, sectionIndex).map((image) => ({ ...image })),
+  }));
+
   return {
     ...project,
     tags: [...project.tags],
     images: [...project.images],
-    sections: project.sections.map((section, sectionIndex) => ({
-      ...section,
-      images: getProjectSectionImages(project, sectionIndex).map((image) => ({ ...image })),
-    })),
+    sections: normalizedSections,
     detailHero: { ...getProjectDetailHero(project) },
   };
 }
 
 async function uploadSectionImageAsset(projectId: string, sectionId: string, file: File) {
   const formData = new FormData();
-  formData.append("file", file);
   formData.append("projectId", projectId);
   formData.append("sectionId", sectionId);
+  formData.append("file", file);
 
   const response = await fetch("/api/admin/upload-image", {
     method: "POST",
@@ -342,23 +374,98 @@ export function AdminDashboard({
   onBack,
   projects,
   onProjectsChange,
+  onPersistProjects,
+  authSettings,
+  onAuthSettingsChange,
+  resumeContent,
+  onPersistResumeContent,
 }: {
   onBack?: () => void;
   projects: PortfolioProject[];
   onProjectsChange: React.Dispatch<React.SetStateAction<PortfolioProject[]>>;
+  onPersistProjects: (nextProjects: PortfolioProject[]) => Promise<PortfolioProject[]>;
+  authSettings: AuthSettings;
+  onAuthSettingsChange: React.Dispatch<React.SetStateAction<AuthSettings>>;
+  resumeContent: ResumeContentData;
+  onPersistResumeContent: (nextContent: ResumeContentData) => Promise<ResumeContentData>;
 }) {
   const [scale, setScale] = useState(1);
   const [password, setPassword] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [status, setStatus] = useState<"idle" | "error" | "success">("idle");
   const [shouldShake, setShouldShake] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isBackHovered, setIsBackHovered] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id ?? "");
   const [filterCategory, setFilterCategory] = useState<FilterCategory>("ai-product");
+  const [activeModule, setActiveModule] = useState<DashboardModule>("projects");
   const [draftProject, setDraftProject] = useState<PortfolioProject | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [uploadingSectionIds, setUploadingSectionIds] = useState<string[]>([]);
+  const [platformWelcomeDraft, setPlatformWelcomeDraft] = useState(authSettings.platformWelcomeText);
+  const [platformOriginalPassword, setPlatformOriginalPassword] = useState("");
+  const [platformNewPassword, setPlatformNewPassword] = useState("");
+  const [adminWelcomeDraft, setAdminWelcomeDraft] = useState(authSettings.adminWelcomeText);
+  const [adminOriginalPassword, setAdminOriginalPassword] = useState("");
+  const [adminNewPassword, setAdminNewPassword] = useState("");
+  const [isPersistingProjects, setIsPersistingProjects] = useState(false);
+
+  const updateAuthSettings = async (payload: Record<string, string>) => {
+    const response = await fetch("/api/admin/auth-settings", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        typeof result?.error === "string" ? result.error : "Auth settings update failed.",
+      );
+    }
+
+    onAuthSettingsChange({
+      ...DEFAULT_AUTH_SETTINGS,
+      ...(result as AuthSettings),
+    });
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAdminSession = async () => {
+      try {
+        const response = await fetch("/api/admin/session");
+        if (!response.ok) {
+          throw new Error("Failed to fetch admin session.");
+        }
+
+        const payload = (await response.json()) as {
+          adminAuthenticated?: boolean;
+        };
+
+        if (!cancelled && payload.adminAuthenticated) {
+          setIsUnlocked(true);
+        }
+      } catch (error) {
+        console.error("Failed to read admin session", error);
+      } finally {
+        if (!cancelled) {
+          setSessionChecked(true);
+        }
+      }
+    };
+
+    loadAdminSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -371,6 +478,11 @@ export function AdminDashboard({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    setPlatformWelcomeDraft(authSettings.platformWelcomeText);
+    setAdminWelcomeDraft(authSettings.adminWelcomeText);
+  }, [authSettings.platformWelcomeText, authSettings.adminWelcomeText]);
 
   useEffect(() => {
     if (!selectedProjectId && projects[0]?.id) {
@@ -422,11 +534,26 @@ export function AdminDashboard({
     setIsDeleteConfirmOpen(false);
   }, [selectedProject]);
 
-  const handleSubmit = () => {
-    if (password === ADMIN_PASSWORD) {
-      setStatus("success");
-      setShouldShake(false);
-      return;
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch("/api/admin/verify-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          target: "admin",
+          password,
+        }),
+      });
+
+      if (response.ok) {
+        setStatus("success");
+        setShouldShake(false);
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to verify admin password", error);
     }
 
     setStatus("error");
@@ -478,53 +605,73 @@ export function AdminDashboard({
 
   const handleAddProject = () => {
     const nextProject = createEmptyProject(projects);
-    onProjectsChange((currentProjects) => sortPortfolioProjects([...currentProjects, nextProject]));
-    setSelectedProjectId(nextProject.id);
-    setFilterCategory(nextProject.category);
+    const nextProjects = sortPortfolioProjects([...projects, nextProject]);
+
+    setIsPersistingProjects(true);
+    onPersistProjects(nextProjects)
+      .then(() => {
+        setSelectedProjectId(nextProject.id);
+        setFilterCategory(nextProject.category);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Failed to create project.");
+      })
+      .finally(() => setIsPersistingProjects(false));
   };
 
   const handleMoveProject = (projectId: string, direction: "up" | "down") => {
     if (!projectId) return;
 
-    onProjectsChange((currentProjects) => {
-      const categoryProjects = sortPortfolioProjects(
-        currentProjects.filter((project) => project.category === filterCategory),
-      );
-      const currentIndex = categoryProjects.findIndex((project) => project.id === projectId);
-      if (currentIndex === -1) return currentProjects;
+    const categoryProjects = sortPortfolioProjects(
+      projects.filter((project) => project.category === filterCategory),
+    );
+    const currentIndex = categoryProjects.findIndex((project) => project.id === projectId);
+    if (currentIndex === -1) return;
 
-      const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      if (targetIndex < 0 || targetIndex >= categoryProjects.length) return currentProjects;
+    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= categoryProjects.length) return;
 
-      const reorderedProjects = [...categoryProjects];
-      const [movedProject] = reorderedProjects.splice(currentIndex, 1);
-      reorderedProjects.splice(targetIndex, 0, movedProject);
+    const reorderedProjects = [...categoryProjects];
+    const [movedProject] = reorderedProjects.splice(currentIndex, 1);
+    reorderedProjects.splice(targetIndex, 0, movedProject);
 
-      const nextOrderById = new Map(
-        reorderedProjects.map((project, index) => [project.id, index + 1] as const),
-      );
-      const now = new Date().toISOString();
+    const nextOrderById = new Map(
+      reorderedProjects.map((project, index) => [project.id, index + 1] as const),
+    );
+    const now = new Date().toISOString();
+    const nextProjects = sortPortfolioProjects(
+      projects.map((project) =>
+        project.category === filterCategory
+          ? {
+              ...project,
+              order: nextOrderById.get(project.id) ?? project.order,
+              updatedAt: project.id === projectId ? now : project.updatedAt,
+            }
+          : project,
+      ),
+    );
 
-      return sortPortfolioProjects(
-        currentProjects.map((project) =>
-          project.category === filterCategory
-            ? {
-                ...project,
-                order: nextOrderById.get(project.id) ?? project.order,
-                updatedAt: project.id === projectId ? now : project.updatedAt,
-              }
-            : project,
-        ),
-      );
-    });
+    setIsPersistingProjects(true);
+    onPersistProjects(nextProjects)
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Failed to reorder projects.");
+      })
+      .finally(() => setIsPersistingProjects(false));
   };
 
   const handleDeleteProject = () => {
     if (!selectedProject) return;
-    onProjectsChange((currentProjects) =>
-      currentProjects.filter((project) => project.id !== selectedProject.id),
-    );
-    setIsDeleteConfirmOpen(false);
+    const nextProjects = projects.filter((project) => project.id !== selectedProject.id);
+
+    setIsPersistingProjects(true);
+    onPersistProjects(nextProjects)
+      .then(() => {
+        setIsDeleteConfirmOpen(false);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Failed to delete project.");
+      })
+      .finally(() => setIsPersistingProjects(false));
   };
 
   const handleUploadSectionImage = async (sectionIndex: number, file: File) => {
@@ -532,12 +679,18 @@ export function AdminDashboard({
 
     const section = editableProject.sections[sectionIndex];
     if (!section) return;
+    const sectionStorageId =
+      (section.stableId || section.id).trim() || String(sectionIndex + 1).padStart(2, "0");
 
-    const sectionUploadKey = `${editableProject.id}:${section.id}`;
+    const sectionUploadKey = `${editableProject.id}:${sectionStorageId}`;
     setUploadingSectionIds((current) => [...current, sectionUploadKey]);
 
     try {
-      const uploadedImage = await uploadSectionImageAsset(editableProject.id, section.id, file);
+      const uploadedImage = await uploadSectionImageAsset(
+        editableProject.id,
+        sectionStorageId,
+        file,
+      );
       updateDraftProject((project) => ({
         ...project,
         sections: project.sections.map((currentSection, currentIndex) =>
@@ -559,18 +712,33 @@ export function AdminDashboard({
   };
 
   const handleRemoveSectionImage = (sectionIndex: number, imageId: string) => {
-    updateDraftProject((project) => ({
-      ...project,
-      sections: project.sections.map((section, currentIndex) =>
-        currentIndex === sectionIndex
-          ? {
-              ...section,
-              images: (section.images ?? []).filter((image) => image.id !== imageId),
-            }
-          : section,
-      ),
-      updatedAt: new Date().toISOString(),
-    }));
+    updateDraftProject((project) => {
+      const targetSection = project.sections[sectionIndex];
+      const removedImage = (targetSection?.images ?? []).find((image) => image.id === imageId);
+      const isLegacySectionImage = removedImage?.id.startsWith(`legacy-${project.id}-`);
+
+      let nextProjectImages = [...project.images];
+      if (isLegacySectionImage && removedImage?.src) {
+        const legacyImageIndex = nextProjectImages.findIndex((src) => src === removedImage.src);
+        if (legacyImageIndex !== -1) {
+          nextProjectImages.splice(legacyImageIndex, 1);
+        }
+      }
+
+      return {
+        ...project,
+        images: nextProjectImages,
+        sections: project.sections.map((section, currentIndex) =>
+          currentIndex === sectionIndex
+            ? {
+                ...section,
+                images: (section.images ?? []).filter((image) => image.id !== imageId),
+              }
+            : section,
+        ),
+        updatedAt: new Date().toISOString(),
+      };
+    });
   };
 
   const handleMoveSectionImage = (
@@ -602,10 +770,9 @@ export function AdminDashboard({
     }));
   };
 
-  const totalPublished = projects.filter((project) => project.status === "published").length;
   const totalDrafts = projects.filter((project) => project.status === "draft").length;
-  const totalAI = projects.filter((project) => project.category === "ai-product").length;
-  const totalUX = projects.filter((project) => project.category === "ux-design").length;
+  const publishedAI = projects.filter((project) => project.category === "ai-product" && project.status === "published").length;
+  const publishedUX = projects.filter((project) => project.category === "ux-design" && project.status === "published").length;
   const dashboardProject = selectedProject ?? filteredProjects[0] ?? projects[0] ?? null;
   const editableProject = draftProject ?? dashboardProject;
   const previewCards = Array.from({ length: 4 }, (_, index) => index);
@@ -622,21 +789,120 @@ export function AdminDashboard({
     setIsDeleteConfirmOpen(false);
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (!selectedProject || !draftProject) return;
 
-    onProjectsChange((currentProjects) =>
-      sortPortfolioProjects(
-        currentProjects.map((project) =>
-          project.id === selectedProject.id
-            ? {
-                ...cloneProject(draftProject),
-                updatedAt: new Date().toISOString(),
-              }
-            : project,
-        ),
+    const nextProjects = sortPortfolioProjects(
+      projects.map((project) =>
+        project.id === selectedProject.id
+          ? {
+              ...cloneProject(draftProject),
+              updatedAt: new Date().toISOString(),
+            }
+          : project,
       ),
     );
+
+    setIsPersistingProjects(true);
+    try {
+      await onPersistProjects(nextProjects);
+      toast.success("Project saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save project.");
+    } finally {
+      setIsPersistingProjects(false);
+    }
+  };
+
+  const moduleOptions: Array<{ key: DashboardModule; label: string }> = [
+    { key: "security", label: "Security" },
+    { key: "projects", label: "Project" },
+    { key: "resume", label: "Resume" },
+    { key: "info", label: "Information" },
+  ];
+
+  const handleSavePlatformSettings = async () => {
+    const trimmedNewPassword = platformNewPassword.trim();
+
+    if (!trimmedNewPassword) {
+      toast.error("请输入新的平台登录密码。");
+      return;
+    }
+
+    try {
+      await updateAuthSettings({
+        target: "platform",
+        field: "password",
+        originalPassword: platformOriginalPassword,
+        newPassword: trimmedNewPassword,
+      });
+      setPlatformOriginalPassword("");
+      setPlatformNewPassword("");
+      toast.success("Platform Login 密码已更新。");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Platform Login 密码更新失败。");
+    }
+  };
+
+  const handleSaveAdminSettings = async () => {
+    const trimmedNewPassword = adminNewPassword.trim();
+
+    if (!trimmedNewPassword) {
+      toast.error("请输入新的后台登录密码。");
+      return;
+    }
+
+    try {
+      await updateAuthSettings({
+        target: "admin",
+        field: "password",
+        originalPassword: adminOriginalPassword,
+        newPassword: trimmedNewPassword,
+      });
+      setAdminOriginalPassword("");
+      setAdminNewPassword("");
+      toast.success("Admin Login 密码已更新。");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Admin Login 密码更新失败。");
+    }
+  };
+
+  const handleSavePlatformWelcomeText = async () => {
+    const trimmedWelcome = platformWelcomeDraft.trim();
+    if (!trimmedWelcome) {
+      toast.error("请填写 Platform Login 欢迎文字。");
+      return;
+    }
+
+    try {
+      await updateAuthSettings({
+        target: "platform",
+        field: "welcomeText",
+        welcomeText: trimmedWelcome,
+      });
+      toast.success("Platform Login 欢迎语已更新。");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Platform Login 欢迎语更新失败。");
+    }
+  };
+
+  const handleSaveAdminWelcomeText = async () => {
+    const trimmedWelcome = adminWelcomeDraft.trim();
+    if (!trimmedWelcome) {
+      toast.error("请填写 Admin Login 欢迎文字。");
+      return;
+    }
+
+    try {
+      await updateAuthSettings({
+        target: "admin",
+        field: "welcomeText",
+        welcomeText: trimmedWelcome,
+      });
+      toast.success("Admin Login 欢迎语已更新。");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Admin Login 欢迎语更新失败。");
+    }
   };
 
   const renderDashboardShell = (preview = false) => {
@@ -673,9 +939,11 @@ export function AdminDashboard({
                       <h1 className="mt-3 whitespace-nowrap font-['Quantum',sans-serif] text-[42px] uppercase leading-[44px] tracking-[-1px] text-[#1a1c1c]">
                         Admin Dashboard
                       </h1>
-                      <p className="mt-4 max-w-[760px] font-['OPPOSans:Light',sans-serif] text-[15px] leading-[30px] text-[#474747]">
-                        统一维护 AI Product 与 UX Design 项目资料。这里编辑的标题、说明、封面图、详情图与章节结构会直接驱动前台展示。
-                      </p>
+                      <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-2 font-['OPPOSans:Light',sans-serif] text-[15px] leading-[30px] text-[#474747]">
+                        <p>AI Product: {publishedAI}</p>
+                        <p>UX Design: {publishedUX}</p>
+                        <p>Drafts: {totalDrafts}</p>
+                      </div>
                     </>
                   )}
                 </div>
@@ -695,7 +963,7 @@ export function AdminDashboard({
             <div className="grid h-full w-full self-stretch grid-cols-2 gap-4">
               {showPreviewSkeleton ? (
                 <>
-                  {["Published", "Drafts", "AI Product", "UX Design"].map((label, index) => (
+                  {["安全设置", "项目配置", "简历配置", "信息配置"].map((label, index) => (
                     <div key={label} className="flex h-full flex-col rounded-[28px] border border-black/6 bg-white/90 px-5 py-4 shadow-[0_18px_50px_rgba(26,28,28,0.06)]">
                       <div className="text-[11px] uppercase tracking-[2.4px] text-[#7d7d84]">{label}</div>
                       <div className="mt-auto flex items-end justify-between gap-3 pt-6">
@@ -706,16 +974,22 @@ export function AdminDashboard({
                   ))}
                 </>
               ) : (
-                <>
-                  <MetricCard label="Published" value={totalPublished} accent="bg-[#03c9c3]" />
-                  <MetricCard label="Drafts" value={totalDrafts} accent="bg-[#f3a67d]" />
-                  <MetricCard label="AI Product" value={totalAI} accent="bg-[#7ba6d7]" />
-                  <MetricCard label="UX Design" value={totalUX} accent="bg-[#f06449]" />
-                </>
+                <div className="col-span-2 grid h-full min-h-0 grid-cols-2 gap-4">
+                  {moduleOptions.map((module) => (
+                    <ModuleToggleCard
+                      key={module.key}
+                      label={module.label}
+                      active={activeModule === module.key}
+                      preview={preview}
+                      onClick={() => setActiveModule(module.key)}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </header>
 
+          {activeModule === "projects" ? (
           <div className="grid min-h-0 flex-1 grid-cols-[320px_minmax(0,1fr)] gap-6">
             <aside className="flex min-h-0 flex-col rounded-[36px] border border-black/6 bg-white/88 p-5 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
               <div className="mb-5 flex items-center justify-between gap-3">
@@ -992,7 +1266,7 @@ export function AdminDashboard({
                       <EditorActionButton
                         label="Save Changes"
                         onClick={handleSaveChanges}
-                        disabled={preview || !hasUnsavedChanges}
+                        disabled={preview || !hasUnsavedChanges || isPersistingProjects}
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M5 4.75H16.75L19.25 7.25V19.25H5V4.75Z" stroke="currentColor" strokeWidth="1.6" />
@@ -1198,9 +1472,10 @@ export function AdminDashboard({
                             disabled={preview}
                             onClick={() =>
                               handleFieldChange("sections", [
-                                ...editableProject.sections,
+                                ...normalizeSectionIdsByOrder(editableProject.sections),
                                 {
-                                  id: `0${editableProject.sections.length + 1}`,
+                                  stableId: createStableSectionId(),
+                                  id: String(editableProject.sections.length + 1).padStart(2, "0"),
                                   title: "新增章节",
                                   subtitle: "new section",
                                   images: [],
@@ -1215,11 +1490,11 @@ export function AdminDashboard({
                         <div className="min-h-0 space-y-4 overflow-y-auto pr-1">
                           {editableProject.sections.map((section, index) => (
                             <SectionCard
-                              key={`${editableProject.id}-${index}-${section.id}`}
+                              key={`${editableProject.id}-${section.stableId ?? section.id}`}
                               projectId={editableProject.id}
                               section={section}
                               index={index}
-                              uploading={uploadingSectionIds.includes(`${editableProject.id}:${section.id}`)}
+                              uploading={uploadingSectionIds.includes(`${editableProject.id}:${section.stableId ?? section.id}`)}
                               onChange={(nextSection) => {
                                 handleFieldChange(
                                   "sections",
@@ -1231,7 +1506,9 @@ export function AdminDashboard({
                               onRemove={() => {
                                 handleFieldChange(
                                   "sections",
-                                  editableProject.sections.filter((_, currentIndex) => currentIndex !== index),
+                                  normalizeSectionIdsByOrder(
+                                    editableProject.sections.filter((_, currentIndex) => currentIndex !== index),
+                                  ),
                                 );
                               }}
                               onUploadImage={(file) => handleUploadSectionImage(index, file)}
@@ -1254,6 +1531,139 @@ export function AdminDashboard({
             </main>
 
           </div>
+          ) : activeModule === "security" ? (
+            <section className="grid min-h-0 flex-1 grid-cols-2 gap-6">
+              <div className="flex min-h-0 flex-col rounded-[36px] border border-black/6 bg-white/88 p-6 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
+                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Update: 2026.05.20</div>
+                <div className="mt-2 font-['Quantum',sans-serif] text-[24px] uppercase text-[#1a1c1c]">Platform Login</div>
+                <div className="mt-6 grid gap-4">
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Welcome Text</span>
+                    <div className="flex items-center gap-3">
+                      <input
+                        value={platformWelcomeDraft}
+                        onChange={(event) => setPlatformWelcomeDraft(event.target.value)}
+                        className="flex-1 rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSavePlatformWelcomeText}
+                        aria-label="Confirm platform welcome text"
+                        title="Confirm platform welcome text"
+                        className="flex size-[44px] shrink-0 items-center justify-center rounded-full border border-black/8 bg-white text-[#1a1c1c] transition-colors hover:bg-[#f7f3ee]"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M5 12.5L9.5 17L19 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </label>
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Current Password</span>
+                    <input
+                      type="password"
+                      value={platformOriginalPassword}
+                      onChange={(event) => setPlatformOriginalPassword(event.target.value)}
+                      className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">New Password</span>
+                    <input
+                      type="password"
+                      value={platformNewPassword}
+                      onChange={(event) => setPlatformNewPassword(event.target.value)}
+                      className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                    />
+                  </label>
+                </div>
+                <div className="mt-auto pt-6">
+                  <button
+                    type="button"
+                    onClick={handleSavePlatformSettings}
+                    className="rounded-full bg-[#1a1c1c] px-5 py-3 text-[11px] uppercase tracking-[2px] text-white transition-transform hover:-translate-y-[1px]"
+                  >
+                    Save Platform Login
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex min-h-0 flex-col rounded-[36px] border border-black/6 bg-white/88 p-6 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
+                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Update: 2026.05.20</div>
+                <div className="mt-2 font-['Quantum',sans-serif] text-[24px] uppercase text-[#1a1c1c]">Admin Login</div>
+                <div className="mt-6 grid gap-4">
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Welcome Text</span>
+                    <div className="flex items-center gap-3">
+                      <input
+                        value={adminWelcomeDraft}
+                        onChange={(event) => setAdminWelcomeDraft(event.target.value)}
+                        className="flex-1 rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveAdminWelcomeText}
+                        aria-label="Confirm admin welcome text"
+                        title="Confirm admin welcome text"
+                        className="flex size-[44px] shrink-0 items-center justify-center rounded-full border border-black/8 bg-white text-[#1a1c1c] transition-colors hover:bg-[#f7f3ee]"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M5 12.5L9.5 17L19 7.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </label>
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Current Password</span>
+                    <input
+                      type="password"
+                      value={adminOriginalPassword}
+                      onChange={(event) => setAdminOriginalPassword(event.target.value)}
+                      className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2">
+                    <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">New Password</span>
+                    <input
+                      type="password"
+                      value={adminNewPassword}
+                      onChange={(event) => setAdminNewPassword(event.target.value)}
+                      className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                    />
+                  </label>
+                </div>
+                <div className="mt-auto pt-6">
+                  <button
+                    type="button"
+                    onClick={handleSaveAdminSettings}
+                    className="rounded-full bg-[#1a1c1c] px-5 py-3 text-[11px] uppercase tracking-[2px] text-white transition-transform hover:-translate-y-[1px]"
+                  >
+                    Save Admin Login
+                  </button>
+                </div>
+              </div>
+            </section>
+          ) : activeModule === "resume" ? (
+            <ResumeModuleEditor
+              resumeContent={resumeContent}
+              onPersistResumeContent={onPersistResumeContent}
+              publishedPortfolioProjects={projects.filter((project) => project.status === "published")}
+            />
+          ) : (
+            <section className="flex min-h-0 flex-1 items-center justify-center rounded-[36px] border border-black/6 bg-white/88 p-8 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
+              <div className="text-center">
+                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">
+                  {moduleOptions.find((module) => module.key === activeModule)?.label}
+                </div>
+                <div className="mt-3 font-['Quantum',sans-serif] text-[28px] uppercase text-[#1a1c1c]">
+                  Coming Soon
+                </div>
+                <p className="mt-4 font-['OPPOSans:Light',sans-serif] text-[15px] leading-[28px] text-[#5f5f65]">
+                  这个模块稍后补充具体配置内容，当前先保留占位展示。
+                </p>
+              </div>
+            </section>
+          )}
 
           {!preview && isDeleteConfirmOpen && editableProject ? (
             <div className="absolute inset-0 z-30 flex items-center justify-center bg-[rgba(26,28,28,0.18)] backdrop-blur-[6px]">
@@ -1290,6 +1700,10 @@ export function AdminDashboard({
     );
   };
 
+  if (!sessionChecked) {
+    return <div className="h-screen w-full bg-[#e6e6e6]" />;
+  }
+
   if (!isUnlocked) {
     const panelStateClass =
       status === "success"
@@ -1307,6 +1721,13 @@ export function AdminDashboard({
         : password.trim().length > 0
           ? "border-[#004e8d]/16 bg-[rgba(0,0,0,0.04)]"
           : "border-transparent bg-[rgba(0,0,0,0.05)]";
+
+    const inputFieldStateClass =
+      status === "success"
+        ? "text-[#6c6c6c] placeholder:text-transparent"
+        : password.trim().length > 0
+          ? "text-[#6c6c6c] placeholder:text-transparent"
+          : "text-[#6c6c6c] placeholder:text-[#6c6c6c]/50";
 
     return (
       <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-[#e6e6e6] text-[#1a1c1c]">
@@ -1337,79 +1758,37 @@ export function AdminDashboard({
           </div>
 
           <div
-            className={`absolute right-[100px] top-[320px] h-[200px] w-[430px] overflow-hidden rounded-[32px] border bg-[#e6e6e6]/96 backdrop-blur-[24px] transition-all duration-[3000ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${panelStateClass} ${shouldShake ? "animate-[shake_0.45s_ease-in-out]" : ""} ${
+            className={`absolute right-[100px] top-[320px] transition-all duration-[3000ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
               status === "success" ? "translate-x-[-24px] scale-[1.02] opacity-0" : "translate-x-0 scale-100 opacity-100"
-            }`}
+            } ${shouldShake ? "animate-[shake_0.45s_ease-in-out]" : ""}`}
           >
-            <CornerDecoration className="left-0 top-0" />
-            <CornerDecoration className="bottom-0 left-0" transform="scaleY(-1)" />
-            <CornerDecoration className="bottom-0 right-0" transform="rotate(180deg)" />
-            <CornerDecoration className="right-0 top-0" transform="scaleY(-1) rotate(180deg)" />
-
-            <div className="flex h-full flex-col items-start justify-center overflow-hidden pt-[24px]">
-              <div className="flex h-[64px] w-full items-center justify-center px-[40px]">
-                <p className={`font-['Manrope:Bold',sans-serif] text-[12px] font-bold uppercase tracking-[1.44px] transition-colors duration-500 ${
-                  status === "success"
-                    ? "text-[#004e8d]"
-                    : status === "error"
-                      ? "text-[#ff9bb0]"
-                      : "text-[#004e8d]"
-                }`}>
-                  {status === "success" ? "Welcome to Vera’s Libertisle ！" : "Welcome to Vera’s Libertisle ！"}
-                </p>
-              </div>
-
-              <div className="flex min-h-0 flex-1 items-start justify-center px-[48px] pb-[48px] pt-[8px] w-full">
-                <div className="flex w-full flex-col items-center gap-[12px]">
-                  <div className={`flex h-[56px] w-full items-center rounded-[8px] border px-[16px] transition-all duration-300 ${inputStateClass}`}>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(event) => {
-                        if (status === "success") return;
-                        setPassword(event.target.value);
-                        if (status !== "idle") {
-                          setStatus("idle");
-                        }
-                      }}
-                      onFocus={() => setIsFocused(true)}
-                      onBlur={() => setIsFocused(false)}
-                      onKeyDown={(event) => {
-                        if (status === "success") return;
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          handleSubmit();
-                        }
-                      }}
-                      placeholder="Please Enter Your Password"
-                      readOnly={status === "success"}
-                      className={`h-full w-full border-0 bg-transparent text-center font-['Manrope:Light',sans-serif] text-[12px] font-light tracking-[1.44px] outline-none transition-colors duration-300 placeholder:text-center ${
-                        status === "success"
-                          ? "text-[#6c6c6c] placeholder:text-transparent"
-                          : password.trim().length > 0
-                          ? "text-[#6c6c6c] placeholder:text-[#6f6f75]/0"
-                          : "text-[#6c6c6c] placeholder:text-[#6c6c6c]/50"
-                      }`}
-                    />
-                  </div>
-                  <p
-                    className={`text-center font-['Manrope:Light',sans-serif] text-[10px] tracking-[1.2px] uppercase transition-all duration-[3000ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                      status === "success"
-                        ? "text-[#96a1b6] opacity-0"
-                        : status === "error"
-                          ? "text-[#ff9bb0]"
-                          : "text-[#96a1b6]"
-                    }`}
-                  >
-                    {status === "success"
-                      ? "Access granted. Welcome home."
-                      : status === "error"
-                        ? "Incorrect password. Press Enter to try again."
-                        : "Press Enter to unlock the dashboard"}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <PasswordAccessCard
+              title={authSettings.adminWelcomeText}
+              value={password}
+              placeholder="Please Enter Your Password"
+              helperText=""
+              panelClassName={`backdrop-blur-[24px] ${panelStateClass}`}
+              titleClassName={status === "error" ? "text-[#ff9bb0]" : "text-[#004e8d]"}
+              inputClassName={inputStateClass}
+              inputFieldClassName={inputFieldStateClass}
+              inputReadOnly={status === "success"}
+              onChange={(value) => {
+                if (status === "success") return;
+                setPassword(value);
+                if (status !== "idle") {
+                  setStatus("idle");
+                }
+              }}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onKeyDown={(event) => {
+                if (status === "success") return;
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleSubmit();
+                }
+              }}
+            />
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import {
   getProjectDetailHero,
   getProjectSectionImageSrc,
   getProjectSectionImages,
+  getProjectSectionStableId,
   type PortfolioProject,
 } from "../data/portfolioProjects";
 
@@ -107,6 +108,7 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
     const sectionsWithImages = currentProject.sections
       .map((section, index) => ({
         ...section,
+        stableId: getProjectSectionStableId(currentProject, index),
         images: getProjectSectionImages(currentProject, index),
       }))
       .filter((section) => section.images.length > 0);
@@ -117,6 +119,7 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
 
     return currentProject.sections.slice(0, 1).map((section) => ({
       ...section,
+      stableId: section.stableId || section.id,
       images: [],
     }));
   }, [currentProject]);
@@ -148,10 +151,10 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
       const nextActiveSection =
         gallerySections
           .map((section) => {
-            const element = document.getElementById(`project-section-${currentProject.id}-${section.id}`);
+            const element = document.getElementById(`project-section-${currentProject.id}-${section.stableId ?? section.id}`);
             if (!element) return null;
             return {
-              id: section.id,
+              id: section.stableId ?? section.id,
               offset: element.getBoundingClientRect().top - containerTop,
             };
           })
@@ -167,12 +170,12 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
     return () => contentArea.removeEventListener('scroll', handleScroll);
   }, [currentProject.id, gallerySections]);
 
-  const handleSectionClick = (sectionId: string) => {
-    const sectionElement = document.getElementById(`project-section-${currentProject.id}-${sectionId}`);
+  const handleSectionClick = (sectionStableId: string) => {
+    const sectionElement = document.getElementById(`project-section-${currentProject.id}-${sectionStableId}`);
     if (!sectionElement) return;
 
     sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setActiveSectionId(sectionId);
+    setActiveSectionId(sectionStableId);
   };
 
   return createPortal(
@@ -207,8 +210,8 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
         <div className="flex flex-col">
           {gallerySections.map((section) => (
             <section
-              key={`${currentProject.id}-${section.id}`}
-              id={`project-section-${currentProject.id}-${section.id}`}
+              key={`${currentProject.id}-${section.stableId ?? section.id}`}
+              id={`project-section-${currentProject.id}-${section.stableId ?? section.id}`}
               className="scroll-mt-6"
             >
               <div className="flex flex-col">
@@ -246,14 +249,14 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
 
         {/* Module Navigation */}
         <div className="flex flex-col gap-4">
-          {gallerySections.map((section) => (
-            <RightNavLink 
-              key={section.id} 
-              num={section.id} 
+          {gallerySections.map((section, sectionIndex) => (
+            <RightNavLink
+              key={section.stableId ?? section.id} 
+              num={String(sectionIndex + 1).padStart(2, "0")} 
               title={section.title} 
               subtitle={section.subtitle} 
-              active={activeSectionId === section.id}
-              onClick={() => handleSectionClick(section.id)}
+              active={activeSectionId === (section.stableId ?? section.id)}
+              onClick={() => handleSectionClick(section.stableId ?? section.id)}
             />
           ))}
         </div>

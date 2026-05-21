@@ -155,21 +155,21 @@ export function Frame6({
             <g filter="url(#filter2_g_2_118)" id="Star 1">
               <path
                 d={svgPaths.p1c1ddb80}
-                fill="var(--fill-0, #96A1B6)"
+                fill="var(--fill-0, #D1D1D1)"
               />
               <path
                 d={svgPaths.p1c1ddb80}
-                stroke="var(--stroke-0, #96A1B6)"
+                stroke="var(--stroke-0, #D1D1D1)"
               />
             </g>
             <g filter="url(#filter3_g_2_118)" id="Star 3">
               <path
                 d={svgPaths.p34d95680}
-                fill="var(--fill-0, #96A1B6)"
+                fill="var(--fill-0, #D1D1D1)"
               />
               <path
                 d={svgPaths.p34d95680}
-                stroke="var(--stroke-0, #96A1B6)"
+                stroke="var(--stroke-0, #D1D1D1)"
               />
             </g>
             <g filter="url(#filter4_g_2_118)" id="Star 2">
@@ -680,15 +680,15 @@ export function Frame6({
               id="paint0_radial_2_118"
               r="1"
             >
-              <stop stopColor="#004E8D" />
+              <stop stopColor={isHovered ? "#7BA6D7" : "#004E8D"} />
               <stop
                 offset="0.4"
-                stopColor="#004E8D"
-                stopOpacity="0.3"
+                stopColor={isHovered ? "#7BA6D7" : "#004E8D"}
+                stopOpacity={isHovered ? "0.22" : "0.3"}
               />
               <stop
                 offset="1"
-                stopColor="#004E8D"
+                stopColor={isHovered ? "#7BA6D7" : "#004E8D"}
                 stopOpacity="0"
               />
             </radialGradient>

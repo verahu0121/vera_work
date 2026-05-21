@@ -17,12 +17,20 @@ export function getProjectSectionImageSrc(image: ProjectSectionImage) {
 }
 
 export interface ProjectSection {
+  stableId?: string;
   id: string;
   title: string;
   subtitle: string;
   content?: string;
   image?: string;
   images?: ProjectSectionImage[];
+}
+
+export function getProjectSectionStableId(project: PortfolioProject, sectionIndex: number) {
+  const section = project.sections[sectionIndex];
+  if (!section) return `${project.id}-section-${sectionIndex + 1}`;
+
+  return section.stableId || section.id || `${project.id}-section-${sectionIndex + 1}`;
 }
 
 export interface ProjectDetailHero {
@@ -69,11 +77,15 @@ export function getProjectSectionImages(project: PortfolioProject, sectionIndex:
   const section = project.sections[sectionIndex];
   if (!section) return [];
 
+  const hasSectionBasedImages = project.sections.some(
+    (currentSection) => (currentSection.images?.length ?? 0) > 0,
+  );
+
   if (section.images && section.images.length > 0) {
     return section.images;
   }
 
-  if (sectionIndex === 0 && project.images.length > 0) {
+  if (!hasSectionBasedImages && sectionIndex === 0 && project.images.length > 0) {
     return project.images.map((src, index) => ({
       id: `legacy-${project.id}-${index + 1}`,
       src,

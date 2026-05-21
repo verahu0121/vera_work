@@ -1,36 +1,37 @@
 import React from "react";
 import svgPaths from "../../imports/Frame1321318823-1/svg-gwftmbd6ul";
+import { type ResumeUxCase as ResumeUxCaseContent } from "../data/resumeContent";
 import imgBackground from "figma:asset/ece298d0ec2c16f10310d45724b276a6035cb503.png";
 import imgProject1 from "figma:asset/5ca464b2982af38ac9a7ea1866701ae60a833af0.png";
 import imgProject2 from "figma:asset/b57462095e3076343086f74b716392073cba5aec.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
-function Blockquote() {
+function Blockquote({ line1, line2 }: { line1: string; line2: string }) {
   return (
     <div className="max-w-[768px] relative shrink-0 w-full" data-name="Blockquote">
       <div className="bg-clip-padding border-0 border-[transparent] border-solid content-stretch flex flex-col items-center max-w-[inherit] relative size-full">
         <div className="flex flex-col font-['OPPOSans:Light',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#474747] text-[30px] text-center">
-          <p className="leading-[40px] mb-0 whitespace-nowrap">“ 设计不止于形与感，</p>
-          <p className="leading-[40px] whitespace-nowrap">更在于它如何作用于人类经验的长河。”</p>
+          <p className="leading-[40px] mb-0 whitespace-nowrap">{line1}</p>
+          <p className="leading-[40px] whitespace-nowrap">{line2}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function SectionHeading() {
+function SectionHeading({ content }: { content: ResumeUxCaseContent }) {
   return (
     <div className="content-stretch flex items-start justify-between relative shrink-0 w-full mb-[48px]" data-name="HorizontalBorder">
       <div className="flex flex-col gap-[8px] items-start relative">
         <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold justify-center leading-[0] relative shrink-0 text-[#1a1c1c] text-[30px] uppercase whitespace-nowrap">
-          <p className="leading-[36px]">UX Case study  体验设计寻踪</p>
+          <p className="leading-[36px]">{content.sectionTitle}</p>
         </div>
         <div className="flex flex-col font-['OPPOSans:Regular',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#939393] text-[14px] tracking-[0.7px] uppercase whitespace-nowrap">
-          <p className="leading-[20px]">产品&设计主管 ｜ 宁波中升估价 ｜ 杉杉商业集团</p>
+          <p className="leading-[20px]">{content.sectionSubtitle}</p>
         </div>
       </div>
       <div className="flex flex-col font-['Manrope:Regular',sans-serif] font-normal justify-center leading-[0] relative shrink-0 text-[#c6c6c6] text-[36px] text-right">
-        <p className="leading-[40px]">02</p>
+        <p className="leading-[40px]">{content.sectionNumber}</p>
       </div>
     </div>
   );
@@ -76,7 +77,7 @@ function ProjectCardLarge({ title, description, category, tags, videoSrc, imgBg,
   );
 }
 
-function ProjectCardMedium({ title, description, category, imgBg, id }: { title: string, description: string, category: string, imgBg: string, id: string }) {
+function ProjectCardMedium({ title, description, category, imgBg, id, actionLabel }: { title: string, description: string, category: string, imgBg: string, id: string, actionLabel: string }) {
   return (
     <div className="flex flex-col gap-[24px] items-start relative w-full mb-[96px]">
        <div className="bg-[#f3f3f3] overflow-clip relative rounded-[2px] shrink-0 w-full aspect-[4/3] flex items-center justify-center">
@@ -91,60 +92,86 @@ function ProjectCardMedium({ title, description, category, imgBg, id }: { title:
           </div>
           <p className="font-bold text-[24px] text-black tracking-[-1px] leading-tight">{title}</p>
           <p className="font-['OPPOSans:Regular'] text-[14px] text-[rgba(26,28,28,0.7)] text-justify tracking-[0.5px] leading-[24px]">{description}</p>
-          <button className="border-b border-black font-bold text-[#1a1c1c] text-[10px] tracking-[1px] uppercase mt-[8px] self-start cursor-pointer">VIEW PROTOTYPE</button>
+          <button className="border-b border-black font-bold text-[#1a1c1c] text-[10px] tracking-[1px] uppercase mt-[8px] self-start cursor-pointer">{actionLabel}</button>
        </div>
     </div>
   );
 }
 
-export function UxCase() {
+export function UxCase({ content }: { content: ResumeUxCaseContent }) {
+  const largeCards = content.largeCards.length >= 2 ? content.largeCards : [
+    ...content.largeCards,
+    ...Array.from({ length: Math.max(0, 2 - content.largeCards.length) }, (_, index) => ({
+      stableId: `resume-ux-fallback-large-${index}`,
+      idLabel: "",
+      title: "",
+      description: "",
+      category: "",
+      tags: "",
+    })),
+  ];
+  const mediumCards = content.mediumCards.length >= 2 ? content.mediumCards : [
+    ...content.mediumCards,
+    ...Array.from({ length: Math.max(0, 2 - content.mediumCards.length) }, (_, index) => ({
+      stableId: `resume-ux-fallback-medium-${index}`,
+      idLabel: "",
+      title: "",
+      description: "",
+      category: "",
+      image: "",
+      actionLabel: "VIEW PROTOTYPE",
+    })),
+  ];
+
   return (
     <div className="w-full flex flex-col items-center bg-[#E6E6E6]">
       <div className="w-full py-[128px] mb-[128px] flex flex-col items-center">
-        <Blockquote />
+        <Blockquote line1={content.quoteLine1} line2={content.quoteLine2} />
         <div className="mt-[24px] flex flex-col font-['Manrope:Regular',sans-serif] font-normal justify-center leading-[0] relative shrink-0 text-[#939393] text-[10px] text-center tracking-[3px] uppercase whitespace-nowrap">
-          <p className="leading-[15px]">as ux designer — from 2021 to 2024</p>
+          <p className="leading-[15px]">{content.timelineLabel}</p>
         </div>
       </div>
 
       <div className="w-[864px] flex flex-col">
-        <SectionHeading />
+        <SectionHeading content={content} />
         
         <ProjectCardLarge 
-          id="001"
-          title="地方火电厂综合平台"
-          description="文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。"
-          category="用户体验设计（主管）"
-          tags="PC端  |  SaaS平台  |  重业务"
-          videoSrc="/_videos/v1/2c856339829e11d00a0f250acad03dd9bed6253e"
+          id={largeCards[0]?.idLabel ?? ""}
+          title={largeCards[0]?.title ?? ""}
+          description={largeCards[0]?.description ?? ""}
+          category={largeCards[0]?.category ?? ""}
+          tags={largeCards[0]?.tags ?? ""}
+          videoSrc={largeCards[0]?.videoSrc}
         />
 
         <ProjectCardLarge 
-          id="001"
-          title="地方火电厂综合平台"
-          description="文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。"
-          category="用户体验设计（主管）"
-          tags="PC端  |  SaaS平台  |  重业务"
-          imgBg={imgBackground}
+          id={largeCards[1]?.idLabel ?? ""}
+          title={largeCards[1]?.title ?? ""}
+          description={largeCards[1]?.description ?? ""}
+          category={largeCards[1]?.category ?? ""}
+          tags={largeCards[1]?.tags ?? ""}
+          imgBg={largeCards[1]?.image || imgBackground}
         />
 
         <div className="flex gap-[48px] items-start w-full mb-[128px]">
             <div className="flex-[7]">
                 <ProjectCardMedium 
-                    id="002"
-                    title="奥莱线上商城小程序"
-                    description="文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息。"
-                    category="用户体验设计（主管）"
-                    imgBg={imgProject1}
+                    id={mediumCards[0]?.idLabel ?? ""}
+                    title={mediumCards[0]?.title ?? ""}
+                    description={mediumCards[0]?.description ?? ""}
+                    category={mediumCards[0]?.category ?? ""}
+                    imgBg={mediumCards[0]?.image || imgProject1}
+                    actionLabel={mediumCards[0]?.actionLabel || "VIEW PROTOTYPE"}
                 />
             </div>
             <div className="flex-[5] pt-[128px]">
                 <ProjectCardMedium 
-                    id="003"
-                    title="中升营销管理系统"
-                    description="文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字。"
-                    category="产品经理 & UX设计"
-                    imgBg={imgProject2}
+                    id={mediumCards[1]?.idLabel ?? ""}
+                    title={mediumCards[1]?.title ?? ""}
+                    description={mediumCards[1]?.description ?? ""}
+                    category={mediumCards[1]?.category ?? ""}
+                    imgBg={mediumCards[1]?.image || imgProject2}
+                    actionLabel={mediumCards[1]?.actionLabel || "VIEW PROTOTYPE"}
                 />
             </div>
         </div>

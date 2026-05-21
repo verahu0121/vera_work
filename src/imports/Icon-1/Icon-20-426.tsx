@@ -7,11 +7,11 @@ export default function Icon({
 }) {
   return (
     <div 
-      className="content-stretch flex flex-col gap-[10px] items-center justify-center relative rounded-[60px] size-full transition-all duration-300 hover:backdrop-blur-[12px]" 
+      className="content-stretch flex flex-col gap-[10px] items-center justify-center relative rounded-[60px] size-full backdrop-blur-[6px]" 
       data-name="icon" 
       style={{ backgroundImage: "url('data:image/svg+xml;utf8,<svg viewBox=\\'0 0 120 120\\' xmlns=\\'http://www.w3.org/2000/svg\\' preserveAspectRatio=\\'none\\'><rect x=\\'0\\' y=\\'0\\' height=\\'100%\\' width=\\'100%\\' fill=\\'url(%23grad)\\' opacity=\\'1\\'/><defs><radialGradient id=\\'grad\\' gradientUnits=\\'userSpaceOnUse\\' cx=\\'0\\' cy=\\'0\\' r=\\'10\\' gradientTransform=\\'matrix(3.6739e-16 6 -6 3.6739e-16 60 60)\\'><stop stop-color=\\'rgba(230,230,230,0.96)\\' offset=\\'0\\'/><stop stop-color=\\'rgba(230,230,230,0.2)\\' offset=\\'1\\'/></radialGradient></defs></svg>')" }}
     >
-      <div aria-hidden="true" className="absolute border border-[#7ba6d7] border-solid inset-0 pointer-events-none rounded-[60px] shadow-[0px_0px_60px_0px_rgba(128,255,251,0.8)]" />
+      <div aria-hidden="true" className="absolute border border-[#004e8d] border-solid inset-0 pointer-events-none rounded-[60px] shadow-[0px_0px_60px_0px_rgba(0,78,141,0.5)]" />
       <div className="h-[47.826px] relative shrink-0 w-[58.276px]" data-name="Vector">
         <div className="absolute inset-[-50.18%_-41.18%]">
           <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 106.276 95.826">
@@ -307,7 +307,7 @@ export default function Icon({
           </svg>
         </div>
       </div>
-      <div className="-translate-x-1/2 -translate-y-1/2 absolute flex flex-col font-['Quantum',sans-serif] justify-center leading-[0] left-1/2 not-italic text-[#00fff7] text-[16px] text-center top-[calc(50%+2.5px)] tracking-[-1px] uppercase whitespace-nowrap">
+      <div className="-translate-x-1/2 -translate-y-1/2 absolute flex flex-col font-['Quantum',sans-serif] justify-center leading-[0] left-1/2 not-italic text-[#004e8d] text-[16px] text-center top-[calc(50%+2.5px)] tracking-[-1px] uppercase whitespace-nowrap">
         {textLines.map((line, index) => (
           <p key={`${line}-${index}`} className={index === 0 ? "leading-[20px] mb-0" : "leading-[20px]"}>
             {line}
