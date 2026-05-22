@@ -19,6 +19,7 @@ import {
 } from "./data/authSettings";
 import {
   DEFAULT_RESUME_CONTENT,
+  normalizeResumeContent,
   type ResumeContentData,
 } from "./data/resumeContent";
 
@@ -292,30 +293,7 @@ export default function App() {
 
         const nextContent = (await response.json()) as ResumeContentData;
         if (!cancelled) {
-          setResumeContent({
-            ...DEFAULT_RESUME_CONTENT,
-            ...nextContent,
-            profile: {
-              ...DEFAULT_RESUME_CONTENT.profile,
-              ...(nextContent.profile ?? {}),
-            },
-            experienceGrid: {
-              ...DEFAULT_RESUME_CONTENT.experienceGrid,
-              ...(nextContent.experienceGrid ?? {}),
-              experiences:
-                nextContent.experienceGrid?.experiences ??
-                DEFAULT_RESUME_CONTENT.experienceGrid.experiences,
-              projectSets:
-                nextContent.experienceGrid?.projectSets ??
-                DEFAULT_RESUME_CONTENT.experienceGrid.projectSets,
-            },
-            education: {
-              ...DEFAULT_RESUME_CONTENT.education,
-              ...(nextContent.education ?? {}),
-              awards:
-                nextContent.education?.awards ?? DEFAULT_RESUME_CONTENT.education.awards,
-            },
-          });
+          setResumeContent(normalizeResumeContent(nextContent));
         }
       } catch (error) {
         console.error("Failed to read resume content from backend", error);
@@ -425,8 +403,9 @@ export default function App() {
     }
 
     const savedContent = (await response.json()) as ResumeContentData;
-    setResumeContent(savedContent);
-    return savedContent;
+    const normalizedContent = normalizeResumeContent(savedContent);
+    setResumeContent(normalizedContent);
+    return normalizedContent;
   }, []);
 
   const aiProductProjects = useMemo(
@@ -686,6 +665,7 @@ export default function App() {
                 onActiveSectionChange={setActiveResumeSubItem}
                 content={resumeContent}
                 onOpenLinkedProject={openLinkedResumeProject}
+                onNavigateToAiProduct={() => navigateToView('ai-product')}
               />
             </motion.div>
           ) : currentView === 'ai-product' ? (

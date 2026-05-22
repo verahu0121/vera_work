@@ -90,4 +90,26 @@ export async function registerMediaRoutes(app: FastifyInstance, mediaService: Me
 
     return reply.send(image)
   })
+
+  app.post('/api/admin/upload-resume-ai-project-image', async (request, reply) => {
+    const file = await request.file({
+      limits: {
+        files: 1,
+        fileSize: 10 * 1024 * 1024,
+      },
+    })
+
+    if (!file) {
+      return reply.status(400).send({ error: 'No file received.' })
+    }
+
+    const fileBuffer = await file.toBuffer()
+    const image = await mediaService.uploadResumeAiProjectImage({
+      fileBuffer,
+      mimeType: file.mimetype || 'application/octet-stream',
+      filename: file.filename || 'cover-image',
+    })
+
+    return reply.send(image)
+  })
 }

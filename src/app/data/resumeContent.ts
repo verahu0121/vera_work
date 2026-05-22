@@ -81,6 +81,20 @@ export type ResumeAiContactCard = {
   buttonLabel: string
 }
 
+export type ResumeAiProjectGroup = {
+  stableId: string
+  roleLabel: string
+  projectTitle: string
+  highlightText?: string
+  coverMeta: string
+  coverImage: string
+  linkedPortfolioProjectId?: string
+  detailTabs: string[]
+  detailTitle: string
+  detailDescription: string
+  detailFooterLabel: string
+}
+
 export type ResumeAiProducts = {
   quoteLine1: string
   quoteLine2: string
@@ -88,9 +102,8 @@ export type ResumeAiProducts = {
   sectionTitle: string
   sectionSubtitle: string
   sectionNumber: string
-  projectCards: ResumeAiProjectCard[]
-  roleCards: ResumeAiRoleCard[]
-  contactCard: ResumeAiContactCard
+  projectGroups: ResumeAiProjectGroup[]
+  ctaCard: ResumeAiContactCard
 }
 
 export type ResumeUxLargeCard = {
@@ -300,47 +313,46 @@ export const DEFAULT_RESUME_CONTENT: ResumeContentData = {
     sectionTitle: "AI Products  智能产品探索",
     sectionSubtitle: "ai产品经理 ｜ 时代之门（上海）科技有限公司",
     sectionNumber: "01",
-    projectCards: [
+    projectGroups: [
       {
-        stableId: "resume-ai-project-01",
-        label: "AI 产品经理",
-        title: "AIEO ",
+        stableId: "resume-ai-group-01",
+        roleLabel: "AI 产品经理",
+        projectTitle: "AIEO ",
         highlightText: "创作与分发平台",
-        meta: "pc & 小程序客户端 + 后管平台 • 2026",
-        image: "",
+        coverMeta: "pc & 小程序客户端 + 后管平台 • 2026",
+        coverImage: "",
+        linkedPortfolioProjectId: "",
+        detailTabs: ["who", "what", "why", "how"],
+        detailTitle: "角色定位",
+        detailDescription: "一句话描述角色定位",
+        detailFooterLabel: "Algorithm • Beta",
       },
       {
-        stableId: "resume-ai-project-02",
-        label: "ai产品经理，视觉设计负责人",
-        title: "鹤元家政2.0智能系统",
-        meta: "小程序客户端 + 业务中台 • 2025",
-        image: "",
+        stableId: "resume-ai-group-02",
+        roleLabel: "ai产品经理，视觉设计负责人",
+        projectTitle: "鹤元家政2.0智能系统",
+        coverMeta: "小程序客户端 + 业务中台 • 2025",
+        coverImage: "",
+        linkedPortfolioProjectId: "",
+        detailTabs: ["who", "what", "why", "how"],
+        detailTitle: "角色定位",
+        detailDescription: "一句话描述角色定位",
+        detailFooterLabel: "Algorithm • Beta",
       },
       {
-        stableId: "resume-ai-project-03",
-        label: "ai产品经理，视觉设计负责人",
-        title: "时代之言智能体中心",
-        meta: "pc客户端 + 后管平台 • 2025",
-        image: "",
+        stableId: "resume-ai-group-03",
+        roleLabel: "ai产品经理，视觉设计负责人",
+        projectTitle: "时代之言智能体中心",
+        coverMeta: "pc客户端 + 后管平台 • 2025",
+        coverImage: "",
+        linkedPortfolioProjectId: "",
+        detailTabs: ["who", "what", "why", "how"],
+        detailTitle: "角色定位",
+        detailDescription: "一句话描述角色定位",
+        detailFooterLabel: "Algorithm • Beta",
       },
     ],
-    roleCards: [
-      {
-        stableId: "resume-ai-role-01",
-        breadcrumbs: ["who", "what", "why", "how"],
-        title: "角色定位",
-        description: "一句话描述角色定位",
-        meta: "Algorithm • Beta",
-      },
-      {
-        stableId: "resume-ai-role-02",
-        breadcrumbs: ["who", "what", "why", "how"],
-        title: "角色定位",
-        description: "一句话描述角色定位",
-        meta: "Algorithm • Beta",
-      },
-    ],
-    contactCard: {
+    ctaCard: {
       brandTitle: "Vera’s  Libertisle",
       description: "更多项目，即刻前往Vera的产品创意岛~",
       buttonLabel: "Get In Touch",
@@ -398,4 +410,125 @@ export const DEFAULT_RESUME_CONTENT: ResumeContentData = {
       },
     ],
   },
+}
+
+type LegacyResumeAiProducts = Partial<ResumeAiProducts> & {
+  projectCards?: ResumeAiProjectCard[]
+  roleCards?: ResumeAiRoleCard[]
+  contactCard?: ResumeAiContactCard
+}
+
+function normalizeAiProducts(aiProducts?: LegacyResumeAiProducts): ResumeAiProducts {
+  if (!aiProducts) {
+    return DEFAULT_RESUME_CONTENT.aiProducts
+  }
+
+  const defaultAiProducts = DEFAULT_RESUME_CONTENT.aiProducts
+  const incomingGroups = aiProducts.projectGroups
+
+  const projectGroups =
+    Array.isArray(incomingGroups) && incomingGroups.length > 0
+      ? incomingGroups.map((group, index) => {
+          const fallback = defaultAiProducts.projectGroups[index] ?? defaultAiProducts.projectGroups[defaultAiProducts.projectGroups.length - 1]
+          return {
+            stableId: group.stableId || fallback.stableId || `resume-ai-group-${String(index + 1).padStart(2, "0")}`,
+            roleLabel: group.roleLabel ?? fallback.roleLabel,
+            projectTitle: group.projectTitle ?? fallback.projectTitle,
+            highlightText: group.highlightText ?? fallback.highlightText ?? "",
+            coverMeta: group.coverMeta ?? fallback.coverMeta,
+            coverImage: group.coverImage ?? fallback.coverImage,
+            linkedPortfolioProjectId: group.linkedPortfolioProjectId ?? fallback.linkedPortfolioProjectId ?? "",
+            detailTabs:
+              Array.isArray(group.detailTabs) && group.detailTabs.length > 0
+                ? group.detailTabs
+                : fallback.detailTabs,
+            detailTitle: group.detailTitle ?? fallback.detailTitle,
+            detailDescription: group.detailDescription ?? fallback.detailDescription,
+            detailFooterLabel: group.detailFooterLabel ?? fallback.detailFooterLabel,
+          }
+        })
+      : (aiProducts.projectCards ?? defaultAiProducts.projectGroups.map((group) => ({
+          stableId: group.stableId,
+          label: group.roleLabel,
+          title: group.projectTitle,
+          highlightText: group.highlightText,
+          meta: group.coverMeta,
+          image: group.coverImage,
+        }))).map((card, index) => {
+          const defaultGroup = defaultAiProducts.projectGroups[index] ?? defaultAiProducts.projectGroups[defaultAiProducts.projectGroups.length - 1]
+          const roleCard =
+            aiProducts.roleCards?.[index] ??
+            aiProducts.roleCards?.[Math.min(index, Math.max((aiProducts.roleCards?.length ?? 1) - 1, 0))] ??
+            {
+              stableId: `resume-ai-role-fallback-${index + 1}`,
+              breadcrumbs: defaultGroup.detailTabs,
+              title: defaultGroup.detailTitle,
+              description: defaultGroup.detailDescription,
+              meta: defaultGroup.detailFooterLabel,
+            }
+
+          return {
+            stableId: card.stableId || defaultGroup.stableId || `resume-ai-group-${String(index + 1).padStart(2, "0")}`,
+            roleLabel: card.label ?? defaultGroup.roleLabel,
+            projectTitle: card.title ?? defaultGroup.projectTitle,
+            highlightText: card.highlightText ?? defaultGroup.highlightText ?? "",
+            coverMeta: card.meta ?? defaultGroup.coverMeta,
+            coverImage: card.image ?? defaultGroup.coverImage,
+            linkedPortfolioProjectId: defaultGroup.linkedPortfolioProjectId ?? "",
+            detailTabs:
+              Array.isArray(roleCard.breadcrumbs) && roleCard.breadcrumbs.length > 0
+                ? roleCard.breadcrumbs
+                : defaultGroup.detailTabs,
+            detailTitle: roleCard.title ?? defaultGroup.detailTitle,
+            detailDescription: roleCard.description ?? defaultGroup.detailDescription,
+            detailFooterLabel: roleCard.meta ?? defaultGroup.detailFooterLabel,
+          }
+        })
+
+  return {
+    quoteLine1: aiProducts.quoteLine1 ?? defaultAiProducts.quoteLine1,
+    quoteLine2: aiProducts.quoteLine2 ?? defaultAiProducts.quoteLine2,
+    timelineLabel: aiProducts.timelineLabel ?? defaultAiProducts.timelineLabel,
+    sectionTitle: aiProducts.sectionTitle ?? defaultAiProducts.sectionTitle,
+    sectionSubtitle: aiProducts.sectionSubtitle ?? defaultAiProducts.sectionSubtitle,
+    sectionNumber: aiProducts.sectionNumber ?? defaultAiProducts.sectionNumber,
+    projectGroups,
+    ctaCard: {
+      ...defaultAiProducts.ctaCard,
+      ...(aiProducts.ctaCard ?? aiProducts.contactCard ?? {}),
+    },
+  }
+}
+
+export function normalizeResumeContent(content?: Partial<ResumeContentData> | null): ResumeContentData {
+  const nextContent = content ?? {}
+
+  return {
+    ...DEFAULT_RESUME_CONTENT,
+    ...nextContent,
+    profile: {
+      ...DEFAULT_RESUME_CONTENT.profile,
+      ...(nextContent.profile ?? {}),
+    },
+    experienceGrid: {
+      ...DEFAULT_RESUME_CONTENT.experienceGrid,
+      ...(nextContent.experienceGrid ?? {}),
+      experiences:
+        nextContent.experienceGrid?.experiences ?? DEFAULT_RESUME_CONTENT.experienceGrid.experiences,
+      projectSets:
+        nextContent.experienceGrid?.projectSets ?? DEFAULT_RESUME_CONTENT.experienceGrid.projectSets,
+    },
+    education: {
+      ...DEFAULT_RESUME_CONTENT.education,
+      ...(nextContent.education ?? {}),
+      awards: nextContent.education?.awards ?? DEFAULT_RESUME_CONTENT.education.awards,
+    },
+    aiProducts: normalizeAiProducts(nextContent.aiProducts as LegacyResumeAiProducts | undefined),
+    uxCase: {
+      ...DEFAULT_RESUME_CONTENT.uxCase,
+      ...(nextContent.uxCase ?? {}),
+      largeCards: nextContent.uxCase?.largeCards ?? DEFAULT_RESUME_CONTENT.uxCase.largeCards,
+      mediumCards: nextContent.uxCase?.mediumCards ?? DEFAULT_RESUME_CONTENT.uxCase.mediumCards,
+    },
+  }
 }

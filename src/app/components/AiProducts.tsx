@@ -2,14 +2,10 @@ import React from "react";
 import svgPaths from "../../imports/SectionBentoGridProjectsAiProducts/svg-9lhe6139vs";
 import {
   type ResumeAiContactCard,
+  type ResumeAiProjectGroup,
   type ResumeAiProducts as ResumeAiProductsContent,
-  type ResumeAiProjectCard,
-  type ResumeAiRoleCard,
 } from "../data/resumeContent";
 
-import imgAiVisual from "figma:asset/8e4d38fb3b68dbaa2053c35cf8593579682102fb.png";
-import imgAiVisual1 from "figma:asset/9c03b298743328ce710cfeb31bb76290734b0619.png";
-import imgAiVisual2 from "figma:asset/0992d23084382dbdd94b84c7e501894e6cf58845.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 function Blockquote({ line1, line2 }: { line1: string; line2: string }) {
@@ -209,49 +205,94 @@ function RoleMeta({ text }: { text: string }) {
 }
 
 // Project Card Types
-function ProjectCardWhite({ label, title, highlight, meta, imgSrc }: { label: string, title: string, highlight?: string, meta: string, imgSrc: string }) {
+function ProjectImageCard({
+  group,
+  imgSrc,
+  onOpenLinkedProject,
+}: {
+  group: ResumeAiProjectGroup
+  imgSrc: string
+  onOpenLinkedProject?: (projectId: string) => void
+}) {
+  const isLinked = Boolean(group.linkedPortfolioProjectId);
+
   return (
-    <div className="bg-white flex-[1_0_0] min-w-px relative" data-name="Project Card White">
+    <div
+      className={`group bg-white flex-[1_0_0] min-w-px relative transition-colors ${
+        isLinked ? "cursor-pointer hover:bg-[#fdfcf8]" : "cursor-default"
+      }`}
+      data-name="Project Card White"
+      role={isLinked ? "button" : undefined}
+      tabIndex={isLinked ? 0 : undefined}
+      aria-label={isLinked ? `Open linked project for ${group.projectTitle}` : undefined}
+      title={isLinked ? "Open linked project" : undefined}
+      onClick={() => {
+        if (group.linkedPortfolioProjectId) {
+          onOpenLinkedProject?.(group.linkedPortfolioProjectId);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (!isLinked) return;
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpenLinkedProject?.(group.linkedPortfolioProjectId!);
+        }
+      }}
+    >
       <div className="content-stretch flex flex-col items-start p-[32px] relative size-full">
         <div className="content-stretch flex flex-col gap-[16px] items-start pb-[16px] relative shrink-0 w-full">
-          <ProjectTitleLabel label={label} />
-          <ProjectHeading title={title} highlight={highlight} />
+          <ProjectTitleLabel label={group.roleLabel} />
+          <ProjectHeading title={group.projectTitle} highlight={group.highlightText} />
         </div>
         <div className="content-stretch flex flex-col items-start justify-center py-[32px] relative shrink-0 w-full">
           <div className="content-stretch flex flex-col h-[273px] items-start justify-center overflow-clip relative shrink-0 w-full">
             <div aria-hidden="true" className="absolute bg-white inset-0 mix-blend-saturation pointer-events-none opacity-0" />
                 <div className="flex-[1_0_0] min-h-px relative w-full">
                   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <ImageWithFallback alt="" className="absolute h-[118.64%] left-[-7.96%] max-w-none top-[-9.23%] w-[116.15%] object-cover" src={imgSrc} />
+                <ImageWithFallback alt="" className="absolute inset-0 size-full object-cover" src={imgSrc} />
                   </div>
                 </div>
               </div>
         </div>
         <div className="content-stretch flex items-center justify-between relative shrink-0 w-full">
-          <ProjectMeta text={meta} />
-          <ProjectIcon />
+          <ProjectMeta text={group.coverMeta} />
+          {isLinked ? (
+            <div className="transition-transform duration-200 ease-out group-hover:translate-x-[3px] group-hover:-translate-y-[3px]">
+              <ProjectIcon />
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
   );
 }
 
-function RoleCardGray({ breadcrumbs, title, description, meta }: { breadcrumbs: string[], title: string, description: string, meta: string }) {
+function ProjectDetailCard({
+  group,
+}: {
+  group: ResumeAiProjectGroup
+}) {
   return (
     <div className="bg-[#E6E6E6] flex-[1_0_0] h-[500px] min-w-px relative" data-name="Role Card Gray">
       <div className="content-stretch flex flex-col items-start justify-between p-[32px] relative size-full">
         <div className="content-stretch flex flex-col gap-[16px] items-start pb-[16px] relative shrink-0 w-[368px]">
-          <Breadcrumbs items={breadcrumbs} />
-          <RoleHeading title={title} />
+          <Breadcrumbs items={group.detailTabs} />
+          <RoleHeading title={group.detailTitle} />
         </div>
-        <RoleDescription text={description} />
-        <RoleMeta text={meta} />
+        <RoleDescription text={group.detailDescription} />
+        <RoleMeta text={group.detailFooterLabel} />
       </div>
     </div>
   );
 }
 
-function ContactCard({ content }: { content: ResumeAiContactCard }) {
+function ContactCard({
+  content,
+  onClick,
+}: {
+  content: ResumeAiContactCard
+  onClick?: () => void
+}) {
   return (
     <div className="bg-[#1a1c1c] flex-[1_0_0] h-[500px] min-w-px relative rounded-[2px]" data-name="Contact Card">
       <div className="flex flex-col items-center justify-center size-full">
@@ -295,9 +336,9 @@ function ContactCard({ content }: { content: ResumeAiContactCard }) {
             </div>
           </div>
           {/* Button */}
-          <button className="bg-[#e8e8e8] content-stretch flex flex-col items-center justify-center px-[40px] py-[20px] relative rounded-[2px] shrink-0 hover:bg-white transition-colors cursor-pointer" data-name="Button">
-            <div className="flex flex-col font-['Manrope:ExtraBold',sans-serif] font-extrabold h-[20px] justify-center leading-[0] relative shrink-0 text-[#1a1c1c] text-[14px] text-center tracking-[1.4px] uppercase w-[112.41px]">
-              <p className="leading-[20px]">{content.buttonLabel}</p>
+          <button onClick={onClick} className="bg-[#e8e8e8] content-stretch flex flex-col items-center justify-center px-[40px] py-[20px] relative rounded-[2px] shrink-0 hover:bg-white transition-colors cursor-pointer" data-name="Button">
+            <div className="flex flex-col font-['Manrope:ExtraBold',sans-serif] font-extrabold h-[20px] justify-center leading-[0] relative shrink-0 text-[#1a1c1c] text-[14px] text-center tracking-[1.4px] uppercase whitespace-nowrap">
+              <p className="leading-[20px] whitespace-nowrap">{content.buttonLabel}</p>
             </div>
           </button>
         </div>
@@ -306,116 +347,86 @@ function ContactCard({ content }: { content: ResumeAiContactCard }) {
   );
 }
 
-function GridContainer({ content }: { content: ResumeAiProductsContent }) {
-  const projectCards = content.projectCards.length >= 3 ? content.projectCards : [
-    ...content.projectCards,
-    ...Array.from({ length: Math.max(0, 3 - content.projectCards.length) }, (_, index) => ({
-      stableId: `resume-ai-fallback-project-${index}`,
-      label: "",
-      title: "",
-      meta: "",
-      image: "",
-    })),
-  ];
-  const roleCards = content.roleCards.length >= 2 ? content.roleCards : [
-    ...content.roleCards,
-    ...Array.from({ length: Math.max(0, 2 - content.roleCards.length) }, (_, index) => ({
-      stableId: `resume-ai-fallback-role-${index}`,
-      breadcrumbs: [],
-      title: "",
-      description: "",
-      meta: "",
-    })),
-  ];
-  const projectImages = [
-    projectCards[0]?.image || imgAiVisual,
-    projectCards[1]?.image || imgAiVisual1,
-    projectCards[2]?.image || imgAiVisual2,
-  ];
+function GridContainer({
+  content,
+  onNavigateToAiProduct,
+  onOpenLinkedProject,
+}: {
+  content: ResumeAiProductsContent
+  onNavigateToAiProduct?: () => void
+  onOpenLinkedProject?: (projectId: string) => void
+}) {
+  const projectGroups = content.projectGroups.length > 0 ? content.projectGroups : [];
+  const lastProject = projectGroups[projectGroups.length - 1];
 
   return (
     <div className="content-stretch flex flex-col items-start relative shrink-0 w-full md:w-[864px]" data-name="Grid Container">
-      {/* Row 1 */}
-      <div className="content-stretch flex flex-col md:flex-row items-start relative shrink-0 w-full">
-        <ProjectCardWhite 
-          label={projectCards[0]?.label ?? ""}
-          title={projectCards[0]?.title ?? ""}
-          highlight={projectCards[0]?.highlightText}
-          meta={projectCards[0]?.meta ?? ""}
-          imgSrc={projectImages[0]}
-        />
-        <RoleCardGray 
-          breadcrumbs={roleCards[0]?.breadcrumbs ?? []}
-          title={roleCards[0]?.title ?? ""}
-          description={roleCards[0]?.description ?? ""}
-          meta={roleCards[0]?.meta ?? ""}
-        />
-      </div>
-      {/* Row 2 */}
-      <div className="content-stretch flex flex-col md:flex-row items-start relative shrink-0 w-full">
-        <RoleCardGray 
-          breadcrumbs={roleCards[1]?.breadcrumbs ?? []}
-          title={roleCards[1]?.title ?? ""}
-          description={roleCards[1]?.description ?? ""}
-          meta={roleCards[1]?.meta ?? ""}
-        />
-        <div className="bg-white flex-[1_0_0] h-[500px] min-w-px relative" data-name="Project Card White">
-           <div className="absolute content-stretch flex flex-col gap-[16px] items-start left-[32px] pb-[16px] right-[32px] top-[32px] z-10">
-              <ProjectTitleLabel label={projectCards[1]?.label ?? ""} />
-              <ProjectHeading title={projectCards[1]?.title ?? ""} highlight={projectCards[1]?.highlightText} />
-           </div>
-           <div className="absolute content-stretch flex items-center justify-between left-[32px] right-[32px] bottom-[24px] z-10">
-              <ProjectMeta text={projectCards[1]?.meta ?? ""} />
-              <ProjectIcon />
-           </div>
-           <div className="absolute content-stretch flex flex-col inset-[115px_32px_56px_32px] items-start justify-center py-[32px]">
-              <div className="content-stretch flex flex-[1_0_0] flex-col items-start justify-center min-h-px overflow-clip relative w-full">
-                <div aria-hidden="true" className="absolute bg-white inset-0 mix-blend-saturation pointer-events-none opacity-0" />
-                <div className="flex-[1_0_0] min-h-px relative w-full">
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <ImageWithFallback alt="" className="absolute h-[115.43%] left-[-6.7%] max-w-none top-[-7.51%] w-[113.29%] object-cover" src={projectImages[1]} />
-                    </div>
-                </div>
-              </div>
-           </div>
+      {projectGroups.slice(0, -1).map((group, index) => {
+        const imageCard = (
+          <ProjectImageCard
+            group={group}
+            imgSrc={group.coverImage}
+            onOpenLinkedProject={onOpenLinkedProject}
+          />
+        );
+        const detailCard = <ProjectDetailCard group={group} />;
+        const isOddDisplayOrder = index % 2 === 0;
+
+        return (
+          <div key={group.stableId} className="content-stretch flex flex-col md:flex-row items-start relative shrink-0 w-full">
+            {isOddDisplayOrder ? imageCard : detailCard}
+            {isOddDisplayOrder ? detailCard : imageCard}
+          </div>
+        );
+      })}
+
+      {lastProject && (
+        <div className="content-stretch flex flex-col md:flex-row items-start relative shrink-0 w-full">
+          {projectGroups.length % 2 === 1 ? (
+            <>
+              <ProjectImageCard
+                group={lastProject}
+                imgSrc={lastProject.coverImage}
+                onOpenLinkedProject={onOpenLinkedProject}
+              />
+              <ContactCard content={content.ctaCard} onClick={onNavigateToAiProduct} />
+            </>
+          ) : (
+            <>
+              <ContactCard content={content.ctaCard} onClick={onNavigateToAiProduct} />
+              <ProjectImageCard
+                group={lastProject}
+                imgSrc={lastProject.coverImage}
+                onOpenLinkedProject={onOpenLinkedProject}
+              />
+            </>
+          )}
         </div>
-      </div>
-      {/* Row 3 */}
-      <div className="content-stretch flex flex-col md:flex-row items-start relative shrink-0 w-full">
-        <div className="bg-white flex-[1_0_0] h-[500px] min-w-px relative" data-name="Project Card White">
-            <div className="absolute content-stretch flex flex-col gap-[16px] items-start left-[32px] pb-[16px] right-[32px] top-[32px] z-10">
-              <ProjectTitleLabel label={projectCards[2]?.label ?? ""} />
-              <ProjectHeading title={projectCards[2]?.title ?? ""} highlight={projectCards[2]?.highlightText} />
-           </div>
-           <div className="absolute content-stretch flex items-center justify-between left-[32px] right-[32px] bottom-[24px] z-10">
-              <ProjectMeta text={projectCards[2]?.meta ?? ""} />
-              <ProjectIcon />
-           </div>
-           <div className="absolute content-stretch flex flex-col inset-[115px_32px_56px_32px] items-start justify-center py-[32px]">
-              <div className="content-stretch flex flex-[1_0_0] flex-col items-start justify-center min-h-px overflow-clip relative w-full">
-                <div aria-hidden="true" className="absolute bg-white inset-0 mix-blend-saturation pointer-events-none opacity-0" />
-                <div className="flex-[1_0_0] min-h-px relative w-full">
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <ImageWithFallback alt="" className="absolute h-[101.9%] left-[0.23%] max-w-none top-[-0.87%] w-[99.77%] object-cover" src={projectImages[2]} />
-                    </div>
-                </div>
-              </div>
-           </div>
-        </div>
-        <ContactCard content={content.contactCard} />
-      </div>
+      )}
     </div>
   );
 }
 
-export function AiProducts({ content }: { content: ResumeAiProductsContent }) {
+export function AiProducts({
+  content,
+  onNavigateToAiProduct,
+  onOpenLinkedProject,
+}: {
+  content: ResumeAiProductsContent
+  onNavigateToAiProduct?: () => void
+  onOpenLinkedProject?: (projectId: string) => void
+}) {
   return (
     <div className="bg-[#F2F2F2] content-stretch flex flex-col gap-[72px] items-start pt-[144px] relative w-full" data-name="AI Products">
       <QuotePhilosophySection content={content} />
       <div className="relative shrink-0 w-full" data-name="Section - Bento Grid Projects: AI Products">
         <div className="content-stretch flex flex-col gap-[72px] items-center pb-[80px] pt-[72px] px-4 md:px-[80px] relative w-full">
           <HorizontalBorder content={content} />
-          <GridContainer content={content} />
+          <GridContainer
+            content={content}
+            onNavigateToAiProduct={onNavigateToAiProduct}
+            onOpenLinkedProject={onOpenLinkedProject}
+          />
         </div>
       </div>
     </div>

@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   DEFAULT_RESUME_CONTENT,
-  type ResumeAiProjectCard,
-  type ResumeAiRoleCard,
+  type ResumeAiProjectGroup,
   type ResumeUxLargeCard,
   type ResumeUxMediumCard,
   type ResumeContentData,
@@ -17,6 +16,7 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import imgVeraPortrait from "figma:asset/c2a725be084d36e42b2de03b1df60b14cc7638a2.png";
 
 type ResumeEditorSection = "profile" | "experience" | "ai-products" | "ux-case" | "education";
+type ResumeAiProductsEditorTab = "meta" | "projects" | "cta";
 
 function cloneResumeContent(content: ResumeContentData): ResumeContentData {
   return JSON.parse(JSON.stringify(content)) as ResumeContentData;
@@ -59,6 +59,30 @@ function ResumeNavButton({
         active
           ? "border-[#03c9c3]/24 bg-[#eefbf9] text-[#1a1c1c]"
           : "border-black/6 bg-white text-[#6d6d73] hover:bg-[#f7f3ee]"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function InlineTabButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-4 py-2 text-[10px] uppercase tracking-[2px] transition-colors ${
+        active
+          ? "border-[#03c9c3]/24 bg-[#eefbf9] text-[#039f9a]"
+          : "border-black/6 bg-white text-[#7d7d84] hover:bg-[#f7f3ee]"
       }`}
     >
       {label}
@@ -113,6 +137,31 @@ function FieldTextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>)
   );
 }
 
+function FieldSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <div className="relative">
+      <select
+        {...props}
+        className={`h-[50px] w-full appearance-none rounded-[16px] border border-black/8 bg-white px-4 pr-12 text-[14px] text-[#1a1c1c] outline-none transition-colors focus:border-[#03c9c3]/50 ${props.className ?? ""}`}
+      />
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1a1c1c]"
+        fill="none"
+        viewBox="0 0 16 16"
+      >
+        <path
+          d="M4 6L8 10L12 6"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export function ResumeModuleEditor({
   resumeContent,
   onPersistResumeContent,
@@ -123,13 +172,16 @@ export function ResumeModuleEditor({
   publishedPortfolioProjects: PortfolioProject[];
 }) {
   const [activeSection, setActiveSection] = useState<ResumeEditorSection>("profile");
+  const [activeAiProductsTab, setActiveAiProductsTab] = useState<ResumeAiProductsEditorTab>("projects");
   const [draftContent, setDraftContent] = useState<ResumeContentData>(cloneResumeContent(resumeContent));
   const [selectedExperienceId, setSelectedExperienceId] = useState(
     resumeContent.experienceGrid.experiences[0]?.stableId ?? "",
   );
   const [isPersisting, setIsPersisting] = useState(false);
   const [isUploadingPortrait, setIsUploadingPortrait] = useState(false);
+  const [uploadingAiProjectImageId, setUploadingAiProjectImageId] = useState<string | null>(null);
   const portraitInputRef = useRef<HTMLInputElement | null>(null);
+  const aiProjectImageInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const profileFieldsRef = useRef<HTMLDivElement | null>(null);
   const [portraitCardHeight, setPortraitCardHeight] = useState<number | null>(null);
 
@@ -252,6 +304,38 @@ export function ResumeModuleEditor({
       if (portraitInputRef.current) {
         portraitInputRef.current.value = "";
       }
+    }
+  };
+
+  const handleAiProjectCoverUpload = async (groupStableId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploadingAiProjectImageId(groupStableId);
+    try {
+      const response = await fetch("/api/admin/upload-resume-ai-project-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error || "Failed to upload cover image.");
+      }
+
+      const payload = (await response.json()) as { src?: string };
+      if (!payload.src) {
+        throw new Error("Cover image upload did not return an image URL.");
+      }
+
+      updateAiProjectGroup(groupStableId, (current) => ({ ...current, coverImage: payload.src }));
+      toast.success("Cover image uploaded");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload cover image.");
+    } finally {
+      setUploadingAiProjectImageId((current) => (current === groupStableId ? null : current));
+      const input = aiProjectImageInputRefs.current[groupStableId];
+      if (input) input.value = "";
     }
   };
 
@@ -496,117 +580,64 @@ export function ResumeModuleEditor({
     }));
   };
 
-  const updateAiProjectCard = (
+  const updateAiProjectGroup = (
     stableId: string,
-    updater: (card: ResumeAiProjectCard) => ResumeAiProjectCard,
+    updater: (group: ResumeAiProjectGroup) => ResumeAiProjectGroup,
   ) => {
     updateDraft((current) => ({
       ...current,
       aiProducts: {
         ...current.aiProducts,
-        projectCards: current.aiProducts.projectCards.map((card) =>
-          card.stableId === stableId ? updater(card) : card,
+        projectGroups: current.aiProducts.projectGroups.map((group) =>
+          group.stableId === stableId ? updater(group) : group,
         ),
       },
     }));
   };
 
-  const handleAddAiProjectCard = () => {
+  const handleAddAiProjectGroup = () => {
     updateDraft((current) => ({
       ...current,
       aiProducts: {
         ...current.aiProducts,
-        projectCards: [
-          ...current.aiProducts.projectCards,
+        projectGroups: [
+          ...current.aiProducts.projectGroups,
           {
-            stableId: createStableId("resume-ai-project"),
-            label: "AI 产品经理",
-            title: "新项目标题",
+            stableId: createStableId("resume-ai-group"),
+            roleLabel: "AI 产品经理",
+            projectTitle: "新项目标题",
             highlightText: "",
-            meta: "项目元信息",
-            image: "",
+            coverMeta: "项目元信息",
+            coverImage: "",
+            detailTabs: ["who", "what", "why", "how"],
+            detailTitle: "角色定位",
+            detailDescription: "一句话描述角色定位",
+            detailFooterLabel: "Algorithm • Beta",
           },
         ],
       },
     }));
   };
 
-  const handleMoveAiProjectCard = (stableId: string, direction: "up" | "down") => {
+  const handleMoveAiProjectGroup = (stableId: string, direction: "up" | "down") => {
     updateDraft((current) => {
-      const currentIndex = current.aiProducts.projectCards.findIndex((card) => card.stableId === stableId);
+      const currentIndex = current.aiProducts.projectGroups.findIndex((group) => group.stableId === stableId);
       return {
         ...current,
         aiProducts: {
           ...current.aiProducts,
-          projectCards: moveItem(current.aiProducts.projectCards, currentIndex, direction),
+          projectGroups: moveItem(current.aiProducts.projectGroups, currentIndex, direction),
         },
       };
     });
   };
 
-  const handleRemoveAiProjectCard = (stableId: string) => {
+  const handleRemoveAiProjectGroup = (stableId: string) => {
     updateDraft((current) => ({
       ...current,
       aiProducts: {
         ...current.aiProducts,
-        projectCards: current.aiProducts.projectCards.filter((card) => card.stableId !== stableId),
-      },
-    }));
-  };
-
-  const updateAiRoleCard = (
-    stableId: string,
-    updater: (card: ResumeAiRoleCard) => ResumeAiRoleCard,
-  ) => {
-    updateDraft((current) => ({
-      ...current,
-      aiProducts: {
-        ...current.aiProducts,
-        roleCards: current.aiProducts.roleCards.map((card) =>
-          card.stableId === stableId ? updater(card) : card,
-        ),
-      },
-    }));
-  };
-
-  const handleAddAiRoleCard = () => {
-    updateDraft((current) => ({
-      ...current,
-      aiProducts: {
-        ...current.aiProducts,
-        roleCards: [
-          ...current.aiProducts.roleCards,
-          {
-            stableId: createStableId("resume-ai-role"),
-            breadcrumbs: ["who", "what", "why", "how"],
-            title: "角色定位",
-            description: "一句话描述角色定位",
-            meta: "Algorithm • Beta",
-          },
-        ],
-      },
-    }));
-  };
-
-  const handleMoveAiRoleCard = (stableId: string, direction: "up" | "down") => {
-    updateDraft((current) => {
-      const currentIndex = current.aiProducts.roleCards.findIndex((card) => card.stableId === stableId);
-      return {
-        ...current,
-        aiProducts: {
-          ...current.aiProducts,
-          roleCards: moveItem(current.aiProducts.roleCards, currentIndex, direction),
-        },
-      };
-    });
-  };
-
-  const handleRemoveAiRoleCard = (stableId: string) => {
-    updateDraft((current) => ({
-      ...current,
-      aiProducts: {
-        ...current.aiProducts,
-        roleCards: current.aiProducts.roleCards.filter((card) => card.stableId !== stableId),
+        projectGroups: current.aiProducts.projectGroups.filter((group) => group.stableId !== stableId),
       },
     }));
   };
@@ -761,7 +792,7 @@ export function ResumeModuleEditor({
 
       <main className="min-h-0 overflow-hidden rounded-[36px] border border-black/6 bg-white/88 p-6 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
         {activeSection === "profile" ? (
-          <div className="grid h-full min-h-0 gap-5 overflow-y-auto pr-1">
+          <div className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto pr-1">
             <div>
               <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Profile</div>
               <div className="mt-2 font-['Quantum',sans-serif] text-[26px] uppercase text-[#1a1c1c]">About Me</div>
@@ -1052,7 +1083,7 @@ export function ResumeModuleEditor({
                           </label>
                           <label className="flex flex-col gap-2">
                             <FieldLabel>Linked Portfolio Project</FieldLabel>
-                            <select
+                            <FieldSelect
                               value={item.linkedPortfolioProjectId ?? ""}
                               onChange={(event) =>
                                 handleUpdateProjectItem(item.stableId, (currentItem) => ({
@@ -1060,7 +1091,6 @@ export function ResumeModuleEditor({
                                   linkedPortfolioProjectId: event.target.value,
                                 }))
                               }
-                              className="min-h-[50px] rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] text-[#1a1c1c] outline-none transition-colors focus:border-[#03c9c3]/50"
                             >
                               <option value="">No linked project</option>
                               {linkedProjectOptions.map((option) => (
@@ -1068,7 +1098,7 @@ export function ResumeModuleEditor({
                                   {option.label}
                                 </option>
                               ))}
-                            </select>
+                            </FieldSelect>
                           </label>
                         </div>
                       </div>
@@ -1083,101 +1113,196 @@ export function ResumeModuleEditor({
             </section>
           </div>
         ) : activeSection === "ai-products" ? (
-          <div className="grid h-full min-h-0 gap-5 overflow-y-auto pr-1">
-            <div>
-              <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">AI Products</div>
-              <div className="mt-2 font-['Quantum',sans-serif] text-[26px] uppercase text-[#1a1c1c]">AI Products Section</div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Quote Line 1</FieldLabel>
-                <FieldInput value={draftContent.aiProducts.quoteLine1} onChange={(event) => updateAiProductsField("quoteLine1", event.target.value)} />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Quote Line 2</FieldLabel>
-                <FieldInput value={draftContent.aiProducts.quoteLine2} onChange={(event) => updateAiProductsField("quoteLine2", event.target.value)} />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Timeline Label</FieldLabel>
-                <FieldInput value={draftContent.aiProducts.timelineLabel} onChange={(event) => updateAiProductsField("timelineLabel", event.target.value)} />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Section Number</FieldLabel>
-                <FieldInput value={draftContent.aiProducts.sectionNumber} onChange={(event) => updateAiProductsField("sectionNumber", event.target.value)} />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Section Title</FieldLabel>
-                <FieldInput value={draftContent.aiProducts.sectionTitle} onChange={(event) => updateAiProductsField("sectionTitle", event.target.value)} />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Section Subtitle</FieldLabel>
-                <FieldInput value={draftContent.aiProducts.sectionSubtitle} onChange={(event) => updateAiProductsField("sectionSubtitle", event.target.value)} />
-              </label>
+          <div className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto pr-1">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+              <div>
+                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">AI Products</div>
+                <div className="mt-2 font-['Quantum',sans-serif] text-[26px] uppercase text-[#1a1c1c]">AI Products Section</div>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <InlineTabButton label="Section Meta" active={activeAiProductsTab === "meta"} onClick={() => setActiveAiProductsTab("meta")} />
+                <InlineTabButton label="Project Groups" active={activeAiProductsTab === "projects"} onClick={() => setActiveAiProductsTab("projects")} />
+                <InlineTabButton label="Get In Touch" active={activeAiProductsTab === "cta"} onClick={() => setActiveAiProductsTab("cta")} />
+              </div>
             </div>
 
-            <div className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Project Cards</div>
-                <button type="button" onClick={handleAddAiProjectCard} className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5]">Add Card</button>
+            {activeAiProductsTab === "meta" ? (
+              <div className="grid content-start auto-rows-max gap-4 md:grid-cols-2">
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Quote Line 1</FieldLabel>
+                  <FieldInput value={draftContent.aiProducts.quoteLine1} onChange={(event) => updateAiProductsField("quoteLine1", event.target.value)} />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Quote Line 2</FieldLabel>
+                  <FieldInput value={draftContent.aiProducts.quoteLine2} onChange={(event) => updateAiProductsField("quoteLine2", event.target.value)} />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Timeline Label</FieldLabel>
+                  <FieldInput value={draftContent.aiProducts.timelineLabel} onChange={(event) => updateAiProductsField("timelineLabel", event.target.value)} />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Section Number</FieldLabel>
+                  <FieldInput value={draftContent.aiProducts.sectionNumber} onChange={(event) => updateAiProductsField("sectionNumber", event.target.value)} />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Section Title</FieldLabel>
+                  <FieldInput value={draftContent.aiProducts.sectionTitle} onChange={(event) => updateAiProductsField("sectionTitle", event.target.value)} />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Section Subtitle</FieldLabel>
+                  <FieldInput value={draftContent.aiProducts.sectionSubtitle} onChange={(event) => updateAiProductsField("sectionSubtitle", event.target.value)} />
+                </label>
               </div>
+            ) : null}
+
+            {activeAiProductsTab === "projects" ? (
               <div className="space-y-4">
-                {draftContent.aiProducts.projectCards.map((card, index, items) => (
-                  <div key={card.stableId} className="rounded-[24px] border border-black/7 bg-white p-4">
+                {draftContent.aiProducts.projectGroups.map((group, index, items) => (
+                  <div key={group.stableId} className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-4">
                     <div className="mb-4 flex items-center justify-between gap-4">
-                      <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">{`Project Card ${String(index + 1).padStart(2, "0")}`}</div>
+                      <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">{`Project Group ${String(index + 1).padStart(2, "0")} · ${index % 2 === 0 ? "Image Left / Detail Right" : "Detail Left / Image Right"}`}</div>
                       <div className="flex items-center gap-2">
-                        <CircleActionButton label="Move card up" disabled={index === 0} onClick={() => handleMoveAiProjectCard(card.stableId, "up")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 3L3 7H11L7 3Z" fill="currentColor" /></svg></CircleActionButton>
-                        <CircleActionButton label="Move card down" disabled={index === items.length - 1} onClick={() => handleMoveAiProjectCard(card.stableId, "down")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 11L11 7H3L7 11Z" fill="currentColor" /></svg></CircleActionButton>
-                        <CircleActionButton label="Delete card" disabled={items.length === 1} onClick={() => handleRemoveAiProjectCard(card.stableId)}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></CircleActionButton>
+                        <CircleActionButton label="Move project up" disabled={index === 0} onClick={() => handleMoveAiProjectGroup(group.stableId, "up")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 3L3 7H11L7 3Z" fill="currentColor" /></svg></CircleActionButton>
+                        <CircleActionButton label="Move project down" disabled={index === items.length - 1} onClick={() => handleMoveAiProjectGroup(group.stableId, "down")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 11L11 7H3L7 11Z" fill="currentColor" /></svg></CircleActionButton>
+                        <CircleActionButton label="Delete project group" disabled={items.length === 1} onClick={() => handleRemoveAiProjectGroup(group.stableId)}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></CircleActionButton>
                       </div>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <label className="flex flex-col gap-2"><FieldLabel>Label</FieldLabel><FieldInput value={card.label} onChange={(event) => updateAiProjectCard(card.stableId, (current) => ({ ...current, label: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Meta</FieldLabel><FieldInput value={card.meta} onChange={(event) => updateAiProjectCard(card.stableId, (current) => ({ ...current, meta: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Title</FieldLabel><FieldInput value={card.title} onChange={(event) => updateAiProjectCard(card.stableId, (current) => ({ ...current, title: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Highlight Text</FieldLabel><FieldInput value={card.highlightText ?? ""} onChange={(event) => updateAiProjectCard(card.stableId, (current) => ({ ...current, highlightText: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Image URL</FieldLabel><FieldInput value={card.image} onChange={(event) => updateAiProjectCard(card.stableId, (current) => ({ ...current, image: event.target.value }))} /></label>
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] lg:items-start">
+                      <div className="grid content-start gap-4">
+                        <div className="text-[10px] uppercase tracking-[2px] text-[#7d7d84]">Image Side</div>
+                        <label className="flex flex-col gap-2"><FieldLabel>Role Label</FieldLabel><FieldInput value={group.roleLabel} onChange={(event) => updateAiProjectGroup(group.stableId, (current) => ({ ...current, roleLabel: event.target.value }))} /></label>
+                        <label className="flex flex-col gap-2"><FieldLabel>Project Title</FieldLabel><FieldInput value={group.projectTitle} onChange={(event) => updateAiProjectGroup(group.stableId, (current) => ({ ...current, projectTitle: event.target.value }))} /></label>
+                        <label className="flex flex-col gap-2"><FieldLabel>Cover Meta</FieldLabel><FieldInput value={group.coverMeta} onChange={(event) => updateAiProjectGroup(group.stableId, (current) => ({ ...current, coverMeta: event.target.value }))} /></label>
+                        <div className="grid gap-4 md:grid-cols-[174px_minmax(0,1fr)] md:items-start">
+                          <div className="flex flex-col gap-2">
+                            <FieldLabel>Cover Image</FieldLabel>
+                            <input
+                              ref={(node) => {
+                                aiProjectImageInputRefs.current[group.stableId] = node;
+                              }}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0];
+                                if (file) {
+                                  void handleAiProjectCoverUpload(group.stableId, file);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => aiProjectImageInputRefs.current[group.stableId]?.click()}
+                              className="group relative w-full overflow-hidden rounded-[20px] border border-black/7 bg-white text-left transition-colors hover:border-[#03c9c3]/24"
+                            >
+                              {group.coverImage ? (
+                                <ImageWithFallback
+                                  alt={group.projectTitle || "AI Products cover preview"}
+                                  src={group.coverImage}
+                                  className="aspect-[4/3] w-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex aspect-[4/3] w-full items-center justify-center bg-[#f7f3ee] text-[11px] uppercase tracking-[2px] text-[#a0a0a6]">
+                                  No Image
+                                </div>
+                              )}
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/8">
+                                <div className="flex size-12 items-center justify-center rounded-full bg-white/92 text-[#1a1c1c] opacity-0 shadow-[0_10px_30px_rgba(0,0,0,0.10)] transition-opacity group-hover:opacity-100">
+                                  {uploadingAiProjectImageId === group.stableId ? (
+                                    <span className="text-[10px] uppercase tracking-[1.5px] text-[#7d7d84]">...</span>
+                                  ) : (
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                      <path d="M12 5V19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                      <path d="M5 12H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+                          <label className="flex flex-col gap-2">
+                            <FieldLabel>Linked Portfolio Project</FieldLabel>
+                            <FieldSelect
+                              value={group.linkedPortfolioProjectId ?? ""}
+                              onChange={(event) =>
+                                updateAiProjectGroup(group.stableId, (current) => ({
+                                  ...current,
+                                  linkedPortfolioProjectId: event.target.value,
+                                }))
+                              }
+                            >
+                              <option value="">No linked project</option>
+                              {linkedProjectOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </FieldSelect>
+                          </label>
+                        </div>
+                      </div>
+                      <div className="hidden self-stretch bg-black/8 lg:block" aria-hidden="true" />
+                      <div className="grid content-start gap-4">
+                        <div className="text-[10px] uppercase tracking-[2px] text-[#7d7d84]">Detail Side</div>
+                        <label className="flex flex-col gap-2"><FieldLabel>Detail Tabs</FieldLabel><FieldInput value={group.detailTabs.join(" | ")} onChange={(event) => updateAiProjectGroup(group.stableId, (current) => ({ ...current, detailTabs: event.target.value.split("|").map((item) => item.trim()).filter(Boolean) }))} /></label>
+                        <label className="flex flex-col gap-2"><FieldLabel>Detail Title</FieldLabel><FieldInput value={group.detailTitle} onChange={(event) => updateAiProjectGroup(group.stableId, (current) => ({ ...current, detailTitle: event.target.value }))} /></label>
+                        <label className="flex flex-col gap-2"><FieldLabel>Detail Footer Label</FieldLabel><FieldInput value={group.detailFooterLabel} onChange={(event) => updateAiProjectGroup(group.stableId, (current) => ({ ...current, detailFooterLabel: event.target.value }))} /></label>
+                        <label className="flex flex-col gap-2"><FieldLabel>Detail Description</FieldLabel><FieldTextArea className="min-h-[96px]" value={group.detailDescription} onChange={(event) => updateAiProjectGroup(group.stableId, (current) => ({ ...current, detailDescription: event.target.value }))} /></label>
+                      </div>
                     </div>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={handleAddAiProjectGroup}
+                  className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5]"
+                >
+                  Add Project
+                </button>
               </div>
-            </div>
+            ) : null}
 
-            <div className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Role Cards</div>
-                <button type="button" onClick={handleAddAiRoleCard} className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5]">Add Card</button>
+            {activeAiProductsTab === "cta" ? (
+              <div className="grid content-start auto-rows-max gap-4 md:grid-cols-2">
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Brand Title</FieldLabel>
+                  <FieldInput
+                    value={draftContent.aiProducts.ctaCard.brandTitle}
+                    onChange={(event) =>
+                      updateAiProductsField("ctaCard", {
+                        ...draftContent.aiProducts.ctaCard,
+                        brandTitle: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Button Label</FieldLabel>
+                  <FieldInput
+                    value={draftContent.aiProducts.ctaCard.buttonLabel}
+                    onChange={(event) =>
+                      updateAiProductsField("ctaCard", {
+                        ...draftContent.aiProducts.ctaCard,
+                        buttonLabel: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+                <label className="flex flex-col gap-2 md:col-span-2">
+                  <FieldLabel>Description</FieldLabel>
+                  <FieldTextArea
+                    className="min-h-[96px]"
+                    value={draftContent.aiProducts.ctaCard.description}
+                    onChange={(event) =>
+                      updateAiProductsField("ctaCard", {
+                        ...draftContent.aiProducts.ctaCard,
+                        description: event.target.value,
+                      })
+                    }
+                  />
+                </label>
               </div>
-              <div className="space-y-4">
-                {draftContent.aiProducts.roleCards.map((card, index, items) => (
-                  <div key={card.stableId} className="rounded-[24px] border border-black/7 bg-white p-4">
-                    <div className="mb-4 flex items-center justify-between gap-4">
-                      <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">{`Role Card ${String(index + 1).padStart(2, "0")}`}</div>
-                      <div className="flex items-center gap-2">
-                        <CircleActionButton label="Move role card up" disabled={index === 0} onClick={() => handleMoveAiRoleCard(card.stableId, "up")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 3L3 7H11L7 3Z" fill="currentColor" /></svg></CircleActionButton>
-                        <CircleActionButton label="Move role card down" disabled={index === items.length - 1} onClick={() => handleMoveAiRoleCard(card.stableId, "down")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 11L11 7H3L7 11Z" fill="currentColor" /></svg></CircleActionButton>
-                        <CircleActionButton label="Delete role card" disabled={items.length === 1} onClick={() => handleRemoveAiRoleCard(card.stableId)}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></CircleActionButton>
-                      </div>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Breadcrumbs</FieldLabel><FieldInput value={card.breadcrumbs.join(" | ")} onChange={(event) => updateAiRoleCard(card.stableId, (current) => ({ ...current, breadcrumbs: event.target.value.split("|").map((item) => item.trim()).filter(Boolean) }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Title</FieldLabel><FieldInput value={card.title} onChange={(event) => updateAiRoleCard(card.stableId, (current) => ({ ...current, title: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Meta</FieldLabel><FieldInput value={card.meta} onChange={(event) => updateAiRoleCard(card.stableId, (current) => ({ ...current, meta: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Description</FieldLabel><FieldTextArea className="min-h-[96px]" value={card.description} onChange={(event) => updateAiRoleCard(card.stableId, (current) => ({ ...current, description: event.target.value }))} /></label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-5">
-              <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Contact Card</div>
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="flex flex-col gap-2"><FieldLabel>Brand Title</FieldLabel><FieldInput value={draftContent.aiProducts.contactCard.brandTitle} onChange={(event) => updateAiProductsField("contactCard", { ...draftContent.aiProducts.contactCard, brandTitle: event.target.value })} /></label>
-                <label className="flex flex-col gap-2"><FieldLabel>Button Label</FieldLabel><FieldInput value={draftContent.aiProducts.contactCard.buttonLabel} onChange={(event) => updateAiProductsField("contactCard", { ...draftContent.aiProducts.contactCard, buttonLabel: event.target.value })} /></label>
-                <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Description</FieldLabel><FieldTextArea className="min-h-[96px]" value={draftContent.aiProducts.contactCard.description} onChange={(event) => updateAiProductsField("contactCard", { ...draftContent.aiProducts.contactCard, description: event.target.value })} /></label>
-              </div>
-            </div>
+            ) : null}
           </div>
         ) : activeSection === "ux-case" ? (
           <div className="grid h-full min-h-0 gap-5 overflow-y-auto pr-1">

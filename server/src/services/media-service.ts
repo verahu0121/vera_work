@@ -28,6 +28,14 @@ function buildResumeProfileObjectKey(filename: string) {
   return `resume/profile/${timestamp}-${safeName}${extension || '.jpg'}`
 }
 
+function buildResumeAiProjectObjectKey(filename: string) {
+  const timestamp = Date.now()
+  const extension = path.extname(filename || '').toLowerCase()
+  const baseName = path.basename(filename || 'cover-image', extension)
+  const safeName = sanitizePathSegment(baseName)
+  return `resume/ai-products/${timestamp}-${safeName}${extension || '.jpg'}`
+}
+
 function buildProxyImageUrl(key: string) {
   return `/api/admin/object-image?key=${encodeURIComponent(key)}`
 }
@@ -90,6 +98,30 @@ export class MediaService {
     const client = createS3Client()
     const bucket = getS3Bucket()
     const objectKey = buildResumeProfileObjectKey(input.filename)
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: objectKey,
+        Body: input.fileBuffer,
+        ContentType: input.mimeType,
+      }),
+    )
+
+    return {
+      key: objectKey,
+      src: buildProxyImageUrl(objectKey),
+    }
+  }
+
+  async uploadResumeAiProjectImage(input: {
+    fileBuffer: Buffer
+    mimeType: string
+    filename: string
+  }) {
+    const client = createS3Client()
+    const bucket = getS3Bucket()
+    const objectKey = buildResumeAiProjectObjectKey(input.filename)
 
     await client.send(
       new PutObjectCommand({
