@@ -871,6 +871,7 @@ export default function App() {
                 content={resumeContent}
                 onOpenLinkedProject={openLinkedResumeProject}
                 onNavigateToAiProduct={() => navigateToView('ai-product')}
+                onNavigateToUxDesign={() => navigateToView('ux-design')}
               />
             </motion.div>
           ) : currentView === 'ai-product' ? (

@@ -155,12 +155,14 @@ export function ResumeContent({
   content,
   onOpenLinkedProject,
   onNavigateToAiProduct,
+  onNavigateToUxDesign,
 }: {
   activeTab: string,
   onActiveSectionChange?: (tab: string) => void
   content: ResumeContentData
   onOpenLinkedProject?: (projectId: string) => void
   onNavigateToAiProduct?: () => void
+  onNavigateToUxDesign?: () => void
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const aboutMeRef = useRef<HTMLDivElement>(null);
@@ -284,6 +286,7 @@ export function ResumeContent({
         <AiProducts
           content={content.aiProducts}
           onNavigateToAiProduct={onNavigateToAiProduct}
+          onNavigateToUxDesign={onNavigateToUxDesign}
           onOpenLinkedProject={onOpenLinkedProject}
         />
       </div>

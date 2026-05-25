@@ -6,7 +6,32 @@ import {
   type ResumeAiProducts as ResumeAiProductsContent,
 } from "../data/resumeContent";
 
+import { ContactIslandIcon } from "./ContactIslandIcon";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+
+export const CONTACT_CARD_ACTIONS = [
+  { kind: "ai-product", label: "AI PRODUCT", collapsedTop: 344, expandedTop: 192, opacityClass: "" },
+  { kind: "ux-design", label: "UX DESIGN", collapsedTop: 344, expandedTop: 268, opacityClass: "opacity-85" },
+  { kind: "cancel", label: "CANCEL", collapsedTop: 344, expandedTop: 344, opacityClass: "opacity-70" },
+] as const;
+
+type ContactCardActionKind = (typeof CONTACT_CARD_ACTIONS)[number]["kind"];
+
+export const CONTACT_CARD_PULL_OUT_TRANSITION = {
+  durationMs: 280,
+  easing: "linear",
+} as const;
+
+export const CONTACT_CARD_CANCEL_CLOSE_TRANSITION = {
+  mode: "fade",
+  durationMs: 180,
+  easing: "linear",
+} as const;
+
+export const CONTACT_CARD_INTERACTION = {
+  openTrigger: "hover",
+  autoCloseTrigger: "pointer-leave",
+} as const;
 
 function Blockquote({ line1, line2 }: { line1: string; line2: string }) {
   return (
@@ -288,35 +313,112 @@ function ProjectDetailCard({
 
 function ContactCard({
   content,
-  onClick,
+  onNavigateToAiProduct,
+  onNavigateToUxDesign,
 }: {
   content: ResumeAiContactCard
-  onClick?: () => void
+  onNavigateToAiProduct?: () => void
+  onNavigateToUxDesign?: () => void
 }) {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isPulledOpen, setIsPulledOpen] = React.useState(false);
+  const [isFadingOut, setIsFadingOut] = React.useState(false);
+  const closeTimeoutRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current !== null) {
+        window.clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!isExpanded) {
+      setIsPulledOpen(false);
+      setIsFadingOut(false);
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsPulledOpen(true);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isExpanded]);
+
+  const closeExpandedMenu = () => {
+    if (!isExpanded || isFadingOut) return;
+
+    setIsFadingOut(true);
+    if (closeTimeoutRef.current !== null) {
+      window.clearTimeout(closeTimeoutRef.current);
+    }
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setIsExpanded(false);
+      setIsPulledOpen(false);
+      setIsFadingOut(false);
+      closeTimeoutRef.current = null;
+    }, CONTACT_CARD_CANCEL_CLOSE_TRANSITION.durationMs);
+  };
+
+  const openExpandedMenu = () => {
+    if (closeTimeoutRef.current !== null) {
+      window.clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsFadingOut(false);
+    setIsExpanded(true);
+    setIsPulledOpen(false);
+  };
+
+  const leaveExpandedMenu = () => {
+    setIsFadingOut(false);
+    setIsPulledOpen(false);
+    setIsExpanded(false);
+  };
+
+  const menuOpacity = isFadingOut ? 0 : 1;
+  const menuOpacityTransition = isFadingOut
+    ? `opacity ${CONTACT_CARD_CANCEL_CLOSE_TRANSITION.durationMs}ms ${CONTACT_CARD_CANCEL_CLOSE_TRANSITION.easing}`
+    : "opacity 120ms linear";
+
+  const actionTop = (action: (typeof CONTACT_CARD_ACTIONS)[number]) => {
+    if (isFadingOut) {
+      return action.expandedTop;
+    }
+
+    return isPulledOpen ? action.expandedTop : action.collapsedTop;
+  };
+
+  const handleAction = (kind: ContactCardActionKind) => {
+    if (kind === "cancel") {
+      closeExpandedMenu();
+      return;
+    }
+
+    leaveExpandedMenu();
+    if (kind === "ai-product") {
+      onNavigateToAiProduct?.();
+      return;
+    }
+
+    onNavigateToUxDesign?.();
+  };
+
   return (
-    <div className="bg-[#1a1c1c] flex-[1_0_0] h-[500px] min-w-px relative rounded-[2px]" data-name="Contact Card">
+    <div
+      className="bg-[#1a1c1c] flex-[1_0_0] h-[500px] min-w-px overflow-hidden relative rounded-[2px]"
+      data-name="Contact Card"
+      onMouseLeave={closeExpandedMenu}
+    >
       <div className="flex flex-col items-center justify-center size-full">
         <div className="content-stretch flex flex-col items-center justify-between px-[48px] py-[96px] relative size-full">
           {/* Icon Group */}
-          <div className="content-stretch flex flex-col h-[55px] items-center justify-center relative shrink-0 pb-[24px]">
-             <div className="h-[44.764px] relative shrink-0 w-[55px]">
-                <svg className="absolute block inset-0 size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 55 45">
-                    <path d={svgPaths.p2dfdf508} fill="#E8E8E8" />
-                    <path d={svgPaths.pe935180} fill="#E8E8E8" />
-                    <path d={svgPaths.p27f4a800} fill="#E8E8E8" />
-                    <path d={svgPaths.p2c957700} fill="#E8E8E8" />
-                    <path d={svgPaths.p144f200} fill="#E8E8E8" />
-                    <path d={svgPaths.p18b7a680} fill="#E8E8E8" />
-                    <path clipRule="evenodd" d={svgPaths.p1897a580} fill="#E8E8E8" fillRule="evenodd" />
-                    <path d={svgPaths.p1c6e3bf0} fill="#E8E8E8" />
-                    <path d={svgPaths.p19d27a00} fill="#E8E8E8" />
-                    <path d={svgPaths.p25d76500} fill="#E8E8E8" />
-                    <path d={svgPaths.p17b15200} fill="#E8E8E8" />
-                    <path d={svgPaths.p21fb5f0} fill="#E8E8E8" />
-                    <path clipRule="evenodd" d={svgPaths.p2ca16500} fill="#E8E8E8" fillRule="evenodd" />
-                    <path d={svgPaths.p7b76020} fill="#E8E8E8" />
-                </svg>
-             </div>
+          <div className="content-stretch flex flex-col items-start pb-[24px] relative shrink-0">
+            <div className="content-stretch flex flex-col h-[55px] items-center justify-center relative shrink-0">
+              <ContactIslandIcon />
+            </div>
           </div>
           {/* Text Group */}
           <div className="content-stretch flex flex-col items-center relative shrink-0">
@@ -336,11 +438,48 @@ function ContactCard({
             </div>
           </div>
           {/* Button */}
-          <button onClick={onClick} className="bg-[#e8e8e8] content-stretch flex flex-col items-center justify-center px-[40px] py-[20px] relative rounded-[2px] shrink-0 hover:bg-white transition-colors cursor-pointer" data-name="Button">
+          <button
+            type="button"
+            aria-expanded={isExpanded}
+            onFocus={openExpandedMenu}
+            onMouseEnter={openExpandedMenu}
+            onClick={openExpandedMenu}
+            className="bg-[#e8e8e8] content-stretch flex flex-col items-center justify-center px-[40px] py-[20px] relative rounded-[2px] shrink-0 hover:bg-white transition-colors cursor-pointer"
+            data-name="Button"
+          >
             <div className="flex flex-col font-['Manrope:ExtraBold',sans-serif] font-extrabold h-[20px] justify-center leading-[0] relative shrink-0 text-[#1a1c1c] text-[14px] text-center tracking-[1.4px] uppercase whitespace-nowrap">
               <p className="leading-[20px] whitespace-nowrap">{content.buttonLabel}</p>
             </div>
           </button>
+          {isExpanded ? (
+            <div
+              className="absolute inset-0 z-10"
+              data-name="Contact Card Expanded Menu"
+              style={{
+                opacity: menuOpacity,
+                transition: menuOpacityTransition,
+              }}
+            >
+              <div className="absolute bg-gradient-to-b from-[rgba(26,28,28,0)] inset-0 to-[#1a1c1c]" aria-hidden="true" />
+              {CONTACT_CARD_ACTIONS.map((action, index) => (
+                <button
+                  key={action.kind}
+                  type="button"
+                  className={`absolute left-1/2 flex h-[60px] w-[192px] -translate-x-1/2 items-center justify-center rounded-[2px] bg-[#e8e8e8] px-[40px] py-[20px] hover:bg-white ${action.opacityClass}`}
+                  style={{
+                    top: `${actionTop(action)}px`,
+                    zIndex: action.kind === "cancel" ? 30 : CONTACT_CARD_ACTIONS.length - index,
+                    transition: `top ${CONTACT_CARD_PULL_OUT_TRANSITION.durationMs}ms ${CONTACT_CARD_PULL_OUT_TRANSITION.easing}, background-color 180ms linear`,
+                  }}
+                  onClick={() => handleAction(action.kind)}
+                >
+                  <span className="font-['Manrope:ExtraBold',sans-serif] text-[14px] font-extrabold leading-[20px] tracking-[1.4px] text-[#1a1c1c] uppercase">
+                    {action.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
@@ -350,10 +489,12 @@ function ContactCard({
 function GridContainer({
   content,
   onNavigateToAiProduct,
+  onNavigateToUxDesign,
   onOpenLinkedProject,
 }: {
   content: ResumeAiProductsContent
   onNavigateToAiProduct?: () => void
+  onNavigateToUxDesign?: () => void
   onOpenLinkedProject?: (projectId: string) => void
 }) {
   const projectGroups = content.projectGroups.length > 0 ? content.projectGroups : [];
@@ -389,11 +530,19 @@ function GridContainer({
                 imgSrc={lastProject.coverImage}
                 onOpenLinkedProject={onOpenLinkedProject}
               />
-              <ContactCard content={content.ctaCard} onClick={onNavigateToAiProduct} />
+              <ContactCard
+                content={content.ctaCard}
+                onNavigateToAiProduct={onNavigateToAiProduct}
+                onNavigateToUxDesign={onNavigateToUxDesign}
+              />
             </>
           ) : (
             <>
-              <ContactCard content={content.ctaCard} onClick={onNavigateToAiProduct} />
+              <ContactCard
+                content={content.ctaCard}
+                onNavigateToAiProduct={onNavigateToAiProduct}
+                onNavigateToUxDesign={onNavigateToUxDesign}
+              />
               <ProjectImageCard
                 group={lastProject}
                 imgSrc={lastProject.coverImage}
@@ -410,10 +559,12 @@ function GridContainer({
 export function AiProducts({
   content,
   onNavigateToAiProduct,
+  onNavigateToUxDesign,
   onOpenLinkedProject,
 }: {
   content: ResumeAiProductsContent
   onNavigateToAiProduct?: () => void
+  onNavigateToUxDesign?: () => void
   onOpenLinkedProject?: (projectId: string) => void
 }) {
   return (
@@ -425,6 +576,7 @@ export function AiProducts({
           <GridContainer
             content={content}
             onNavigateToAiProduct={onNavigateToAiProduct}
+            onNavigateToUxDesign={onNavigateToUxDesign}
             onOpenLinkedProject={onOpenLinkedProject}
           />
         </div>
