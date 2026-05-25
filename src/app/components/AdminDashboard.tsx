@@ -30,6 +30,18 @@ function normalizePasswordInput(value: string) {
     .replace(/\u3000/g, " ");
 }
 
+function formatSecurityUpdateDate(updatedAt?: string) {
+  if (!updatedAt) return "2026.05.20";
+
+  const date = new Date(updatedAt);
+  if (Number.isNaN(date.getTime())) return "2026.05.20";
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}.${month}.${day}`;
+}
+
 function LightDiffuseSweep({ active }: { active: boolean }) {
   return (
     <div className={`absolute inset-0 overflow-hidden transition-opacity duration-500 ${active ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
@@ -783,6 +795,7 @@ export function AdminDashboard({
   const totalDrafts = projects.filter((project) => project.status === "draft").length;
   const publishedAI = projects.filter((project) => project.category === "ai-product" && project.status === "published").length;
   const publishedUX = projects.filter((project) => project.category === "ux-design" && project.status === "published").length;
+  const securityUpdatedLabel = formatSecurityUpdateDate(authSettings.updatedAt);
   const dashboardProject = selectedProject ?? filteredProjects[0] ?? projects[0] ?? null;
   const editableProject = draftProject ?? dashboardProject;
   const previewCards = Array.from({ length: 4 }, (_, index) => index);
@@ -1544,7 +1557,7 @@ export function AdminDashboard({
           ) : activeModule === "security" ? (
             <section className="grid min-h-0 flex-1 grid-cols-2 gap-6">
               <div className="flex min-h-0 flex-col rounded-[36px] border border-black/6 bg-white/88 p-6 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
-                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Update: 2026.05.20</div>
+                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Update: {securityUpdatedLabel}</div>
                 <div className="mt-2 font-['Quantum',sans-serif] text-[24px] uppercase text-[#1a1c1c]">Platform Login</div>
                 <div className="mt-6 grid gap-4">
                   <label className="flex flex-col gap-2">
@@ -1599,7 +1612,7 @@ export function AdminDashboard({
               </div>
 
               <div className="flex min-h-0 flex-col rounded-[36px] border border-black/6 bg-white/88 p-6 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
-                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Update: 2026.05.20</div>
+                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Update: {securityUpdatedLabel}</div>
                 <div className="mt-2 font-['Quantum',sans-serif] text-[24px] uppercase text-[#1a1c1c]">Admin Login</div>
                 <div className="mt-6 grid gap-4">
                   <label className="flex flex-col gap-2">

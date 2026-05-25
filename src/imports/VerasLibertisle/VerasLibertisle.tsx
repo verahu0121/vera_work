@@ -178,6 +178,28 @@ export function Frame6({
               />
             </g>
             <g filter="url(#filter4_g_2_118)" id="Star 2">
+              <animateMotion
+                dur="22s"
+                repeatCount="indefinite"
+                calcMode="paced"
+                path="M 0 0 A 449 449 0 0 1 0 662 A 449 449 0 0 0 0 0"
+              />
+              <animate
+                attributeName="opacity"
+                dur="22s"
+                repeatCount="indefinite"
+                keyTimes="0;0.25;0.5;0.75;1"
+                values="1;0;1;0;1"
+              />
+              <animateTransform
+                attributeName="transform"
+                type="scale"
+                dur="22s"
+                repeatCount="indefinite"
+                additive="sum"
+                keyTimes="0;0.25;0.5;0.75;1"
+                values="1;0.1;1;0.1;1"
+              />
               <path
                 d={svgPaths.p32ce2b80}
                 fill="var(--fill-0, #96A1B6)"
@@ -188,6 +210,28 @@ export function Frame6({
               />
             </g>
             <g filter="url(#filter5_g_2_118)" id="Star 4">
+              <animateMotion
+                dur="22s"
+                repeatCount="indefinite"
+                calcMode="paced"
+                path="M 0 0 A 449 449 0 0 0 0 -662 A 449 449 0 0 1 0 0"
+              />
+              <animate
+                attributeName="opacity"
+                dur="22s"
+                repeatCount="indefinite"
+                keyTimes="0;0.25;0.5;0.75;1"
+                values="1;0;1;0;1"
+              />
+              <animateTransform
+                attributeName="transform"
+                type="scale"
+                dur="22s"
+                repeatCount="indefinite"
+                additive="sum"
+                keyTimes="0;0.25;0.5;0.75;1"
+                values="1;0.1;1;0.1;1"
+              />
               <path
                 d={svgPaths.p45e7a80}
                 fill="var(--fill-0, #96A1B6)"
@@ -490,11 +534,11 @@ export function Frame6({
             <filter
               colorInterpolationFilters="sRGB"
               filterUnits="userSpaceOnUse"
-              height="59.9593"
+              height="790"
               id="filter4_g_2_118"
-              width="59.9592"
-              x="721.02"
-              y="88.0204"
+              width="250"
+              x="690"
+              y="60"
             >
               <feFlood
                 floodOpacity="0"
@@ -528,11 +572,11 @@ export function Frame6({
             <filter
               colorInterpolationFilters="sRGB"
               filterUnits="userSpaceOnUse"
-              height="59.9592"
+              height="790"
               id="filter5_g_2_118"
-              width="59.9592"
-              x="721.02"
-              y="750.02"
+              width="250"
+              x="690"
+              y="60"
             >
               <feFlood
                 floodOpacity="0"

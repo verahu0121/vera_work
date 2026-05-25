@@ -25,8 +25,29 @@ import {
   type ResumeInformationHomeModuleKey,
 } from "./data/resumeContent";
 
-const SITE_SUCCESS_TRANSITION_MS = 2400;
+const SITE_SUCCESS_TRANSITION_MS = 850;
+const SITE_WELCOME_EXIT_START_MS = 80;
+const SITE_LOGOUT_TRANSITION_MS = 520;
+const SITE_WELCOME_FADE_DURATION = 0.72;
 const SITE_WELCOME_GRID_ITEMS = Array.from({ length: 30 }, (_, index) => index);
+type AppView = 'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard';
+
+const VIEW_PATHS: Record<AppView, string> = {
+  home: '/',
+  resume: '/resume',
+  'ai-product': '/ai-product',
+  'ux-design': '/ux-design',
+  'admin-dashboard': '/admin',
+};
+
+function getViewFromPath(pathname: string): AppView {
+  const normalizedPath = pathname.replace(/\/+$/, '') || '/';
+  const matchedView = (Object.entries(VIEW_PATHS) as Array<[AppView, string]>).find(
+    ([, path]) => path === normalizedPath,
+  )?.[0];
+
+  return matchedView ?? 'home';
+}
 
 function normalizePasswordInput(value: string) {
   return value
@@ -44,17 +65,21 @@ const primarySectionTransition = {
 
 function SiteWelcomeTransition({
   lines = ["Welcome To", "Vera’s Libertisle"],
+  fadeOnly = false,
+  fadeDuration = 0.48,
 }: {
   lines?: string[];
+  fadeOnly?: boolean;
+  fadeDuration?: number;
 }) {
   return (
     <motion.div
       key="site-welcome"
-      initial={{ opacity: 0, scale: 1.02 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.995, filter: "blur(8px)" }}
-      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[#e6e6e6]"
+      initial={fadeOnly ? { opacity: 0 } : { opacity: 0, scale: 1.02 }}
+      animate={fadeOnly ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+      exit={fadeOnly ? { opacity: 0 } : { opacity: 0, scale: 0.995, filter: "blur(8px)" }}
+      transition={{ duration: fadeOnly ? fadeDuration : 0.8, ease: [0.22, 1, 0.36, 1] }}
+      className="absolute inset-0 z-[80] flex items-center justify-center overflow-hidden bg-[#e6e6e6]"
     >
       <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
         <div
@@ -137,7 +162,7 @@ function Labels({
 
   return (
     <>
-      <div 
+      <div
         onMouseEnter={() => onHover(0)}
         onMouseLeave={onLeave}
         className={`transition-all duration-500 ease-in-out -translate-y-1/2 absolute content-stretch flex flex-col gap-[4px] items-end right-[395.17px] top-[calc(50%+18.5px)] w-[181px] origin-right ${activeIndex === 0 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
@@ -161,7 +186,7 @@ function Labels({
           </div>
         </div>
       </div>
-      <div 
+      <div
         onMouseEnter={() => onHover(1)}
         onMouseLeave={onLeave}
         className={`transition-all duration-500 ease-in-out absolute content-stretch flex flex-col gap-[4px] items-start justify-center right-[864.17px] top-[553px] w-[181px] origin-left ${activeIndex === 1 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
@@ -185,7 +210,7 @@ function Labels({
           </div>
         </div>
       </div>
-      <div 
+      <div
         onMouseEnter={() => onHover(2)}
         onMouseLeave={onLeave}
         className={`transition-all duration-500 ease-in-out -translate-x-1/2 absolute content-stretch flex flex-col gap-[4px] items-center left-[calc(50%-79.5px)] top-[91px] w-[181px] origin-top ${activeIndex === 2 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
@@ -220,12 +245,14 @@ export default function App() {
   const [sitePassword, setSitePassword] = useState("");
   const [sitePasswordError, setSitePasswordError] = useState(false);
   const [isSitePasswordFocused, setIsSitePasswordFocused] = useState(false);
-  const [siteGatePhase, setSiteGatePhase] = useState<"locked" | "welcome" | "goodbye">("locked");
+  const [siteGatePhase, setSiteGatePhase] = useState<"locked" | "welcome" | "welcome-exit" | "goodbye">("locked");
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [isIconHovered, setIsIconHovered] = useState(false);
   const [isContactPopupOpen, setIsContactPopupOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard'>('home');
+  const [currentView, setCurrentView] = useState<AppView>(() =>
+    typeof window === 'undefined' ? 'home' : getViewFromPath(window.location.pathname),
+  );
   const [activeResumeSubItem, setActiveResumeSubItem] = useState<string>('about me');
   const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
   const [portfolioProjects, setPortfolioProjects] = useState<PortfolioProject[]>([]);
@@ -313,16 +340,25 @@ export default function App() {
     if (siteGatePhase === "welcome") {
       const unlockTimer = window.setTimeout(() => {
         setIsSiteUnlocked(true);
+        setSiteGatePhase("welcome-exit");
       }, SITE_SUCCESS_TRANSITION_MS);
 
       return () => window.clearTimeout(unlockTimer);
+    }
+
+    if (siteGatePhase === "welcome-exit") {
+      const exitTimer = window.setTimeout(() => {
+        setSiteGatePhase("locked");
+      }, SITE_WELCOME_EXIT_START_MS);
+
+      return () => window.clearTimeout(exitTimer);
     }
 
     if (siteGatePhase === "goodbye") {
       const lockTimer = window.setTimeout(() => {
         setIsSiteUnlocked(false);
         setSiteGatePhase("locked");
-      }, SITE_SUCCESS_TRANSITION_MS);
+      }, SITE_LOGOUT_TRANSITION_MS);
 
       return () => window.clearTimeout(lockTimer);
     }
@@ -503,7 +539,7 @@ export default function App() {
     [portfolioProjects],
   );
 
-  const viewOrder: Record<'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard', number> = {
+  const viewOrder: Record<AppView, number> = {
     home: 0,
     resume: 1,
     'ai-product': 2,
@@ -511,18 +547,41 @@ export default function App() {
     'admin-dashboard': 4,
   };
 
-  const navigateToView = (
-    nextView: 'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard',
-  ) => {
-    if (nextView === currentView) return;
+  const navigateToView = (nextView: AppView, options?: { replace?: boolean }) => {
+    if (nextView !== currentView) {
+      setTransitionDirection(viewOrder[nextView] >= viewOrder[currentView] ? 1 : -1);
+      setCurrentView(nextView);
+    }
 
-    setTransitionDirection(viewOrder[nextView] >= viewOrder[currentView] ? 1 : -1);
-    setCurrentView(nextView);
+    const nextPath = VIEW_PATHS[nextView];
+    if (window.location.pathname !== nextPath) {
+      const updateHistory = options?.replace ? window.history.replaceState : window.history.pushState;
+      updateHistory.call(window.history, null, '', nextPath);
+    }
+
     setIsContactPopupOpen(false);
     if (nextView !== 'home') {
       setIsIconHovered(false);
     }
   };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const nextView = getViewFromPath(window.location.pathname);
+
+      setCurrentView((previousView) => {
+        setTransitionDirection(viewOrder[nextView] >= viewOrder[previousView] ? 1 : -1);
+        return nextView;
+      });
+      setIsContactPopupOpen(false);
+      if (nextView !== 'home') {
+        setIsIconHovered(false);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const openAdminDashboard = () => {
     navigateToView('admin-dashboard');
@@ -531,7 +590,7 @@ export default function App() {
   const handleSiteLogout = () => {
     setIsContactPopupOpen(false);
     setResumeLinkedProjectId(null);
-    setCurrentView("home");
+    navigateToView("home", { replace: true });
     setActiveResumeSubItem("about me");
     setSitePassword("");
     setSitePasswordError(false);
@@ -598,15 +657,7 @@ export default function App() {
     return <div className="h-screen w-full bg-[#e6e6e6]" />;
   }
 
-  if (isSiteUnlocked && siteGatePhase === "goodbye") {
-    return (
-      <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-[#e6e6e6] text-[#1a1c1c]">
-        <SiteWelcomeTransition lines={["GOODBYE"]} />
-      </div>
-    );
-  }
-
-  if (!isSiteUnlocked) {
+  if (!isSiteUnlocked || siteGatePhase === "goodbye") {
     const inputStateClass = sitePasswordError
       ? "border-[#d78ea0]/55 bg-[rgba(255,107,138,0.06)] shadow-[inset_0_0_0_1px_rgba(255,107,138,0.18)]"
       : isSitePasswordFocused
@@ -662,8 +713,10 @@ export default function App() {
                 />
               </div>
             </motion.div>
+          ) : siteGatePhase === "goodbye" ? (
+            <SiteWelcomeTransition key="site-goodbye-shell" lines={["GOODBYE"]} fadeOnly />
           ) : (
-            <SiteWelcomeTransition key="site-welcome-shell" />
+            <SiteWelcomeTransition key="site-welcome-shell" fadeOnly />
           )}
         </AnimatePresence>
       </div>
@@ -674,15 +727,15 @@ export default function App() {
     resumeLinkedProjectId == null
       ? null
       : portfolioProjects.find(
-          (project) => project.id === resumeLinkedProjectId && project.status === "published",
-        ) ?? null;
+        (project) => project.id === resumeLinkedProjectId && project.status === "published",
+      ) ?? null;
 
   return (
     <div className="w-full h-screen flex overflow-hidden relative transition-colors duration-500 bg-[#E6E6E6]">
-      <Toaster 
-        position="top-left" 
-        expand={false} 
-        visibleToasts={1} 
+      <Toaster
+        position="top-left"
+        expand={false}
+        visibleToasts={1}
         toastOptions={{
           style: {
             background: 'transparent',
@@ -702,6 +755,15 @@ export default function App() {
         }}
       />
       <AnimatePresence initial={false}>
+        {siteGatePhase === "welcome-exit" && (
+          <SiteWelcomeTransition
+            key="site-welcome-overlay"
+            fadeOnly
+            fadeDuration={SITE_WELCOME_FADE_DURATION}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence initial={false}>
         {currentView !== 'admin-dashboard' && (
           <motion.div
             initial={{ opacity: 0, x: -28 }}
@@ -710,12 +772,12 @@ export default function App() {
             transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
             className="w-[256px] h-full absolute top-0 left-0 z-40 overflow-y-auto overflow-x-hidden transition-all duration-500 bg-[rgba(230,230,230,0.5)] backdrop-blur-[2px]"
           >
-            <MainSidebar 
+            <MainSidebar
               currentView={currentView}
               onViewChange={(view) => {
                 navigateToView(view as 'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard');
               }}
-              isContactActive={isContactPopupOpen} 
+              isContactActive={isContactPopupOpen}
               onContactClick={refreshSidebarContact}
               contact={resumeContent.information.contact}
               onHomeClick={() => {
@@ -728,7 +790,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <div 
+      <div
         className="absolute inset-0 flex items-center justify-center overflow-hidden"
         onClick={() => {
           if (isContactPopupOpen) setIsContactPopupOpen(false);
@@ -766,9 +828,9 @@ export default function App() {
                   copyright={resumeContent.information.copyright}
                 />
                 <Frame6 isHovered={isIconHovered || isContactPopupOpen} />
-                <div 
-                  className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-300 bg-[rgba(230,230,230,0.5)] ${(isIconHovered || isContactPopupOpen) ? 'opacity-100' : 'opacity-0'}`} 
-                  aria-hidden="true" 
+                <div
+                  className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-300 bg-[rgba(230,230,230,0.5)] ${(isIconHovered || isContactPopupOpen) ? 'opacity-100' : 'opacity-0'}`}
+                  aria-hidden="true"
                 />
                 <Labels
                   activeIndex={activeIndex}
@@ -780,12 +842,12 @@ export default function App() {
                   activeIndex={activeIndex}
                   items={getHomeItemsByActiveIndex(resumeContent.information.home.modules, activeIndex)}
                 />
-                <Icon 
-                  isHovered={isIconHovered} 
+                <Icon
+                  isHovered={isIconHovered}
                   isActive={isContactPopupOpen}
                   hoverTextLines={["EXPLORE"]}
-                  onMouseEnter={() => setIsIconHovered(true)} 
-                  onMouseLeave={() => setIsIconHovered(false)} 
+                  onMouseEnter={() => setIsIconHovered(true)}
+                  onMouseLeave={() => setIsIconHovered(false)}
                   onClick={() => {
                     if (isIconHovered) {
                       openAIProductFromHome();
@@ -803,8 +865,8 @@ export default function App() {
               transition={primarySectionTransition.transition}
               className="absolute inset-0 z-10 pl-[256px] bg-[#e6e6e6]"
             >
-              <ResumeContent 
-                activeTab={activeResumeSubItem} 
+              <ResumeContent
+                activeTab={activeResumeSubItem}
                 onActiveSectionChange={setActiveResumeSubItem}
                 content={resumeContent}
                 onOpenLinkedProject={openLinkedResumeProject}
@@ -820,7 +882,7 @@ export default function App() {
               transition={primarySectionTransition.transition}
               className="absolute inset-0 z-10 pl-[256px] overflow-y-auto scrollbar-hide bg-[#e6e6e6]"
             >
-               <AIProductContent projects={aiProductProjects} />
+              <AIProductContent projects={aiProductProjects} />
             </motion.div>
           ) : currentView === 'ux-design' ? (
             <motion.div
@@ -831,7 +893,7 @@ export default function App() {
               transition={primarySectionTransition.transition}
               className="absolute inset-0 z-10 pl-[256px] overflow-y-auto scrollbar-hide bg-[#e6e6e6]"
             >
-               <UXDesignContent projects={uxDesignProjects} />
+              <UXDesignContent projects={uxDesignProjects} />
             </motion.div>
           ) : (
             <motion.div

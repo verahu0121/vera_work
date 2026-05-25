@@ -1,6 +1,7 @@
 export type AuthSettings = {
   platformWelcomeText: string;
   adminWelcomeText: string;
+  updatedAt?: string;
 };
 
 export type AuthSettingsSeed = AuthSettings & {

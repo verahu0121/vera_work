@@ -12,6 +12,7 @@ export class AuthSettingsService {
     return {
       platformWelcomeText: record.platformWelcomeText,
       adminWelcomeText: record.adminWelcomeText,
+      updatedAt: record.updatedAt,
     }
   }
 

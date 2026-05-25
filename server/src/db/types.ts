@@ -1,12 +1,12 @@
 export type PublicAuthSettings = {
   platformWelcomeText: string
   adminWelcomeText: string
+  updatedAt: string
 }
 
 export type AuthSettingsRecord = PublicAuthSettings & {
   platformPasswordHash: string
   adminPasswordHash: string
-  updatedAt: string
 }
 
 export type ResumeContentRecord = {
