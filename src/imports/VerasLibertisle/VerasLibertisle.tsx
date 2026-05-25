@@ -158,88 +158,160 @@ export function Frame6({
               />
             </g>
             <g filter="url(#filter2_g_2_118)" id="Star 1">
-              <path
-                d={svgPaths.p1c1ddb80}
-                fill="var(--fill-0, #D1D1D1)"
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                from="0 450 450"
+                to="-360 450 450"
+                dur="22s"
+                repeatCount="indefinite"
               />
-              <path
-                d={svgPaths.p1c1ddb80}
-                stroke="var(--stroke-0, #D1D1D1)"
-              />
+              <g transform="translate(148 118)">
+                <g>
+                  <animate
+                    attributeName="opacity"
+                    dur="22s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.25;0.5;0.75;1"
+                    values="1;0;1;0;1"
+                  />
+                  <animateTransform
+                    attributeName="transform"
+                    type="scale"
+                    dur="22s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.25;0.5;0.75;1"
+                    values="1;0.01;1;0.01;1"
+                  />
+                <path
+                  d={svgPaths.p1c1ddb80}
+                  fill="var(--fill-0, #96A1B6)"
+                  transform="translate(-148 -118)"
+                />
+                <path
+                  d={svgPaths.p1c1ddb80}
+                  stroke="var(--stroke-0, #96A1B6)"
+                  transform="translate(-148 -118)"
+                />
+                </g>
+              </g>
             </g>
             <g filter="url(#filter3_g_2_118)" id="Star 3">
-              <path
-                d={svgPaths.p34d95680}
-                fill="var(--fill-0, #D1D1D1)"
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                from="0 450 450"
+                to="360 450 450"
+                dur="22s"
+                repeatCount="indefinite"
               />
-              <path
-                d={svgPaths.p34d95680}
-                stroke="var(--stroke-0, #D1D1D1)"
-              />
+              <g transform="translate(148 780)">
+                <g>
+                  <animate
+                    attributeName="opacity"
+                    dur="22s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.25;0.5;0.75;1"
+                    values="1;0;1;0;1"
+                  />
+                  <animateTransform
+                    attributeName="transform"
+                    type="scale"
+                    dur="22s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.25;0.5;0.75;1"
+                    values="1;0.01;1;0.01;1"
+                  />
+                <path
+                  d={svgPaths.p34d95680}
+                  fill="var(--fill-0, #96A1B6)"
+                  transform="translate(-148 -780)"
+                />
+                <path
+                  d={svgPaths.p34d95680}
+                  stroke="var(--stroke-0, #96A1B6)"
+                  transform="translate(-148 -780)"
+                />
+                </g>
+              </g>
             </g>
             <g filter="url(#filter4_g_2_118)" id="Star 2">
-              <animateMotion
-                dur="22s"
-                repeatCount="indefinite"
-                calcMode="paced"
-                path="M 0 0 A 449 449 0 0 1 0 662 A 449 449 0 0 0 0 0"
-              />
-              <animate
-                attributeName="opacity"
-                dur="22s"
-                repeatCount="indefinite"
-                keyTimes="0;0.25;0.5;0.75;1"
-                values="1;0;1;0;1"
-              />
               <animateTransform
                 attributeName="transform"
-                type="scale"
+                type="rotate"
+                from="0 450 450"
+                to="360 450 450"
                 dur="22s"
                 repeatCount="indefinite"
-                additive="sum"
-                keyTimes="0;0.25;0.5;0.75;1"
-                values="1;0.1;1;0.1;1"
               />
-              <path
-                d={svgPaths.p32ce2b80}
-                fill="var(--fill-0, #96A1B6)"
-              />
-              <path
-                d={svgPaths.p32ce2b80}
-                stroke="var(--stroke-0, #96A1B6)"
-              />
+              <g transform="translate(751 118)">
+                <g>
+                  <animate
+                    attributeName="opacity"
+                    dur="22s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.25;0.5;0.75;1"
+                    values="1;0;1;0;1"
+                  />
+                  <animateTransform
+                    attributeName="transform"
+                    type="scale"
+                    dur="22s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.25;0.5;0.75;1"
+                    values="1;0.01;1;0.01;1"
+                  />
+                <path
+                  d={svgPaths.p32ce2b80}
+                  fill="var(--fill-0, #96A1B6)"
+                  transform="translate(-751 -118)"
+                />
+                <path
+                  d={svgPaths.p32ce2b80}
+                  stroke="var(--stroke-0, #96A1B6)"
+                  transform="translate(-751 -118)"
+                />
+                </g>
+              </g>
             </g>
             <g filter="url(#filter5_g_2_118)" id="Star 4">
-              <animateMotion
-                dur="22s"
-                repeatCount="indefinite"
-                calcMode="paced"
-                path="M 0 0 A 449 449 0 0 0 0 -662 A 449 449 0 0 1 0 0"
-              />
-              <animate
-                attributeName="opacity"
-                dur="22s"
-                repeatCount="indefinite"
-                keyTimes="0;0.25;0.5;0.75;1"
-                values="1;0;1;0;1"
-              />
               <animateTransform
                 attributeName="transform"
-                type="scale"
+                type="rotate"
+                from="0 450 450"
+                to="-360 450 450"
                 dur="22s"
                 repeatCount="indefinite"
-                additive="sum"
-                keyTimes="0;0.25;0.5;0.75;1"
-                values="1;0.1;1;0.1;1"
               />
-              <path
-                d={svgPaths.p45e7a80}
-                fill="var(--fill-0, #96A1B6)"
-              />
-              <path
-                d={svgPaths.p45e7a80}
-                stroke="var(--stroke-0, #96A1B6)"
-              />
+              <g transform="translate(751 780)">
+                <g>
+                  <animate
+                    attributeName="opacity"
+                    dur="22s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.25;0.5;0.75;1"
+                    values="1;0;1;0;1"
+                  />
+                  <animateTransform
+                    attributeName="transform"
+                    type="scale"
+                    dur="22s"
+                    repeatCount="indefinite"
+                    keyTimes="0;0.25;0.5;0.75;1"
+                    values="1;0.01;1;0.01;1"
+                  />
+                <path
+                  d={svgPaths.p45e7a80}
+                  fill="var(--fill-0, #96A1B6)"
+                  transform="translate(-751 -780)"
+                />
+                <path
+                  d={svgPaths.p45e7a80}
+                  stroke="var(--stroke-0, #96A1B6)"
+                  transform="translate(-751 -780)"
+                />
+                </g>
+              </g>
             </g>
             <g
               className="origin-center animate-spin"
@@ -458,11 +530,11 @@ export function Frame6({
             <filter
               colorInterpolationFilters="sRGB"
               filterUnits="userSpaceOnUse"
-              height="59.9593"
+              height="900"
               id="filter2_g_2_118"
-              width="59.9593"
-              x="118.02"
-              y="88.0204"
+              width="900"
+              x="0"
+              y="0"
             >
               <feFlood
                 floodOpacity="0"
@@ -496,11 +568,11 @@ export function Frame6({
             <filter
               colorInterpolationFilters="sRGB"
               filterUnits="userSpaceOnUse"
-              height="59.9592"
+              height="900"
               id="filter3_g_2_118"
-              width="59.9593"
-              x="118.02"
-              y="750.02"
+              width="900"
+              x="0"
+              y="0"
             >
               <feFlood
                 floodOpacity="0"
@@ -534,11 +606,11 @@ export function Frame6({
             <filter
               colorInterpolationFilters="sRGB"
               filterUnits="userSpaceOnUse"
-              height="790"
+              height="900"
               id="filter4_g_2_118"
-              width="250"
-              x="690"
-              y="60"
+              width="900"
+              x="0"
+              y="0"
             >
               <feFlood
                 floodOpacity="0"
@@ -572,11 +644,11 @@ export function Frame6({
             <filter
               colorInterpolationFilters="sRGB"
               filterUnits="userSpaceOnUse"
-              height="790"
+              height="900"
               id="filter5_g_2_118"
-              width="250"
-              x="690"
-              y="60"
+              width="900"
+              x="0"
+              y="0"
             >
               <feFlood
                 floodOpacity="0"
@@ -862,17 +934,12 @@ export function Icon({
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      {isActive ? (
-        <ActiveIcon />
-      ) : isHovered ? (
-        <HoverIcon textLines={hoverTextLines} />
-      ) : (
-        <svg
-          className="absolute block size-full"
-          fill="none"
-          preserveAspectRatio="none"
-          viewBox="0 0 120 120"
-        >
+      <svg
+        className="absolute block size-full"
+        fill="none"
+        preserveAspectRatio="none"
+        viewBox="0 0 120 120"
+      >
           <g id="icon">
             <rect
               fill="url(#paint0_radial_2_115)"
@@ -1511,8 +1578,21 @@ export function Icon({
               <stop offset="1" stopColor="#7BA6D7" />
             </radialGradient>
           </defs>
-        </svg>
-      )}
+      </svg>
+      <AnimatePresence initial={false}>
+        {(isActive || isHovered) && (
+          <motion.div
+            key={isActive ? "active-icon" : "hover-icon"}
+            className="absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {isActive ? <ActiveIcon /> : <HoverIcon textLines={hoverTextLines} />}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

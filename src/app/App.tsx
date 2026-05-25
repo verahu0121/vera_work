@@ -829,7 +829,7 @@ export default function App() {
                 />
                 <Frame6 isHovered={isIconHovered || isContactPopupOpen} />
                 <div
-                  className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-300 bg-[rgba(230,230,230,0.5)] ${(isIconHovered || isContactPopupOpen) ? 'opacity-100' : 'opacity-0'}`}
+                  className={`absolute inset-0 z-20 pointer-events-none transition-opacity bg-[rgba(230,230,230,0.5)] ${(isIconHovered || isContactPopupOpen) ? 'opacity-100 duration-300' : 'opacity-0 duration-[600ms] ease-[cubic-bezier(0.68,0,0.82,0.55)]'}`}
                   aria-hidden="true"
                 />
                 <Labels
