@@ -21,10 +21,19 @@ import {
   DEFAULT_RESUME_CONTENT,
   normalizeResumeContent,
   type ResumeContentData,
+  type ResumeInformationHomeModule,
+  type ResumeInformationHomeModuleKey,
 } from "./data/resumeContent";
 
 const SITE_SUCCESS_TRANSITION_MS = 2400;
 const SITE_WELCOME_GRID_ITEMS = Array.from({ length: 30 }, (_, index) => index);
+
+function normalizePasswordInput(value: string) {
+  return value
+    .trim()
+    .replace(/[！-～]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+    .replace(/\u3000/g, " ");
+}
 
 const primarySectionTransition = {
   initial: { opacity: 0, y: 18, filter: "blur(10px)" },
@@ -33,7 +42,11 @@ const primarySectionTransition = {
   transition: { duration: 0.48, ease: [0.22, 1, 0.36, 1] },
 } as const;
 
-function SiteWelcomeTransition() {
+function SiteWelcomeTransition({
+  lines = ["Welcome To", "Vera’s Libertisle"],
+}: {
+  lines?: string[];
+}) {
   return (
     <motion.div
       key="site-welcome"
@@ -71,37 +84,78 @@ function SiteWelcomeTransition() {
       </div>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.58)_0%,rgba(230,230,230,0.18)_34%,rgba(230,230,230,0)_68%)]" />
       <div className="relative z-10 -translate-y-[8px] text-center font-['Manrope:ExtraBold',sans-serif] text-[64px] font-extrabold uppercase tracking-[5.12px] text-[#004e8d]">
-        <p className="leading-[84px]">Welcome To</p>
-        <p className="leading-[84px]">Vera’s Libertisle</p>
+        {lines.map((line) => (
+          <p key={line} className="leading-[84px]">
+            {line}
+          </p>
+        ))}
       </div>
     </motion.div>
   );
 }
 
-function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHover: (index: number) => void, onLeave: () => void }) {
+function getHomeLabelLines(
+  modules: ResumeInformationHomeModule[],
+  key: ResumeInformationHomeModuleKey,
+) {
+  const module = modules.find((item) => item.key === key);
+  return Array.from({ length: 3 }, (_, index) => module?.information[index] ?? "");
+}
+
+const HOME_MODULE_KEYS_BY_ACTIVE_INDEX: ResumeInformationHomeModuleKey[] = ["right", "left", "center"];
+
+function getHomeItemsByActiveIndex(
+  modules: ResumeInformationHomeModule[],
+  activeIndex: number,
+) {
+  const key = HOME_MODULE_KEYS_BY_ACTIVE_INDEX[activeIndex] ?? "right";
+  return (
+    modules
+      .find((item) => item.key === key)
+      ?.items.map((item) => ({
+        label: item.label,
+        value: item.value,
+      })) ?? []
+  );
+}
+
+function Labels({
+  activeIndex,
+  onHover,
+  onLeave,
+  homeModules,
+}: {
+  activeIndex: number;
+  onHover: (index: number) => void;
+  onLeave: () => void;
+  homeModules: ResumeInformationHomeModule[];
+}) {
   const customCursor = `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle cx='6' cy='6' r='6' fill='%23004997'/%3E%3C/svg%3E") 6 6, auto`;
+  const rightLines = getHomeLabelLines(homeModules, "right");
+  const leftLines = getHomeLabelLines(homeModules, "left");
+  const centerLines = getHomeLabelLines(homeModules, "center");
 
   return (
     <>
       <div 
         onMouseEnter={() => onHover(0)}
         onMouseLeave={onLeave}
-        className={`transition-all duration-500 ease-in-out -translate-y-1/2 absolute content-stretch flex flex-col gap-[10px] items-end right-[395.17px] top-[calc(50%+18.5px)] w-[181px] origin-right ${activeIndex === 0 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
+        className={`transition-all duration-500 ease-in-out -translate-y-1/2 absolute content-stretch flex flex-col gap-[4px] items-end right-[395.17px] top-[calc(50%+18.5px)] w-[181px] origin-right ${activeIndex === 0 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
         style={{ cursor: customCursor }}
       >
         <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-end leading-[0] not-italic relative shrink-0 text-[#004997] text-[16px] text-right tracking-[-1px] uppercase w-full">
           <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
-            <p className="leading-[16px]">AI Product</p>
+            <p className="leading-[16px]">{rightLines[0]}</p>
           </div>
           <div className="flex flex-col justify-center relative shrink-0 whitespace-nowrap">
-            <p className="leading-[16px]">ProductAI Product</p>
+            <p className="leading-[16px]">{rightLines[1]}</p>
           </div>
         </div>
         <div className="relative shrink-0 w-full">
           <div className="flex flex-row items-center justify-end size-full">
             <div className="content-stretch flex items-center justify-end px-[2px] relative w-full">
               <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#96a1b6] text-[10px] text-right uppercase whitespace-nowrap">
-                <p className="leading-[15px]">ux设计项目</p>
+                <p className="leading-[15px]">{rightLines[2]}</p>
               </div>
             </div>
           </div>
@@ -110,22 +164,22 @@ function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHove
       <div 
         onMouseEnter={() => onHover(1)}
         onMouseLeave={onLeave}
-        className={`transition-all duration-500 ease-in-out absolute content-stretch flex flex-col gap-[10px] items-start justify-center right-[864.17px] top-[553px] w-[181px] origin-left ${activeIndex === 1 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
+        className={`transition-all duration-500 ease-in-out absolute content-stretch flex flex-col gap-[4px] items-start justify-center right-[864.17px] top-[553px] w-[181px] origin-left ${activeIndex === 1 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
         style={{ cursor: customCursor }}
       >
         <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-start justify-center leading-[0] not-italic relative shrink-0 text-[#004997] text-[16px] tracking-[-1px] uppercase w-full">
           <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
-            <p className="leading-[16px]">AI Product</p>
+            <p className="leading-[16px]">{leftLines[0]}</p>
           </div>
           <div className="flex flex-col justify-center relative shrink-0 whitespace-nowrap">
-            <p className="leading-[16px]">ProductAI Product</p>
+            <p className="leading-[16px]">{leftLines[1]}</p>
           </div>
         </div>
         <div className="relative shrink-0 w-full">
           <div className="flex flex-row items-center size-full">
             <div className="content-stretch flex items-center px-[2px] relative w-full">
               <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#96a1b6] text-[10px] text-right uppercase whitespace-nowrap">
-                <p className="leading-[15px]">ux设计项目</p>
+                <p className="leading-[15px]">{leftLines[2]}</p>
               </div>
             </div>
           </div>
@@ -134,22 +188,22 @@ function Labels({ activeIndex, onHover, onLeave }: { activeIndex: number, onHove
       <div 
         onMouseEnter={() => onHover(2)}
         onMouseLeave={onLeave}
-        className={`transition-all duration-500 ease-in-out -translate-x-1/2 absolute content-stretch flex flex-col gap-[10px] items-center left-[calc(50%-79.5px)] top-[91px] w-[181px] origin-top ${activeIndex === 2 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
+        className={`transition-all duration-500 ease-in-out -translate-x-1/2 absolute content-stretch flex flex-col gap-[4px] items-center left-[calc(50%-79.5px)] top-[91px] w-[181px] origin-top ${activeIndex === 2 ? 'opacity-100 scale-110' : 'opacity-20 scale-100'}`}
         style={{ cursor: customCursor }}
       >
         <div className="content-stretch flex flex-col font-['Quantum',sans-serif] gap-[6px] items-center leading-[0] not-italic relative shrink-0 text-[#004997] text-[16px] text-center tracking-[-1px] uppercase w-full">
           <div className="flex flex-col justify-center min-w-full relative shrink-0 w-[min-content]">
-            <p className="leading-[16px]">AI Product</p>
+            <p className="leading-[16px]">{centerLines[0]}</p>
           </div>
           <div className="flex flex-col justify-center relative shrink-0 whitespace-nowrap">
-            <p className="leading-[16px]">ProductAI Product</p>
+            <p className="leading-[16px]">{centerLines[1]}</p>
           </div>
         </div>
         <div className="relative shrink-0 w-full">
           <div className="flex flex-row items-center justify-center size-full">
             <div className="content-stretch flex items-center justify-center px-[2px] relative w-full">
               <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#96a1b6] text-[10px] text-right uppercase whitespace-nowrap">
-                <p className="leading-[15px]">ux设计项目</p>
+                <p className="leading-[15px]">{centerLines[2]}</p>
               </div>
             </div>
           </div>
@@ -166,7 +220,7 @@ export default function App() {
   const [sitePassword, setSitePassword] = useState("");
   const [sitePasswordError, setSitePasswordError] = useState(false);
   const [isSitePasswordFocused, setIsSitePasswordFocused] = useState(false);
-  const [siteGatePhase, setSiteGatePhase] = useState<"locked" | "welcome">("locked");
+  const [siteGatePhase, setSiteGatePhase] = useState<"locked" | "welcome" | "goodbye">("locked");
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [isIconHovered, setIsIconHovered] = useState(false);
@@ -179,6 +233,21 @@ export default function App() {
   const [authSettings, setAuthSettings] = useState<AuthSettings>(DEFAULT_AUTH_SETTINGS);
   const [resumeContent, setResumeContent] = useState<ResumeContentData>(DEFAULT_RESUME_CONTENT);
   const [resumeLinkedProjectId, setResumeLinkedProjectId] = useState<string | null>(null);
+
+  const refreshResumeContent = useCallback(async () => {
+    const response = await fetch("/api/admin/resume", {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch resume content.");
+    }
+
+    const nextContent = (await response.json()) as ResumeContentData;
+    const normalizedContent = normalizeResumeContent(nextContent);
+    setResumeContent(normalizedContent);
+    return normalizedContent;
+  }, []);
 
   useEffect(() => {
     if (isHovering || (currentView !== 'home')) return;
@@ -212,6 +281,8 @@ export default function App() {
   }, []);
 
   const handleSiteUnlock = async () => {
+    const normalizedPassword = normalizePasswordInput(sitePassword);
+
     try {
       const response = await fetch("/api/admin/verify-login", {
         method: "POST",
@@ -220,7 +291,7 @@ export default function App() {
         },
         body: JSON.stringify({
           target: "platform",
-          password: sitePassword,
+          password: normalizedPassword,
         }),
       });
 
@@ -239,13 +310,22 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (siteGatePhase !== "welcome") return;
+    if (siteGatePhase === "welcome") {
+      const unlockTimer = window.setTimeout(() => {
+        setIsSiteUnlocked(true);
+      }, SITE_SUCCESS_TRANSITION_MS);
 
-    const unlockTimer = window.setTimeout(() => {
-      setIsSiteUnlocked(true);
-    }, SITE_SUCCESS_TRANSITION_MS);
+      return () => window.clearTimeout(unlockTimer);
+    }
 
-    return () => window.clearTimeout(unlockTimer);
+    if (siteGatePhase === "goodbye") {
+      const lockTimer = window.setTimeout(() => {
+        setIsSiteUnlocked(false);
+        setSiteGatePhase("locked");
+      }, SITE_SUCCESS_TRANSITION_MS);
+
+      return () => window.clearTimeout(lockTimer);
+    }
   }, [siteGatePhase]);
 
   useEffect(() => {
@@ -286,14 +366,9 @@ export default function App() {
 
     const loadResumeContent = async () => {
       try {
-        const response = await fetch("/api/admin/resume");
-        if (!response.ok) {
-          throw new Error("Failed to fetch resume content.");
-        }
-
-        const nextContent = (await response.json()) as ResumeContentData;
+        const normalizedContent = await refreshResumeContent();
         if (!cancelled) {
-          setResumeContent(normalizeResumeContent(nextContent));
+          setResumeContent(normalizedContent);
         }
       } catch (error) {
         console.error("Failed to read resume content from backend", error);
@@ -305,7 +380,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshResumeContent]);
 
   useEffect(() => {
     let cancelled = false;
@@ -453,10 +528,54 @@ export default function App() {
     navigateToView('admin-dashboard');
   };
 
+  const handleSiteLogout = () => {
+    setIsContactPopupOpen(false);
+    setResumeLinkedProjectId(null);
+    setCurrentView("home");
+    setActiveResumeSubItem("about me");
+    setSitePassword("");
+    setSitePasswordError(false);
+    setIsSitePasswordFocused(false);
+    setSiteGatePhase("goodbye");
+
+    void fetch("/api/admin/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        target: "platform",
+      }),
+    })
+      .catch((error) => {
+        console.error("Failed to logout platform session", error);
+      });
+  };
+
   const openAIProductFromHome = () => {
     navigateToView('ai-product');
     setActiveIndex(0);
   };
+
+  const toggleContactPopup = () => {
+    if (isContactPopupOpen) {
+      setIsContactPopupOpen(false);
+      return;
+    }
+
+    void refreshResumeContent()
+      .catch((error) => {
+        console.error("Failed to refresh contact information", error);
+      })
+      .finally(() => {
+        setIsContactPopupOpen(true);
+      });
+  };
+
+  const refreshSidebarContact = () =>
+    refreshResumeContent().catch((error) => {
+      console.error("Failed to refresh contact information", error);
+    });
 
   const openLinkedResumeProject = (projectId: string) => {
     const targetProject = portfolioProjects.find(
@@ -477,6 +596,14 @@ export default function App() {
 
   if (!siteSessionChecked) {
     return <div className="h-screen w-full bg-[#e6e6e6]" />;
+  }
+
+  if (isSiteUnlocked && siteGatePhase === "goodbye") {
+    return (
+      <div className="relative flex h-screen w-full items-center justify-center overflow-hidden bg-[#e6e6e6] text-[#1a1c1c]">
+        <SiteWelcomeTransition lines={["GOODBYE"]} />
+      </div>
+    );
   }
 
   if (!isSiteUnlocked) {
@@ -589,7 +716,8 @@ export default function App() {
                 navigateToView(view as 'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard');
               }}
               isContactActive={isContactPopupOpen} 
-              onContactClick={() => setIsContactPopupOpen(!isContactPopupOpen)} 
+              onContactClick={refreshSidebarContact}
+              contact={resumeContent.information.contact}
               onHomeClick={() => {
                 navigateToView('home');
               }}
@@ -606,7 +734,10 @@ export default function App() {
           if (isContactPopupOpen) setIsContactPopupOpen(false);
         }}
       >
-        <ContactPopup isOpen={isContactPopupOpen} />
+        <ContactPopup
+          isOpen={isContactPopupOpen}
+          contact={resumeContent.information.contact}
+        />
 
         <AnimatePresence initial={false} mode="sync" custom={transitionDirection}>
           {currentView === 'home' ? (
@@ -629,14 +760,26 @@ export default function App() {
                 className="relative w-[1280px] h-[832px] shrink-0 origin-center"
                 style={{ transform: `scale(${scale})` }}
               >
-                <Footer onAdminDashboardClick={openAdminDashboard} />
+                <Footer
+                  onAdminDashboardClick={openAdminDashboard}
+                  onLogoutClick={handleSiteLogout}
+                  copyright={resumeContent.information.copyright}
+                />
                 <Frame6 isHovered={isIconHovered || isContactPopupOpen} />
                 <div 
                   className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-300 bg-[rgba(230,230,230,0.5)] ${(isIconHovered || isContactPopupOpen) ? 'opacity-100' : 'opacity-0'}`} 
                   aria-hidden="true" 
                 />
-                <Labels activeIndex={activeIndex} onHover={handleHover} onLeave={handleLeave} />
-                <Frame5 activeIndex={activeIndex} />
+                <Labels
+                  activeIndex={activeIndex}
+                  onHover={handleHover}
+                  onLeave={handleLeave}
+                  homeModules={resumeContent.information.home.modules}
+                />
+                <Frame5
+                  activeIndex={activeIndex}
+                  items={getHomeItemsByActiveIndex(resumeContent.information.home.modules, activeIndex)}
+                />
                 <Icon 
                   isHovered={isIconHovered} 
                   isActive={isContactPopupOpen}

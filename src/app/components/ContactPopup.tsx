@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "motion/react";
+import type { ResumeInformationContact } from "../data/resumeContent";
 
 const svgPaths = {
   // Corner decoration path from svg-o4bwqror5r.ts
@@ -34,7 +35,33 @@ function CopyIcon() {
   );
 }
 
-export function ContactPopup({ isOpen }: { isOpen: boolean }) {
+function ContactValue({ value }: { value: string }) {
+  return (
+    <p className="font-['OPPOSans:Regular',sans-serif] leading-[14px] lowercase not-italic relative shrink-0 text-[#b1b1b1] text-[0px] w-[124px]">
+      {value.split("0121").map((part, index, parts) => (
+        <React.Fragment key={`${part}-${index}`}>
+          <span className="leading-[14px] text-[14px]">{part}</span>
+          {index < parts.length - 1 ? (
+            <span className="leading-[14px] text-[13px]">0121</span>
+          ) : null}
+        </React.Fragment>
+      ))}
+    </p>
+  );
+}
+
+export function ContactPopup({
+  isOpen,
+  contact,
+}: {
+  isOpen: boolean;
+  contact?: ResumeInformationContact;
+}) {
+  const contactContent = contact ?? {
+    wechat: "-vera0121-",
+    email: "vera0121@126.com",
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -43,7 +70,7 @@ export function ContactPopup({ isOpen }: { isOpen: boolean }) {
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 20, scale: 0.95 }}
           transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-          className="absolute h-[244px] right-[100px] rounded-[32px] top-[286px] w-[324px] z-50 pointer-events-auto"
+          className="absolute h-[180px] right-[100px] rounded-[32px] top-[286px] w-[324px] z-50 pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
           style={{
             boxShadow: '8px 8px 24px 0px rgba(3, 255, 247, 0.10), inset 4px 4px 8px 0px rgba(3, 255, 247, 0.20)'
@@ -72,11 +99,7 @@ export function ContactPopup({ isOpen }: { isOpen: boolean }) {
                     <div className="content-stretch flex flex-[1_0_0] gap-[24px] items-center min-h-px min-w-px relative">
                       <p className="font-['Manrope:Light',sans-serif] font-light leading-[14px] relative shrink-0 text-[#b1b1b1] text-[12px] tracking-[0.48px] uppercase w-[60px]">WECHAT</p>
                       <div className="content-stretch flex flex-[1_0_0] items-center justify-between min-h-px min-w-px relative">
-                        <p className="font-['OPPOSans:Regular',sans-serif] leading-[14px] lowercase not-italic relative shrink-0 text-[#b1b1b1] text-[0px] w-[124px]">
-                          <span className="leading-[14px] text-[14px]">-vera</span>
-                          <span className="leading-[14px] text-[13px]">0121</span>
-                          <span className="leading-[14px] text-[14px]">-</span>
-                        </p>
+                        <ContactValue value={contactContent.wechat} />
                         <CopyIcon />
                       </div>
                     </div>
@@ -97,29 +120,8 @@ export function ContactPopup({ isOpen }: { isOpen: boolean }) {
                   <div className="content-stretch flex gap-[24px] items-center pl-[48px] pr-[24px] py-[12px] relative size-full">
                     <p className="font-['Manrope:Light',sans-serif] font-light leading-[14px] relative shrink-0 text-[#b1b1b1] text-[12px] tracking-[0.48px] uppercase w-[60px]">E-MAIL</p>
                     <div className="content-stretch flex flex-[1_0_0] items-center justify-between min-h-px min-w-px relative">
-                      <p className="font-['OPPOSans:Regular',sans-serif] leading-[14px] lowercase not-italic relative shrink-0 text-[#b1b1b1] text-[14px] w-[124px]">vera0121@126.com</p>
+                      <ContactValue value={contactContent.email} />
                       <CopyIcon />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Line 2 */}
-              <div className="h-px relative shrink-0 w-full">
-                <svg className="absolute block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 324 1">
-                  <path d="M324 0V1H0V0H324Z" fill="#B1B1B1" opacity="0.2" />
-                </svg>
-              </div>
-
-              {/* Location Row */}
-              <div className="h-[64px] relative shrink-0 w-full">
-                <div className="overflow-clip rounded-[inherit] size-full">
-                  <div className="content-stretch flex items-start pb-[12px] pl-[48px] pr-[24px] pt-[24px] relative size-full">
-                    <div className="content-stretch flex gap-[24px] items-center relative shrink-0">
-                      <p className="font-['Manrope:Light',sans-serif] font-light leading-[14px] relative shrink-0 text-[#b1b1b1] text-[12px] tracking-[0.48px] uppercase w-[60px]">LOCATION</p>
-                      <div className="content-stretch flex gap-[8px] items-center relative shrink-0">
-                        <p className="font-['OPPOSans:Regular',sans-serif] leading-[14px] not-italic relative shrink-0 text-[#b1b1b1] text-[14px] w-[124px]">Shanghai, China</p>
-                      </div>
                     </div>
                   </div>
                 </div>

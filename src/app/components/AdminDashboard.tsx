@@ -16,11 +16,19 @@ import {
 import { DEFAULT_AUTH_SETTINGS, type AuthSettings } from "../data/authSettings";
 import { type ResumeContentData } from "../data/resumeContent";
 import { ResumeModuleEditor } from "./ResumeModuleEditor";
+import { InformationModuleEditor } from "./InformationModuleEditor";
 
 const SUCCESS_TRANSITION_MS = 3000;
 
 type FilterCategory = ProjectCategory;
 type DashboardModule = "security" | "projects" | "resume" | "info";
+
+function normalizePasswordInput(value: string) {
+  return value
+    .trim()
+    .replace(/[！-～]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+    .replace(/\u3000/g, " ");
+}
 
 function LightDiffuseSweep({ active }: { active: boolean }) {
   return (
@@ -535,6 +543,8 @@ export function AdminDashboard({
   }, [selectedProject]);
 
   const handleSubmit = async () => {
+    const normalizedPassword = normalizePasswordInput(password);
+
     try {
       const response = await fetch("/api/admin/verify-login", {
         method: "POST",
@@ -543,7 +553,7 @@ export function AdminDashboard({
         },
         body: JSON.stringify({
           target: "admin",
-          password,
+          password: normalizedPassword,
         }),
       });
 
@@ -1648,6 +1658,11 @@ export function AdminDashboard({
               resumeContent={resumeContent}
               onPersistResumeContent={onPersistResumeContent}
               publishedPortfolioProjects={projects.filter((project) => project.status === "published")}
+            />
+          ) : activeModule === "info" ? (
+            <InformationModuleEditor
+              resumeContent={resumeContent}
+              onPersistResumeContent={onPersistResumeContent}
             />
           ) : (
             <section className="flex min-h-0 flex-1 items-center justify-center rounded-[36px] border border-black/6 bg-white/88 p-8 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">

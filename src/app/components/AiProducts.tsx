@@ -218,8 +218,8 @@ function ProjectImageCard({
 
   return (
     <div
-      className={`group bg-white flex-[1_0_0] min-w-px relative transition-colors ${
-        isLinked ? "cursor-pointer hover:bg-[#fdfcf8]" : "cursor-default"
+      className={`group bg-[#f9f9f9] flex-[1_0_0] min-w-px relative transition-colors ${
+        isLinked ? "cursor-pointer hover:bg-white" : "cursor-default"
       }`}
       data-name="Project Card White"
       role={isLinked ? "button" : undefined}

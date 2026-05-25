@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  DEFAULT_RESUME_CONTENT,
   type ResumeAiProjectGroup,
+  type ResumeUxCardGroupBlock,
+  type ResumeUxGroupCard,
   type ResumeUxLargeCard,
-  type ResumeUxMediumCard,
+  type ResumeUxLargeCardBlock,
+  type ResumeUxProjectBlock,
   type ResumeContentData,
   type ResumeEducationAward,
   type ResumeExperienceItem,
@@ -17,6 +19,8 @@ import imgVeraPortrait from "figma:asset/c2a725be084d36e42b2de03b1df60b14cc7638a
 
 type ResumeEditorSection = "profile" | "experience" | "ai-products" | "ux-case" | "education";
 type ResumeAiProductsEditorTab = "meta" | "projects" | "cta";
+type ResumeUxCaseEditorTab = "meta" | "projects";
+type ResumeEducationEditorTab = "meta" | "school" | "award";
 
 function cloneResumeContent(content: ResumeContentData): ResumeContentData {
   return JSON.parse(JSON.stringify(content)) as ResumeContentData;
@@ -173,6 +177,8 @@ export function ResumeModuleEditor({
 }) {
   const [activeSection, setActiveSection] = useState<ResumeEditorSection>("profile");
   const [activeAiProductsTab, setActiveAiProductsTab] = useState<ResumeAiProductsEditorTab>("projects");
+  const [activeUxCaseTab, setActiveUxCaseTab] = useState<ResumeUxCaseEditorTab>("projects");
+  const [activeEducationTab, setActiveEducationTab] = useState<ResumeEducationEditorTab>("meta");
   const [draftContent, setDraftContent] = useState<ResumeContentData>(cloneResumeContent(resumeContent));
   const [selectedExperienceId, setSelectedExperienceId] = useState(
     resumeContent.experienceGrid.experiences[0]?.stableId ?? "",
@@ -180,10 +186,16 @@ export function ResumeModuleEditor({
   const [isPersisting, setIsPersisting] = useState(false);
   const [isUploadingPortrait, setIsUploadingPortrait] = useState(false);
   const [uploadingAiProjectImageId, setUploadingAiProjectImageId] = useState<string | null>(null);
+  const [uploadingUxMediaId, setUploadingUxMediaId] = useState<string | null>(null);
+  const [uploadingEducationAwardImageId, setUploadingEducationAwardImageId] = useState<string | null>(null);
   const portraitInputRef = useRef<HTMLInputElement | null>(null);
   const aiProjectImageInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const uxMediaInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const educationAwardImageInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const educationAwardFieldsRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const profileFieldsRef = useRef<HTMLDivElement | null>(null);
   const [portraitCardHeight, setPortraitCardHeight] = useState<number | null>(null);
+  const [educationAwardImageSizes, setEducationAwardImageSizes] = useState<Record<string, { height: number; width: number }>>({});
 
   useEffect(() => {
     setDraftContent(cloneResumeContent(resumeContent));
@@ -225,6 +237,55 @@ export function ResumeModuleEditor({
       window.removeEventListener("resize", syncHeight);
     };
   }, [activeSection, draftContent.profile.aboutLabel, draftContent.profile.chineseName, draftContent.profile.englishName, draftContent.profile.roleSubtitle]);
+
+  useEffect(() => {
+    if (activeSection !== "education" || activeEducationTab !== "award") return;
+
+    let frameId = 0;
+    const awardIds = draftContent.education.awards.map((award) => award.stableId);
+
+    const syncSizes = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        const nextSizes = awardIds.reduce<Record<string, { height: number; width: number }>>((sizes, stableId) => {
+          const element = educationAwardFieldsRefs.current[stableId];
+          if (!element) return sizes;
+          const height = Math.round(element.getBoundingClientRect().height);
+          if (height > 0) {
+            sizes[stableId] = {
+              height,
+              width: Math.round(height * 1.5),
+            };
+          }
+          return sizes;
+        }, {});
+
+        setEducationAwardImageSizes((current) =>
+          JSON.stringify(current) === JSON.stringify(nextSizes) ? current : nextSizes,
+        );
+      });
+    };
+
+    syncSizes();
+
+    const observers = awardIds
+      .map((stableId) => {
+        const element = educationAwardFieldsRefs.current[stableId];
+        if (!element) return null;
+        const observer = new ResizeObserver(syncSizes);
+        observer.observe(element);
+        return observer;
+      })
+      .filter((observer): observer is ResizeObserver => Boolean(observer));
+
+    window.addEventListener("resize", syncSizes);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      observers.forEach((observer) => observer.disconnect());
+      window.removeEventListener("resize", syncSizes);
+    };
+  }, [activeEducationTab, activeSection, draftContent.education.awards]);
 
   const hasUnsavedChanges = useMemo(
     () => JSON.stringify(resumeContent) !== JSON.stringify(draftContent),
@@ -335,6 +396,104 @@ export function ResumeModuleEditor({
     } finally {
       setUploadingAiProjectImageId((current) => (current === groupStableId ? null : current));
       const input = aiProjectImageInputRefs.current[groupStableId];
+      if (input) input.value = "";
+    }
+  };
+
+  const handleUxCaseMediaUpload = async (
+    mediaStableId: string,
+    file: File,
+    target:
+      | { type: "large-card"; blockStableId: string }
+      | { type: "group-card"; blockStableId: string; side: "left" | "right" },
+  ) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploadingUxMediaId(mediaStableId);
+    try {
+      const response = await fetch("/api/admin/upload-resume-ux-case-media", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error || "Failed to upload UX case media.");
+      }
+
+      const payload = (await response.json()) as { src?: string; mimeType?: string };
+      if (!payload.src) {
+        throw new Error("UX case media upload did not return a media URL.");
+      }
+
+      if (target.type === "large-card") {
+        updateUxProjectBlock(target.blockStableId, (block) => {
+          if (block.type !== "large-card") return block;
+          return {
+            ...block,
+            card: {
+              ...block.card,
+              mediaUrl: payload.src ?? "",
+              mediaType: payload.mimeType?.startsWith("video/") ? "video" : "image",
+            },
+          };
+        });
+      } else {
+        updateUxProjectBlock(target.blockStableId, (block) => {
+          if (block.type !== "card-group") return block;
+          const field = target.side === "left" ? "leftCard" : "rightCard";
+          return {
+            ...block,
+            [field]: {
+              ...block[field],
+              image: payload.src ?? "",
+            },
+          };
+        });
+      }
+
+      toast.success("UX case media uploaded");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload UX case media.");
+    } finally {
+      setUploadingUxMediaId((current) => (current === mediaStableId ? null : current));
+      const input = uxMediaInputRefs.current[mediaStableId];
+      if (input) input.value = "";
+    }
+  };
+
+  const handleEducationAwardImageUpload = async (awardStableId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploadingEducationAwardImageId(awardStableId);
+    try {
+      const response = await fetch("/api/admin/upload-resume-education-award-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error || "Failed to upload award image.");
+      }
+
+      const payload = (await response.json()) as { src?: string };
+      if (!payload.src) {
+        throw new Error("Award image upload did not return an image URL.");
+      }
+
+      handleUpdateAward(awardStableId, (currentAward) => ({
+        ...currentAward,
+        image: payload.src ?? "",
+      }));
+      toast.success("Award image uploaded");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload award image.");
+    } finally {
+      setUploadingEducationAwardImageId((current) => (current === awardStableId ? null : current));
+      const input = educationAwardImageInputRefs.current[awardStableId];
       if (input) input.value = "";
     }
   };
@@ -642,122 +801,138 @@ export function ResumeModuleEditor({
     }));
   };
 
-  const updateUxLargeCard = (
+  const updateUxProjectBlock = (
     stableId: string,
-    updater: (card: ResumeUxLargeCard) => ResumeUxLargeCard,
+    updater: (block: ResumeUxProjectBlock) => ResumeUxProjectBlock,
   ) => {
     updateDraft((current) => ({
       ...current,
       uxCase: {
         ...current.uxCase,
-        largeCards: current.uxCase.largeCards.map((card) =>
-          card.stableId === stableId ? updater(card) : card,
+        projectBlocks: current.uxCase.projectBlocks.map((block) =>
+          block.stableId === stableId ? updater(block) : block,
         ),
       },
     }));
   };
 
   const handleAddUxLargeCard = () => {
+    const nextBlockStableId = createStableId("resume-ux-block");
+    const nextCardStableId = createStableId("resume-ux-large");
+
     updateDraft((current) => ({
       ...current,
       uxCase: {
         ...current.uxCase,
-        largeCards: [
-          ...current.uxCase.largeCards,
+        projectBlocks: [
+          ...current.uxCase.projectBlocks,
           {
-            stableId: createStableId("resume-ux-large"),
-            idLabel: "004",
-            title: "新大型项目",
-            description: "在这里填写大型 UX 项目描述。",
-            category: "用户体验设计",
-            tags: "PC端  |  SaaS平台",
-            image: "",
-          },
+            stableId: nextBlockStableId,
+            type: "large-card",
+            card: {
+              stableId: nextCardStableId,
+              idLabel: "",
+              title: "新大型项目",
+              description: "在这里填写大型 UX 项目描述。",
+              category: "用户体验设计",
+              tags: "PC端  |  SaaS平台",
+              mediaUrl: "",
+              mediaType: "image",
+              linkedPortfolioProjectId: "",
+            },
+          } satisfies ResumeUxLargeCardBlock,
         ],
       },
     }));
   };
 
-  const handleMoveUxLargeCard = (stableId: string, direction: "up" | "down") => {
+  const handleAddUxCardGroup = () => {
+    const nextBlockStableId = createStableId("resume-ux-block");
+    updateDraft((current) => ({
+      ...current,
+      uxCase: {
+        ...current.uxCase,
+        projectBlocks: [
+          ...current.uxCase.projectBlocks,
+          {
+            stableId: nextBlockStableId,
+            type: "card-group",
+            leftCard: {
+              stableId: createStableId("resume-ux-group-left"),
+              idLabel: "",
+              title: "新中卡项目",
+              description: "在这里填写左侧中卡项目描述。",
+              category: "产品经理 & UX设计",
+              image: "",
+              actionLabel: "VIEW PROTOTYPE",
+              linkedPortfolioProjectId: "",
+            },
+            rightCard: {
+              stableId: createStableId("resume-ux-group-right"),
+              idLabel: "",
+              title: "新小卡项目",
+              description: "在这里填写右侧小卡项目描述。",
+              category: "用户体验设计",
+              image: "",
+              actionLabel: "VIEW PROTOTYPE",
+              linkedPortfolioProjectId: "",
+            },
+          } satisfies ResumeUxCardGroupBlock,
+        ],
+      },
+    }));
+  };
+
+  const handleMoveUxProjectBlock = (stableId: string, direction: "up" | "down") => {
     updateDraft((current) => {
-      const currentIndex = current.uxCase.largeCards.findIndex((card) => card.stableId === stableId);
+      const currentIndex = current.uxCase.projectBlocks.findIndex((block) => block.stableId === stableId);
       return {
         ...current,
         uxCase: {
           ...current.uxCase,
-          largeCards: moveItem(current.uxCase.largeCards, currentIndex, direction),
+          projectBlocks: moveItem(current.uxCase.projectBlocks, currentIndex, direction),
         },
       };
     });
   };
 
-  const handleRemoveUxLargeCard = (stableId: string) => {
+  const handleRemoveUxProjectBlock = (stableId: string) => {
     updateDraft((current) => ({
       ...current,
       uxCase: {
         ...current.uxCase,
-        largeCards: current.uxCase.largeCards.filter((card) => card.stableId !== stableId),
+        projectBlocks: current.uxCase.projectBlocks.filter((block) => block.stableId !== stableId),
       },
     }));
   };
 
-  const updateUxMediumCard = (
-    stableId: string,
-    updater: (card: ResumeUxMediumCard) => ResumeUxMediumCard,
+  const updateUxLargeCardInBlock = (
+    blockStableId: string,
+    updater: (card: ResumeUxLargeCard) => ResumeUxLargeCard,
   ) => {
-    updateDraft((current) => ({
-      ...current,
-      uxCase: {
-        ...current.uxCase,
-        mediumCards: current.uxCase.mediumCards.map((card) =>
-          card.stableId === stableId ? updater(card) : card,
-        ),
-      },
-    }));
+    updateUxProjectBlock(blockStableId, (block) =>
+      block.type === "large-card"
+        ? {
+            ...block,
+            card: updater(block.card),
+          }
+        : block,
+    );
   };
 
-  const handleAddUxMediumCard = () => {
-    updateDraft((current) => ({
-      ...current,
-      uxCase: {
-        ...current.uxCase,
-        mediumCards: [
-          ...current.uxCase.mediumCards,
-          {
-            stableId: createStableId("resume-ux-medium"),
-            idLabel: "004",
-            title: "新中型项目",
-            description: "在这里填写中型 UX 项目描述。",
-            category: "产品经理 & UX设计",
-            image: "",
-            actionLabel: "VIEW PROTOTYPE",
-          },
-        ],
-      },
-    }));
-  };
-
-  const handleMoveUxMediumCard = (stableId: string, direction: "up" | "down") => {
-    updateDraft((current) => {
-      const currentIndex = current.uxCase.mediumCards.findIndex((card) => card.stableId === stableId);
+  const updateUxGroupCardInBlock = (
+    blockStableId: string,
+    side: "left" | "right",
+    updater: (card: ResumeUxGroupCard) => ResumeUxGroupCard,
+  ) => {
+    updateUxProjectBlock(blockStableId, (block) => {
+      if (block.type !== "card-group") return block;
+      const field = side === "left" ? "leftCard" : "rightCard";
       return {
-        ...current,
-        uxCase: {
-          ...current.uxCase,
-          mediumCards: moveItem(current.uxCase.mediumCards, currentIndex, direction),
-        },
+        ...block,
+        [field]: updater(block[field]),
       };
     });
-  };
-
-  const handleRemoveUxMediumCard = (stableId: string) => {
-    updateDraft((current) => ({
-      ...current,
-      uxCase: {
-        ...current.uxCase,
-        mediumCards: current.uxCase.mediumCards.filter((card) => card.stableId !== stableId),
-      },
-    }));
   };
 
   return (
@@ -1305,263 +1480,498 @@ export function ResumeModuleEditor({
             ) : null}
           </div>
         ) : activeSection === "ux-case" ? (
-          <div className="grid h-full min-h-0 gap-5 overflow-y-auto pr-1">
-            <div>
-              <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">UX Case</div>
-              <div className="mt-2 font-['Quantum',sans-serif] text-[26px] uppercase text-[#1a1c1c]">UX Case Section</div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="flex flex-col gap-2"><FieldLabel>Quote Line 1</FieldLabel><FieldInput value={draftContent.uxCase.quoteLine1} onChange={(event) => updateUxCaseField("quoteLine1", event.target.value)} /></label>
-              <label className="flex flex-col gap-2"><FieldLabel>Quote Line 2</FieldLabel><FieldInput value={draftContent.uxCase.quoteLine2} onChange={(event) => updateUxCaseField("quoteLine2", event.target.value)} /></label>
-              <label className="flex flex-col gap-2"><FieldLabel>Timeline Label</FieldLabel><FieldInput value={draftContent.uxCase.timelineLabel} onChange={(event) => updateUxCaseField("timelineLabel", event.target.value)} /></label>
-              <label className="flex flex-col gap-2"><FieldLabel>Section Number</FieldLabel><FieldInput value={draftContent.uxCase.sectionNumber} onChange={(event) => updateUxCaseField("sectionNumber", event.target.value)} /></label>
-              <label className="flex flex-col gap-2"><FieldLabel>Section Title</FieldLabel><FieldInput value={draftContent.uxCase.sectionTitle} onChange={(event) => updateUxCaseField("sectionTitle", event.target.value)} /></label>
-              <label className="flex flex-col gap-2"><FieldLabel>Section Subtitle</FieldLabel><FieldInput value={draftContent.uxCase.sectionSubtitle} onChange={(event) => updateUxCaseField("sectionSubtitle", event.target.value)} /></label>
-            </div>
-
-            <div className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Large Cards</div>
-                <button type="button" onClick={handleAddUxLargeCard} className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5]">Add Card</button>
+          <div className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto pr-1">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+              <div>
+                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">UX Case</div>
+                <div className="mt-2 font-['Quantum',sans-serif] text-[26px] uppercase text-[#1a1c1c]">UX Case Section</div>
               </div>
-              <div className="space-y-4">
-                {draftContent.uxCase.largeCards.map((card, index, items) => (
-                  <div key={card.stableId} className="rounded-[24px] border border-black/7 bg-white p-4">
-                    <div className="mb-4 flex items-center justify-between gap-4">
-                      <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">{`Large Card ${String(index + 1).padStart(2, "0")}`}</div>
-                      <div className="flex items-center gap-2">
-                        <CircleActionButton label="Move large card up" disabled={index === 0} onClick={() => handleMoveUxLargeCard(card.stableId, "up")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 3L3 7H11L7 3Z" fill="currentColor" /></svg></CircleActionButton>
-                        <CircleActionButton label="Move large card down" disabled={index === items.length - 1} onClick={() => handleMoveUxLargeCard(card.stableId, "down")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 11L11 7H3L7 11Z" fill="currentColor" /></svg></CircleActionButton>
-                        <CircleActionButton label="Delete large card" disabled={items.length === 1} onClick={() => handleRemoveUxLargeCard(card.stableId)}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></CircleActionButton>
-                      </div>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <label className="flex flex-col gap-2"><FieldLabel>ID Label</FieldLabel><FieldInput value={card.idLabel} onChange={(event) => updateUxLargeCard(card.stableId, (current) => ({ ...current, idLabel: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Category</FieldLabel><FieldInput value={card.category} onChange={(event) => updateUxLargeCard(card.stableId, (current) => ({ ...current, category: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Title</FieldLabel><FieldInput value={card.title} onChange={(event) => updateUxLargeCard(card.stableId, (current) => ({ ...current, title: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Tags</FieldLabel><FieldInput value={card.tags} onChange={(event) => updateUxLargeCard(card.stableId, (current) => ({ ...current, tags: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Description</FieldLabel><FieldTextArea className="min-h-[96px]" value={card.description} onChange={(event) => updateUxLargeCard(card.stableId, (current) => ({ ...current, description: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Video URL</FieldLabel><FieldInput value={card.videoSrc ?? ""} onChange={(event) => updateUxLargeCard(card.stableId, (current) => ({ ...current, videoSrc: event.target.value, image: event.target.value ? "" : current.image }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Image URL</FieldLabel><FieldInput value={card.image ?? ""} onChange={(event) => updateUxLargeCard(card.stableId, (current) => ({ ...current, image: event.target.value, videoSrc: event.target.value ? "" : current.videoSrc }))} /></label>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <InlineTabButton label="Section Meta" active={activeUxCaseTab === "meta"} onClick={() => setActiveUxCaseTab("meta")} />
+                <InlineTabButton label="Project Card" active={activeUxCaseTab === "projects"} onClick={() => setActiveUxCaseTab("projects")} />
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-5">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Medium Cards</div>
-                <button type="button" onClick={handleAddUxMediumCard} className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5]">Add Card</button>
+            {activeUxCaseTab === "meta" ? (
+              <div className="grid content-start auto-rows-max gap-4 md:grid-cols-2">
+                <label className="flex flex-col gap-2"><FieldLabel>Quote Line 1</FieldLabel><FieldInput value={draftContent.uxCase.quoteLine1} onChange={(event) => updateUxCaseField("quoteLine1", event.target.value)} /></label>
+                <label className="flex flex-col gap-2"><FieldLabel>Quote Line 2</FieldLabel><FieldInput value={draftContent.uxCase.quoteLine2} onChange={(event) => updateUxCaseField("quoteLine2", event.target.value)} /></label>
+                <label className="flex flex-col gap-2"><FieldLabel>Timeline Label</FieldLabel><FieldInput value={draftContent.uxCase.timelineLabel} onChange={(event) => updateUxCaseField("timelineLabel", event.target.value)} /></label>
+                <label className="flex flex-col gap-2"><FieldLabel>Section Number</FieldLabel><FieldInput value={draftContent.uxCase.sectionNumber} onChange={(event) => updateUxCaseField("sectionNumber", event.target.value)} /></label>
+                <label className="flex flex-col gap-2"><FieldLabel>Section Title</FieldLabel><FieldInput value={draftContent.uxCase.sectionTitle} onChange={(event) => updateUxCaseField("sectionTitle", event.target.value)} /></label>
+                <label className="flex flex-col gap-2"><FieldLabel>Section Subtitle</FieldLabel><FieldInput value={draftContent.uxCase.sectionSubtitle} onChange={(event) => updateUxCaseField("sectionSubtitle", event.target.value)} /></label>
               </div>
+            ) : null}
+
+            {activeUxCaseTab === "projects" ? (
               <div className="space-y-4">
-                {draftContent.uxCase.mediumCards.map((card, index, items) => (
-                  <div key={card.stableId} className="rounded-[24px] border border-black/7 bg-white p-4">
-                    <div className="mb-4 flex items-center justify-between gap-4">
-                      <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">{`Medium Card ${String(index + 1).padStart(2, "0")}`}</div>
+                {draftContent.uxCase.projectBlocks.map((block, index, items) => (
+                  <div key={block.stableId} className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-4">
+                    <div className="mb-4 flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">
+                          {`Block ${String(index + 1).padStart(2, "0")} · ${block.type === "large-card" ? "Large Card" : "Card Group"}`}
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <CircleActionButton label="Move medium card up" disabled={index === 0} onClick={() => handleMoveUxMediumCard(card.stableId, "up")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 3L3 7H11L7 3Z" fill="currentColor" /></svg></CircleActionButton>
-                        <CircleActionButton label="Move medium card down" disabled={index === items.length - 1} onClick={() => handleMoveUxMediumCard(card.stableId, "down")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 11L11 7H3L7 11Z" fill="currentColor" /></svg></CircleActionButton>
-                        <CircleActionButton label="Delete medium card" disabled={items.length === 1} onClick={() => handleRemoveUxMediumCard(card.stableId)}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></CircleActionButton>
+                        <CircleActionButton label="Move block up" disabled={index === 0} onClick={() => handleMoveUxProjectBlock(block.stableId, "up")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 3L3 7H11L7 3Z" fill="currentColor" /></svg></CircleActionButton>
+                        <CircleActionButton label="Move block down" disabled={index === items.length - 1} onClick={() => handleMoveUxProjectBlock(block.stableId, "down")}><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 11L11 7H3L7 11Z" fill="currentColor" /></svg></CircleActionButton>
+                        <CircleActionButton label="Delete block" onClick={() => handleRemoveUxProjectBlock(block.stableId)}><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></CircleActionButton>
                       </div>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <label className="flex flex-col gap-2"><FieldLabel>ID Label</FieldLabel><FieldInput value={card.idLabel} onChange={(event) => updateUxMediumCard(card.stableId, (current) => ({ ...current, idLabel: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Category</FieldLabel><FieldInput value={card.category} onChange={(event) => updateUxMediumCard(card.stableId, (current) => ({ ...current, category: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Title</FieldLabel><FieldInput value={card.title} onChange={(event) => updateUxMediumCard(card.stableId, (current) => ({ ...current, title: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2"><FieldLabel>Action Label</FieldLabel><FieldInput value={card.actionLabel} onChange={(event) => updateUxMediumCard(card.stableId, (current) => ({ ...current, actionLabel: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Description</FieldLabel><FieldTextArea className="min-h-[96px]" value={card.description} onChange={(event) => updateUxMediumCard(card.stableId, (current) => ({ ...current, description: event.target.value }))} /></label>
-                      <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Image URL</FieldLabel><FieldInput value={card.image} onChange={(event) => updateUxMediumCard(card.stableId, (current) => ({ ...current, image: event.target.value }))} /></label>
-                    </div>
+
+                    {block.type === "large-card" ? (
+                      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <label className="flex flex-col gap-2"><FieldLabel>Category</FieldLabel><FieldInput value={block.card.category} onChange={(event) => updateUxLargeCardInBlock(block.stableId, (current) => ({ ...current, category: event.target.value }))} /></label>
+                          <label className="flex flex-col gap-2"><FieldLabel>Title</FieldLabel><FieldInput value={block.card.title} onChange={(event) => updateUxLargeCardInBlock(block.stableId, (current) => ({ ...current, title: event.target.value }))} /></label>
+                          <label className="flex flex-col gap-2"><FieldLabel>Tags</FieldLabel><FieldInput value={block.card.tags} onChange={(event) => updateUxLargeCardInBlock(block.stableId, (current) => ({ ...current, tags: event.target.value }))} /></label>
+                          <label className="flex flex-col gap-2">
+                            <FieldLabel>Linked Portfolio Project</FieldLabel>
+                            <FieldSelect
+                              value={block.card.linkedPortfolioProjectId ?? ""}
+                              onChange={(event) =>
+                                updateUxLargeCardInBlock(block.stableId, (current) => ({
+                                  ...current,
+                                  linkedPortfolioProjectId: event.target.value,
+                                }))
+                              }
+                            >
+                              <option value="">No linked project</option>
+                              {linkedProjectOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </FieldSelect>
+                          </label>
+                          <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Description</FieldLabel><FieldTextArea className="min-h-[112px]" value={block.card.description} onChange={(event) => updateUxLargeCardInBlock(block.stableId, (current) => ({ ...current, description: event.target.value }))} /></label>
+                        </div>
+
+                        <div className="grid content-start gap-3">
+                          <FieldLabel>Media Upload</FieldLabel>
+                          <input
+                            ref={(node) => {
+                              uxMediaInputRefs.current[block.card.stableId] = node;
+                            }}
+                            type="file"
+                            accept="image/*,video/*"
+                            className="hidden"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (!file) return;
+                              void handleUxCaseMediaUpload(block.card.stableId, file, {
+                                type: "large-card",
+                                blockStableId: block.stableId,
+                              });
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => uxMediaInputRefs.current[block.card.stableId]?.click()}
+                            className="group relative overflow-hidden rounded-[20px] border border-black/7 bg-white text-left transition-colors hover:border-[#03c9c3]/24"
+                          >
+                            {block.card.mediaUrl ? (
+                              block.card.mediaType === "video" ? (
+                                <video
+                                  src={block.card.mediaUrl}
+                                  className="aspect-[4/3] w-full bg-black object-cover"
+                                  controls
+                                  muted
+                                  playsInline
+                                />
+                              ) : (
+                                <ImageWithFallback
+                                  alt={block.card.title || "UX large card preview"}
+                                  src={block.card.mediaUrl}
+                                  className="aspect-[4/3] w-full object-cover"
+                                />
+                              )
+                            ) : (
+                              <div className="flex aspect-[4/3] w-full items-center justify-center bg-[#f7f3ee] text-[11px] uppercase tracking-[2px] text-[#a0a0a6]">
+                                Upload Image Or Video
+                              </div>
+                            )}
+                            <div className="absolute left-3 top-3 rounded-full bg-white/92 px-3 py-1 text-[10px] uppercase tracking-[1.8px] text-[#1a1c1c] shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+                              {block.card.mediaType}
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/8">
+                              <div className="flex size-12 items-center justify-center rounded-full bg-white/92 text-[#1a1c1c] opacity-0 shadow-[0_10px_30px_rgba(0,0,0,0.10)] transition-opacity group-hover:opacity-100">
+                                {uploadingUxMediaId === block.card.stableId ? (
+                                  <span className="text-[10px] uppercase tracking-[1.5px] text-[#7d7d84]">...</span>
+                                ) : (
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M12 5V19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                    <path d="M5 12H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid gap-6 lg:grid-cols-2">
+                        {([
+                          { side: "left", title: "Left · Medium Card", card: block.leftCard },
+                          { side: "right", title: "Right · Small Card", card: block.rightCard },
+                        ] as const).map(({ side, title, card }) => (
+                          <div key={card.stableId} className="grid content-start gap-4 rounded-[20px] border border-black/6 bg-white p-4">
+                            <div className="text-[10px] uppercase tracking-[2px] text-[#7d7d84]">{title}</div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <label className="flex flex-col gap-2"><FieldLabel>Category</FieldLabel><FieldInput value={card.category} onChange={(event) => updateUxGroupCardInBlock(block.stableId, side, (current) => ({ ...current, category: event.target.value }))} /></label>
+                              <label className="flex flex-col gap-2"><FieldLabel>Title</FieldLabel><FieldInput value={card.title} onChange={(event) => updateUxGroupCardInBlock(block.stableId, side, (current) => ({ ...current, title: event.target.value }))} /></label>
+                              <label className="flex flex-col gap-2"><FieldLabel>Action Label</FieldLabel><FieldInput value={card.actionLabel} onChange={(event) => updateUxGroupCardInBlock(block.stableId, side, (current) => ({ ...current, actionLabel: event.target.value }))} /></label>
+                              <label className="flex flex-col gap-2">
+                                <FieldLabel>Linked Portfolio Project</FieldLabel>
+                                <FieldSelect
+                                  value={card.linkedPortfolioProjectId ?? ""}
+                                  onChange={(event) =>
+                                    updateUxGroupCardInBlock(block.stableId, side, (current) => ({
+                                      ...current,
+                                      linkedPortfolioProjectId: event.target.value,
+                                    }))
+                                  }
+                                >
+                                  <option value="">No linked project</option>
+                                  {linkedProjectOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </FieldSelect>
+                              </label>
+                              <label className="flex flex-col gap-2 md:col-span-2"><FieldLabel>Description</FieldLabel><FieldTextArea className="min-h-[112px]" value={card.description} onChange={(event) => updateUxGroupCardInBlock(block.stableId, side, (current) => ({ ...current, description: event.target.value }))} /></label>
+                            </div>
+                            <div className="grid gap-3">
+                              <FieldLabel>Image Upload</FieldLabel>
+                              <input
+                                ref={(node) => {
+                                  uxMediaInputRefs.current[card.stableId] = node;
+                                }}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(event) => {
+                                  const file = event.target.files?.[0];
+                                  if (!file) return;
+                                  void handleUxCaseMediaUpload(card.stableId, file, {
+                                    type: "group-card",
+                                    blockStableId: block.stableId,
+                                    side,
+                                  });
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => uxMediaInputRefs.current[card.stableId]?.click()}
+                                className="group relative overflow-hidden rounded-[20px] border border-black/7 bg-white text-left transition-colors hover:border-[#03c9c3]/24"
+                              >
+                                {card.image ? (
+                                  <ImageWithFallback
+                                    alt={card.title || `${title} preview`}
+                                    src={card.image}
+                                    className="aspect-[4/3] w-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="flex aspect-[4/3] w-full items-center justify-center bg-[#f7f3ee] text-[11px] uppercase tracking-[2px] text-[#a0a0a6]">
+                                    Upload Image
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/8">
+                                  <div className="flex size-12 items-center justify-center rounded-full bg-white/92 text-[#1a1c1c] opacity-0 shadow-[0_10px_30px_rgba(0,0,0,0.10)] transition-opacity group-hover:opacity-100">
+                                    {uploadingUxMediaId === card.stableId ? (
+                                      <span className="text-[10px] uppercase tracking-[1.5px] text-[#7d7d84]">...</span>
+                                    ) : (
+                                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M12 5V19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                        <path d="M5 12H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddUxLargeCard}
+                    className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5]"
+                  >
+                    Add Large Card
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddUxCardGroup}
+                    className="rounded-full border border-black/8 bg-white px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#1a1c1c] transition-colors hover:bg-[#f7f3ee]"
+                  >
+                    Add Card Group
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
         ) : (
-          <div className="grid h-full min-h-0 gap-5 overflow-y-auto pr-1">
-            <div>
-              <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Education</div>
-              <div className="mt-2 font-['Quantum',sans-serif] text-[26px] uppercase text-[#1a1c1c]">Education Section</div>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Quote Line 1</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.quoteLine1}
-                  onChange={(event) => updateEducationField("quoteLine1", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Quote Line 2</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.quoteLine2}
-                  onChange={(event) => updateEducationField("quoteLine2", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Graduated Label</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.graduatedLabel}
-                  onChange={(event) => updateEducationField("graduatedLabel", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Section Number</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.sectionNumber}
-                  onChange={(event) => updateEducationField("sectionNumber", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Section Title</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.sectionTitle}
-                  onChange={(event) => updateEducationField("sectionTitle", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Section Subtitle</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.sectionSubtitle}
-                  onChange={(event) => updateEducationField("sectionSubtitle", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>School Period</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.schoolPeriod}
-                  onChange={(event) => updateEducationField("schoolPeriod", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>School Name</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.schoolName}
-                  onChange={(event) => updateEducationField("schoolName", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Major</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.major}
-                  onChange={(event) => updateEducationField("major", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Class Name</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.className}
-                  onChange={(event) => updateEducationField("className", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Degree Type</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.degreeType}
-                  onChange={(event) => updateEducationField("degreeType", event.target.value)}
-                />
-              </label>
-              <label className="flex flex-col gap-2">
-                <FieldLabel>Degree Level</FieldLabel>
-                <FieldInput
-                  value={draftContent.education.degreeLevel}
-                  onChange={(event) => updateEducationField("degreeLevel", event.target.value)}
-                />
-              </label>
+          <div className="flex h-full min-h-0 flex-col gap-5 overflow-y-auto pr-1">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+              <div>
+                <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Education</div>
+                <div className="mt-2 font-['Quantum',sans-serif] text-[26px] uppercase text-[#1a1c1c]">Education Section</div>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <InlineTabButton label="Section Meta" active={activeEducationTab === "meta"} onClick={() => setActiveEducationTab("meta")} />
+                <InlineTabButton label="School" active={activeEducationTab === "school"} onClick={() => setActiveEducationTab("school")} />
+                <InlineTabButton label="Award" active={activeEducationTab === "award"} onClick={() => setActiveEducationTab("award")} />
+              </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Awards</div>
-              <button
-                type="button"
-                onClick={handleAddAward}
-                className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5]"
-              >
-                Add Award
-              </button>
-            </div>
+            {activeEducationTab === "meta" ? (
+              <div className="grid content-start auto-rows-max gap-4 md:grid-cols-2">
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Quote Line 1</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.quoteLine1}
+                    onChange={(event) => updateEducationField("quoteLine1", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Quote Line 2</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.quoteLine2}
+                    onChange={(event) => updateEducationField("quoteLine2", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Graduated Label</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.graduatedLabel}
+                    onChange={(event) => updateEducationField("graduatedLabel", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Section Number</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.sectionNumber}
+                    onChange={(event) => updateEducationField("sectionNumber", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Section Title</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.sectionTitle}
+                    onChange={(event) => updateEducationField("sectionTitle", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Section Subtitle</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.sectionSubtitle}
+                    onChange={(event) => updateEducationField("sectionSubtitle", event.target.value)}
+                  />
+                </label>
+              </div>
+            ) : null}
 
-            <div className="space-y-4">
-              {draftContent.education.awards.map((award, index, awards) => (
-                <div key={award.stableId} className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-4">
-                  <div className="mb-4 flex items-center justify-between gap-4">
-                    <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">
-                      {`Award ${String(index + 1).padStart(2, "0")}`}
+            {activeEducationTab === "school" ? (
+              <div className="grid content-start auto-rows-max gap-4 md:grid-cols-2">
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>School Period</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.schoolPeriod}
+                    onChange={(event) => updateEducationField("schoolPeriod", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>School Name</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.schoolName}
+                    onChange={(event) => updateEducationField("schoolName", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Major</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.major}
+                    onChange={(event) => updateEducationField("major", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Class Name</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.className}
+                    onChange={(event) => updateEducationField("className", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Degree Type</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.degreeType}
+                    onChange={(event) => updateEducationField("degreeType", event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <FieldLabel>Degree Level</FieldLabel>
+                  <FieldInput
+                    value={draftContent.education.degreeLevel}
+                    onChange={(event) => updateEducationField("degreeLevel", event.target.value)}
+                  />
+                </label>
+              </div>
+            ) : null}
+
+            {activeEducationTab === "award" ? (
+              <div className="grid gap-4">
+                <div className="space-y-4">
+                  {draftContent.education.awards.map((award, index, awards) => {
+                    const awardImageSize = educationAwardImageSizes[award.stableId];
+                    return (
+                    <div key={award.stableId} className="rounded-[24px] border border-black/7 bg-[#fbfaf7] p-4">
+                      <div className="mb-4 flex items-center justify-between gap-4">
+                        <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">
+                          {`Award ${String(index + 1).padStart(2, "0")}`}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CircleActionButton label="Move award up" disabled={index === 0} onClick={() => handleMoveAward(award.stableId, "up")}>
+                            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                              <path d="M7 3L3 7H11L7 3Z" fill="currentColor" />
+                            </svg>
+                          </CircleActionButton>
+                          <CircleActionButton label="Move award down" disabled={index === awards.length - 1} onClick={() => handleMoveAward(award.stableId, "down")}>
+                            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                              <path d="M7 11L11 7H3L7 11Z" fill="currentColor" />
+                            </svg>
+                          </CircleActionButton>
+                          <CircleActionButton label="Delete award" disabled={awards.length === 1} onClick={() => handleRemoveAward(award.stableId)}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                              <path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                            </svg>
+                          </CircleActionButton>
+                        </div>
+                      </div>
+                      <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                        <div
+                          ref={(node) => {
+                            educationAwardFieldsRefs.current[award.stableId] = node;
+                          }}
+                          className="grid w-full min-w-0 content-start auto-rows-max gap-4"
+                        >
+                          <label className="flex flex-col gap-2">
+                            <FieldLabel>Date</FieldLabel>
+                            <FieldInput
+                              value={award.date}
+                              onChange={(event) =>
+                                handleUpdateAward(award.stableId, (currentAward) => ({
+                                  ...currentAward,
+                                  date: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="flex flex-col gap-2">
+                            <FieldLabel>Title</FieldLabel>
+                            <FieldInput
+                              value={award.title}
+                              onChange={(event) =>
+                                handleUpdateAward(award.stableId, (currentAward) => ({
+                                  ...currentAward,
+                                  title: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                          <label className="flex flex-col gap-2">
+                            <FieldLabel>Description</FieldLabel>
+                            <FieldTextArea
+                              className="resize-none"
+                              style={{
+                                height: 112,
+                                minHeight: 112,
+                                maxHeight: 112,
+                              }}
+                              value={award.description}
+                              onChange={(event) =>
+                                handleUpdateAward(award.stableId, (currentAward) => ({
+                                  ...currentAward,
+                                  description: event.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                        </div>
+                        <div className="flex justify-end lg:items-start">
+                          <input
+                            ref={(node) => {
+                              educationAwardImageInputRefs.current[award.stableId] = node;
+                            }}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (!file) return;
+                              void handleEducationAwardImageUpload(award.stableId, file);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => educationAwardImageInputRefs.current[award.stableId]?.click()}
+                            aria-label="Upload award image"
+                            className="group relative shrink-0 overflow-hidden rounded-[20px] border border-black/7 bg-white text-left transition-colors hover:border-[#03c9c3]/24"
+                            style={{
+                              height: awardImageSize?.height ?? 220,
+                              width: awardImageSize?.width ?? 330,
+                            }}
+                          >
+                            {award.image ? (
+                              <ImageWithFallback
+                                alt={award.title || "Award image"}
+                                src={award.image}
+                                className="absolute inset-0 size-full object-cover"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center bg-[#f7f3ee] text-[11px] uppercase tracking-[2px] text-[#a0a0a6]">
+                                Upload Image
+                              </div>
+                            )}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/8">
+                              <div className="flex size-12 items-center justify-center rounded-full bg-white/92 text-[#1a1c1c] opacity-0 shadow-[0_10px_30px_rgba(0,0,0,0.10)] transition-opacity group-hover:opacity-100">
+                                {uploadingEducationAwardImageId === award.stableId ? (
+                                  <span className="text-[10px] uppercase tracking-[1.5px] text-[#7d7d84]">...</span>
+                                ) : (
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M12 5V19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                    <path d="M5 12H19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CircleActionButton label="Move award up" disabled={index === 0} onClick={() => handleMoveAward(award.stableId, "up")}>
-                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path d="M7 3L3 7H11L7 3Z" fill="currentColor" />
-                        </svg>
-                      </CircleActionButton>
-                      <CircleActionButton label="Move award down" disabled={index === awards.length - 1} onClick={() => handleMoveAward(award.stableId, "down")}>
-                        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path d="M7 11L11 7H3L7 11Z" fill="currentColor" />
-                        </svg>
-                      </CircleActionButton>
-                      <CircleActionButton label="Delete award" disabled={awards.length === 1} onClick={() => handleRemoveAward(award.stableId)}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path d="M7 7L17 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                          <path d="M17 7L7 17" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                        </svg>
-                      </CircleActionButton>
-                    </div>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="flex flex-col gap-2">
-                      <FieldLabel>Date</FieldLabel>
-                      <FieldInput
-                        value={award.date}
-                        onChange={(event) =>
-                          handleUpdateAward(award.stableId, (currentAward) => ({
-                            ...currentAward,
-                            date: event.target.value,
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="flex flex-col gap-2">
-                      <FieldLabel>Image URL</FieldLabel>
-                      <FieldInput
-                        value={award.image}
-                        onChange={(event) =>
-                          handleUpdateAward(award.stableId, (currentAward) => ({
-                            ...currentAward,
-                            image: event.target.value,
-                          }))
-                        }
-                        placeholder="https://..."
-                      />
-                    </label>
-                    <label className="flex flex-col gap-2 md:col-span-2">
-                      <FieldLabel>Title</FieldLabel>
-                      <FieldInput
-                        value={award.title}
-                        onChange={(event) =>
-                          handleUpdateAward(award.stableId, (currentAward) => ({
-                            ...currentAward,
-                            title: event.target.value,
-                          }))
-                        }
-                      />
-                    </label>
-                    <label className="flex flex-col gap-2 md:col-span-2">
-                      <FieldLabel>Description</FieldLabel>
-                      <FieldTextArea
-                        value={award.description}
-                        onChange={(event) =>
-                          handleUpdateAward(award.stableId, (currentAward) => ({
-                            ...currentAward,
-                            description: event.target.value,
-                          }))
-                        }
-                      />
-                    </label>
-                  </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddAward}
+                    className="rounded-full bg-[#effbfa] px-4 py-2 text-[10px] uppercase tracking-[2px] text-[#039f9a] transition-colors hover:bg-[#def7f5]"
+                  >
+                    Add Award
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </main>

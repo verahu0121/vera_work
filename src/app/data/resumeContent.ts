@@ -113,11 +113,12 @@ export type ResumeUxLargeCard = {
   description: string
   category: string
   tags: string
-  videoSrc?: string
-  image?: string
+  mediaUrl: string
+  mediaType: "image" | "video"
+  linkedPortfolioProjectId?: string
 }
 
-export type ResumeUxMediumCard = {
+export type ResumeUxGroupCard = {
   stableId: string
   idLabel: string
   title: string
@@ -125,7 +126,23 @@ export type ResumeUxMediumCard = {
   category: string
   image: string
   actionLabel: string
+  linkedPortfolioProjectId?: string
 }
+
+export type ResumeUxLargeCardBlock = {
+  stableId: string
+  type: "large-card"
+  card: ResumeUxLargeCard
+}
+
+export type ResumeUxCardGroupBlock = {
+  stableId: string
+  type: "card-group"
+  leftCard: ResumeUxGroupCard
+  rightCard: ResumeUxGroupCard
+}
+
+export type ResumeUxProjectBlock = ResumeUxLargeCardBlock | ResumeUxCardGroupBlock
 
 export type ResumeUxCase = {
   quoteLine1: string
@@ -134,8 +151,41 @@ export type ResumeUxCase = {
   sectionTitle: string
   sectionSubtitle: string
   sectionNumber: string
-  largeCards: ResumeUxLargeCard[]
-  mediumCards: ResumeUxMediumCard[]
+  projectBlocks: ResumeUxProjectBlock[]
+}
+
+export const RESUME_INFORMATION_HOME_MODULE_KEYS = ["center", "left", "right"] as const
+
+export type ResumeInformationHomeModuleKey = (typeof RESUME_INFORMATION_HOME_MODULE_KEYS)[number]
+
+export type ResumeInformationItem = {
+  stableId: string
+  label: string
+  value: string
+}
+
+export type ResumeInformationHomeModule = {
+  key: ResumeInformationHomeModuleKey
+  name: string
+  information: string[]
+  items: ResumeInformationItem[]
+}
+
+export type ResumeInformationContact = {
+  wechat: string
+  email: string
+}
+
+export type ResumeInformationCopyright = {
+  text: string
+}
+
+export type ResumeInformation = {
+  home: {
+    modules: ResumeInformationHomeModule[]
+  }
+  contact: ResumeInformationContact
+  copyright: ResumeInformationCopyright
 }
 
 export type ResumeContentData = {
@@ -144,6 +194,7 @@ export type ResumeContentData = {
   education: ResumeEducation
   aiProducts: ResumeAiProducts
   uxCase: ResumeUxCase
+  information: ResumeInformation
 }
 
 export const DEFAULT_RESUME_CONTENT: ResumeContentData = {
@@ -365,50 +416,113 @@ export const DEFAULT_RESUME_CONTENT: ResumeContentData = {
     sectionTitle: "UX Case study  体验设计寻踪",
     sectionSubtitle: "产品&设计主管 ｜ 宁波中升估价 ｜ 杉杉商业集团",
     sectionNumber: "02",
-    largeCards: [
+    projectBlocks: [
       {
-        stableId: "resume-ux-large-01",
-        idLabel: "001",
-        title: "地方火电厂综合平台",
-        description:
-          "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。",
-        category: "用户体验设计（主管）",
-        tags: "PC端  |  SaaS平台  |  重业务",
-        videoSrc: "/_videos/v1/2c856339829e11d00a0f250acad03dd9bed6253e",
+        stableId: "resume-ux-block-01",
+        type: "large-card",
+        card: {
+          stableId: "resume-ux-large-01",
+          idLabel: "001",
+          title: "地方火电厂综合平台",
+          description:
+            "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。",
+          category: "用户体验设计（主管）",
+          tags: "PC端  |  SaaS平台  |  重业务",
+          mediaUrl: "/_videos/v1/2c856339829e11d00a0f250acad03dd9bed6253e",
+          mediaType: "video",
+          linkedPortfolioProjectId: "",
+        },
       },
       {
-        stableId: "resume-ux-large-02",
-        idLabel: "001",
-        title: "地方火电厂综合平台",
-        description:
-          "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。",
-        category: "用户体验设计（主管）",
-        tags: "PC端  |  SaaS平台  |  重业务",
-        image: "",
+        stableId: "resume-ux-block-02",
+        type: "large-card",
+        card: {
+          stableId: "resume-ux-large-02",
+          idLabel: "001",
+          title: "地方火电厂综合平台",
+          description:
+            "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。",
+          category: "用户体验设计（主管）",
+          tags: "PC端  |  SaaS平台  |  重业务",
+          mediaUrl: "",
+          mediaType: "image",
+          linkedPortfolioProjectId: "",
+        },
+      },
+      {
+        stableId: "resume-ux-block-03",
+        type: "card-group",
+        leftCard: {
+          stableId: "resume-ux-medium-01",
+          idLabel: "002",
+          title: "奥莱线上商城小程序",
+          description:
+            "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息。",
+          category: "用户体验设计（主管）",
+          image: "",
+          actionLabel: "VIEW PROTOTYPE",
+          linkedPortfolioProjectId: "",
+        },
+        rightCard: {
+          stableId: "resume-ux-medium-02",
+          idLabel: "003",
+          title: "中升营销管理系统",
+          description:
+            "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字。",
+          category: "产品经理 & UX设计",
+          image: "",
+          actionLabel: "VIEW PROTOTYPE",
+          linkedPortfolioProjectId: "",
+        },
       },
     ],
-    mediumCards: [
-      {
-        stableId: "resume-ux-medium-01",
-        idLabel: "002",
-        title: "奥莱线上商城小程序",
-        description:
-          "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息。",
-        category: "用户体验设计（主管）",
-        image: "",
-        actionLabel: "VIEW PROTOTYPE",
-      },
-      {
-        stableId: "resume-ux-medium-02",
-        idLabel: "003",
-        title: "中升营销管理系统",
-        description:
-          "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字。",
-        category: "产品经理 & UX设计",
-        image: "",
-        actionLabel: "VIEW PROTOTYPE",
-      },
-    ],
+  },
+  information: {
+    home: {
+      modules: [
+        {
+          key: "center",
+          name: "居中模块",
+          information: ["AI PRODUCT", "PRODUCT AI PRODUCT", "UX设计项目"],
+          items: [
+            {
+              stableId: "information-center-item-01",
+              label: "EMAIL",
+              value: "-hello@vera-",
+            },
+            {
+              stableId: "information-center-item-02",
+              label: "BEHANCE",
+              value: "-veradesign-",
+            },
+            {
+              stableId: "information-center-item-03",
+              label: "DRIBBBLE",
+              value: "-vera.ux-",
+            },
+          ],
+        },
+        {
+          key: "left",
+          name: "左对齐模块",
+          information: ["AI PRODUCT", "PRODUCT AI PRODUCT", "UX设计项目"],
+          items: [],
+        },
+        {
+          key: "right",
+          name: "右对齐模块",
+          information: ["AI PRODUCT", "PRODUCT AI PRODUCT", "UX设计项目"],
+          items: [],
+        },
+      ],
+    },
+    contact: {
+      wechat: "-vera0121-",
+      email: "vera0121@126.com",
+    },
+    copyright: {
+      text: "© 2026 The Digital Curator. Built for stability.",
+    },
   },
 }
 
@@ -416,6 +530,268 @@ type LegacyResumeAiProducts = Partial<ResumeAiProducts> & {
   projectCards?: ResumeAiProjectCard[]
   roleCards?: ResumeAiRoleCard[]
   contactCard?: ResumeAiContactCard
+}
+
+type LegacyResumeUxLargeCard = {
+  stableId?: string
+  idLabel?: string
+  title?: string
+  description?: string
+  category?: string
+  tags?: string
+  videoSrc?: string
+  image?: string
+  linkedPortfolioProjectId?: string
+}
+
+type LegacyResumeUxMediumCard = {
+  stableId?: string
+  idLabel?: string
+  title?: string
+  description?: string
+  category?: string
+  image?: string
+  actionLabel?: string
+  linkedPortfolioProjectId?: string
+}
+
+type LegacyResumeUxProjectBlock = Partial<ResumeUxProjectBlock> & {
+  card?: Partial<ResumeUxLargeCard>
+  leftCard?: Partial<ResumeUxGroupCard>
+  rightCard?: Partial<ResumeUxGroupCard>
+}
+
+type LegacyResumeUxCase = Partial<ResumeUxCase> & {
+  largeCards?: LegacyResumeUxLargeCard[]
+  mediumCards?: LegacyResumeUxMediumCard[]
+  projectBlocks?: LegacyResumeUxProjectBlock[]
+}
+
+type LegacyResumeInformation = Partial<ResumeInformation> & {
+  home?: Partial<ResumeInformation["home"]>
+  contact?: Partial<ResumeInformationContact>
+  copyright?: Partial<ResumeInformationCopyright>
+}
+
+function normalizeUxLargeCard(
+  card: Partial<ResumeUxLargeCard> | undefined,
+  fallback: ResumeUxLargeCard,
+): ResumeUxLargeCard {
+  return {
+    stableId: card?.stableId ?? fallback.stableId,
+    idLabel: card?.idLabel ?? fallback.idLabel,
+    title: card?.title ?? fallback.title,
+    description: card?.description ?? fallback.description,
+    category: card?.category ?? fallback.category,
+    tags: card?.tags ?? fallback.tags,
+    mediaUrl: card?.mediaUrl ?? fallback.mediaUrl,
+    mediaType: card?.mediaType === "video" ? "video" : "image",
+    linkedPortfolioProjectId: card?.linkedPortfolioProjectId ?? fallback.linkedPortfolioProjectId ?? "",
+  }
+}
+
+function normalizeUxGroupCard(
+  card: Partial<ResumeUxGroupCard> | undefined,
+  fallback: ResumeUxGroupCard,
+): ResumeUxGroupCard {
+  return {
+    stableId: card?.stableId ?? fallback.stableId,
+    idLabel: card?.idLabel ?? fallback.idLabel,
+    title: card?.title ?? fallback.title,
+    description: card?.description ?? fallback.description,
+    category: card?.category ?? fallback.category,
+    image: card?.image ?? fallback.image,
+    actionLabel: card?.actionLabel ?? fallback.actionLabel,
+    linkedPortfolioProjectId: card?.linkedPortfolioProjectId ?? fallback.linkedPortfolioProjectId ?? "",
+  }
+}
+
+function normalizeUxProjectBlocks(uxCase?: LegacyResumeUxCase): ResumeUxProjectBlock[] {
+  const fallbackBlocks = DEFAULT_RESUME_CONTENT.uxCase.projectBlocks
+  const incomingBlocks = uxCase?.projectBlocks
+  const legacyLargeCards = uxCase?.largeCards ?? []
+  const legacyMediumCards = uxCase?.mediumCards ?? []
+  const getLegacyLargeLinkedProjectId = (stableId?: string) =>
+    stableId
+      ? legacyLargeCards.find((card) => card.stableId === stableId)?.linkedPortfolioProjectId
+      : undefined
+  const getLegacyMediumLinkedProjectId = (stableId?: string) =>
+    stableId
+      ? legacyMediumCards.find((card) => card.stableId === stableId)?.linkedPortfolioProjectId
+      : undefined
+
+  if (Array.isArray(incomingBlocks) && incomingBlocks.length > 0) {
+    return incomingBlocks.map((block, index) => {
+      const fallback =
+        fallbackBlocks[index] ??
+        fallbackBlocks[Math.min(index, Math.max(fallbackBlocks.length - 1, 0))]
+
+      if (block.type === "card-group") {
+        const groupFallback =
+          fallback.type === "card-group"
+            ? fallback
+            : {
+                stableId: `resume-ux-block-group-fallback-${index + 1}`,
+                type: "card-group" as const,
+                leftCard: {
+                  stableId: `resume-ux-group-left-fallback-${index + 1}`,
+                  idLabel: "",
+                  title: "",
+                  description: "",
+                  category: "",
+                  image: "",
+                  actionLabel: "VIEW PROTOTYPE",
+                  linkedPortfolioProjectId: "",
+                },
+                rightCard: {
+                  stableId: `resume-ux-group-right-fallback-${index + 1}`,
+                  idLabel: "",
+                  title: "",
+                  description: "",
+                  category: "",
+                  image: "",
+                  actionLabel: "VIEW PROTOTYPE",
+                  linkedPortfolioProjectId: "",
+                },
+              }
+
+        return {
+          stableId: block.stableId ?? groupFallback.stableId,
+          type: "card-group" as const,
+          leftCard: normalizeUxGroupCard(
+            {
+              ...block.leftCard,
+              linkedPortfolioProjectId:
+                block.leftCard?.linkedPortfolioProjectId ??
+                getLegacyMediumLinkedProjectId(block.leftCard?.stableId),
+            },
+            groupFallback.leftCard,
+          ),
+          rightCard: normalizeUxGroupCard(
+            {
+              ...block.rightCard,
+              linkedPortfolioProjectId:
+                block.rightCard?.linkedPortfolioProjectId ??
+                getLegacyMediumLinkedProjectId(block.rightCard?.stableId),
+            },
+            groupFallback.rightCard,
+          ),
+        }
+      }
+
+      const largeFallback =
+        fallback.type === "large-card"
+          ? fallback
+          : {
+              stableId: `resume-ux-block-large-fallback-${index + 1}`,
+              type: "large-card" as const,
+              card: {
+                stableId: `resume-ux-large-fallback-${index + 1}`,
+                idLabel: "",
+                title: "",
+                description: "",
+                category: "",
+                tags: "",
+                mediaUrl: "",
+                mediaType: "image" as const,
+                linkedPortfolioProjectId: "",
+              },
+            }
+
+      return {
+        stableId: block.stableId ?? largeFallback.stableId,
+        type: "large-card" as const,
+        card: normalizeUxLargeCard(
+          {
+            ...block.card,
+            linkedPortfolioProjectId:
+              block.card?.linkedPortfolioProjectId ??
+              getLegacyLargeLinkedProjectId(block.card?.stableId),
+          },
+          largeFallback.card,
+        ),
+      }
+    })
+  }
+
+  const blocks: ResumeUxProjectBlock[] = []
+
+  legacyLargeCards.forEach((card, index) => {
+    const fallback =
+      fallbackBlocks.find((block) => block.type === "large-card" && block.card.stableId === card.stableId) ??
+      fallbackBlocks.find((block) => block.type === "large-card") ??
+      {
+        stableId: `resume-ux-block-large-fallback-${index + 1}`,
+        type: "large-card" as const,
+        card: {
+          stableId: `resume-ux-large-fallback-${index + 1}`,
+          idLabel: "",
+          title: "",
+          description: "",
+          category: "",
+          tags: "",
+          mediaUrl: "",
+          mediaType: "image" as const,
+          linkedPortfolioProjectId: "",
+        },
+      }
+
+    blocks.push({
+      stableId: `resume-ux-block-large-legacy-${index + 1}`,
+      type: "large-card",
+      card: {
+        stableId: card.stableId ?? fallback.card.stableId,
+        idLabel: card.idLabel ?? fallback.card.idLabel,
+        title: card.title ?? fallback.card.title,
+        description: card.description ?? fallback.card.description,
+        category: card.category ?? fallback.card.category,
+        tags: card.tags ?? fallback.card.tags,
+        mediaUrl: card.videoSrc ?? card.image ?? fallback.card.mediaUrl,
+        mediaType: card.videoSrc ? "video" : "image",
+        linkedPortfolioProjectId: card.linkedPortfolioProjectId ?? fallback.card.linkedPortfolioProjectId ?? "",
+      },
+    })
+  })
+
+  for (let index = 0; index < legacyMediumCards.length; index += 2) {
+    const leftLegacyCard = legacyMediumCards[index]
+    const rightLegacyCard = legacyMediumCards[index + 1]
+    const fallbackGroup =
+      fallbackBlocks.find((block) => block.type === "card-group") ??
+      {
+        stableId: `resume-ux-block-group-fallback-${index + 1}`,
+        type: "card-group" as const,
+        leftCard: {
+          stableId: `resume-ux-group-left-fallback-${index + 1}`,
+          idLabel: "",
+          title: "",
+          description: "",
+          category: "",
+          image: "",
+          actionLabel: "VIEW PROTOTYPE",
+          linkedPortfolioProjectId: "",
+        },
+        rightCard: {
+          stableId: `resume-ux-group-right-fallback-${index + 1}`,
+          idLabel: "",
+          title: "",
+          description: "",
+          category: "",
+          image: "",
+          actionLabel: "VIEW PROTOTYPE",
+          linkedPortfolioProjectId: "",
+        },
+      }
+
+    blocks.push({
+      stableId: `resume-ux-block-group-legacy-${Math.floor(index / 2) + 1}`,
+      type: "card-group",
+      leftCard: normalizeUxGroupCard(leftLegacyCard, fallbackGroup.leftCard),
+      rightCard: normalizeUxGroupCard(rightLegacyCard, fallbackGroup.rightCard),
+    })
+  }
+
+  return blocks.length > 0 ? blocks : fallbackBlocks
 }
 
 function normalizeAiProducts(aiProducts?: LegacyResumeAiProducts): ResumeAiProducts {
@@ -500,6 +876,41 @@ function normalizeAiProducts(aiProducts?: LegacyResumeAiProducts): ResumeAiProdu
   }
 }
 
+function normalizeInformation(information?: LegacyResumeInformation): ResumeInformation {
+  const defaultInformation = DEFAULT_RESUME_CONTENT.information
+
+  return {
+    home: {
+      modules: RESUME_INFORMATION_HOME_MODULE_KEYS.map((key, index) => {
+        const fallback = defaultInformation.home.modules[index]
+        const incomingModule = information?.home?.modules?.find((module) => module?.key === key)
+
+        return {
+          key,
+          name: incomingModule?.name ?? fallback.name,
+          information: Array.from({ length: 3 }, (_, itemIndex) =>
+            incomingModule?.information?.[itemIndex] ?? fallback.information[itemIndex] ?? "",
+          ),
+          items: Array.isArray(incomingModule?.items)
+            ? incomingModule.items.slice(0, 5).map((item, itemIndex) => ({
+                stableId: item.stableId || `information-${key}-item-${String(itemIndex + 1).padStart(2, "0")}`,
+                label: item.label ?? "",
+                value: item.value ?? "",
+              }))
+            : fallback.items,
+        }
+      }),
+    },
+    contact: {
+      wechat: information?.contact?.wechat ?? defaultInformation.contact.wechat,
+      email: information?.contact?.email ?? defaultInformation.contact.email,
+    },
+    copyright: {
+      text: information?.copyright?.text ?? defaultInformation.copyright.text,
+    },
+  }
+}
+
 export function normalizeResumeContent(content?: Partial<ResumeContentData> | null): ResumeContentData {
   const nextContent = content ?? {}
 
@@ -527,8 +938,8 @@ export function normalizeResumeContent(content?: Partial<ResumeContentData> | nu
     uxCase: {
       ...DEFAULT_RESUME_CONTENT.uxCase,
       ...(nextContent.uxCase ?? {}),
-      largeCards: nextContent.uxCase?.largeCards ?? DEFAULT_RESUME_CONTENT.uxCase.largeCards,
-      mediumCards: nextContent.uxCase?.mediumCards ?? DEFAULT_RESUME_CONTENT.uxCase.mediumCards,
+      projectBlocks: normalizeUxProjectBlocks(nextContent.uxCase as LegacyResumeUxCase | undefined),
     },
+    information: normalizeInformation(nextContent.information as LegacyResumeInformation | undefined),
   }
 }

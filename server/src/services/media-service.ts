@@ -36,6 +36,22 @@ function buildResumeAiProjectObjectKey(filename: string) {
   return `resume/ai-products/${timestamp}-${safeName}${extension || '.jpg'}`
 }
 
+function buildResumeUxCaseObjectKey(filename: string) {
+  const timestamp = Date.now()
+  const extension = path.extname(filename || '').toLowerCase()
+  const baseName = path.basename(filename || 'ux-media', extension)
+  const safeName = sanitizePathSegment(baseName)
+  return `resume/ux-case/${timestamp}-${safeName}${extension || '.jpg'}`
+}
+
+function buildResumeEducationAwardObjectKey(filename: string) {
+  const timestamp = Date.now()
+  const extension = path.extname(filename || '').toLowerCase()
+  const baseName = path.basename(filename || 'award-image', extension)
+  const safeName = sanitizePathSegment(baseName)
+  return `resume/education-awards/${timestamp}-${safeName}${extension || '.jpg'}`
+}
+
 function buildProxyImageUrl(key: string) {
   return `/api/admin/object-image?key=${encodeURIComponent(key)}`
 }
@@ -122,6 +138,55 @@ export class MediaService {
     const client = createS3Client()
     const bucket = getS3Bucket()
     const objectKey = buildResumeAiProjectObjectKey(input.filename)
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: objectKey,
+        Body: input.fileBuffer,
+        ContentType: input.mimeType,
+      }),
+    )
+
+    return {
+      key: objectKey,
+      src: buildProxyImageUrl(objectKey),
+    }
+  }
+
+  async uploadResumeUxCaseMedia(input: {
+    fileBuffer: Buffer
+    mimeType: string
+    filename: string
+  }) {
+    const client = createS3Client()
+    const bucket = getS3Bucket()
+    const objectKey = buildResumeUxCaseObjectKey(input.filename)
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: objectKey,
+        Body: input.fileBuffer,
+        ContentType: input.mimeType,
+      }),
+    )
+
+    return {
+      key: objectKey,
+      src: buildProxyImageUrl(objectKey),
+      mimeType: input.mimeType,
+    }
+  }
+
+  async uploadResumeEducationAwardImage(input: {
+    fileBuffer: Buffer
+    mimeType: string
+    filename: string
+  }) {
+    const client = createS3Client()
+    const bucket = getS3Bucket()
+    const objectKey = buildResumeEducationAwardObjectKey(input.filename)
 
     await client.send(
       new PutObjectCommand({

@@ -134,5 +134,134 @@
         "image": ""
       }
     ]
+  },
+  "aiProducts": {
+    "quoteLine1": "“ AI 产品的关键在于：",
+    "quoteLine2": "如何在智能时代，契合人类的思考与行为逻辑。”",
+    "timelineLabel": "as ai  product manager — from 2025 to 2026",
+    "sectionTitle": "AI Products  智能产品探索",
+    "sectionSubtitle": "ai产品经理 ｜ 时代之门（上海）科技有限公司",
+    "sectionNumber": "01",
+    "projectGroups": [
+      {
+        "stableId": "resume-ai-group-01",
+        "roleLabel": "AI 产品经理",
+        "projectTitle": "AIEO ",
+        "highlightText": "创作与分发平台",
+        "coverMeta": "pc & 小程序客户端 + 后管平台 • 2026",
+        "coverImage": "",
+        "linkedPortfolioProjectId": "",
+        "detailTabs": [
+          "who",
+          "what",
+          "why",
+          "how"
+        ],
+        "detailTitle": "角色定位",
+        "detailDescription": "一句话描述角色定位",
+        "detailFooterLabel": "Algorithm • Beta"
+      },
+      {
+        "stableId": "resume-ai-group-02",
+        "roleLabel": "ai产品经理，视觉设计负责人",
+        "projectTitle": "鹤元家政2.0智能系统",
+        "highlightText": "",
+        "coverMeta": "小程序客户端 + 业务中台 • 2025",
+        "coverImage": "",
+        "linkedPortfolioProjectId": "",
+        "detailTabs": [
+          "who",
+          "what",
+          "why",
+          "how"
+        ],
+        "detailTitle": "角色定位",
+        "detailDescription": "一句话描述角色定位",
+        "detailFooterLabel": "Algorithm • Beta"
+      },
+      {
+        "stableId": "resume-ai-group-03",
+        "roleLabel": "ai产品经理，视觉设计负责人",
+        "projectTitle": "时代之言智能体中心",
+        "highlightText": "",
+        "coverMeta": "pc客户端 + 后管平台 • 2025",
+        "coverImage": "",
+        "linkedPortfolioProjectId": "",
+        "detailTabs": [
+          "who",
+          "what",
+          "why",
+          "how"
+        ],
+        "detailTitle": "角色定位",
+        "detailDescription": "一句话描述角色定位",
+        "detailFooterLabel": "Algorithm • Beta"
+      }
+    ],
+    "ctaCard": {
+      "brandTitle": "Vera’s  Libertisle",
+      "description": "更多项目，即刻前往Vera的产品创意岛~",
+      "buttonLabel": "Get In Touch"
+    }
+  },
+  "uxCase": {
+    "quoteLine1": "“ 设计不止于形与感，",
+    "quoteLine2": "更在于它如何作用于人类经验的长河。”",
+    "timelineLabel": "as ux designer — from 2021 to 2024",
+    "sectionTitle": "UX Case study  体验设计寻踪",
+    "sectionSubtitle": "产品&设计主管 ｜ 宁波中升估价 ｜ 杉杉商业集团",
+    "sectionNumber": "02",
+    "projectBlocks": [
+      {
+        "stableId": "resume-ux-block-02",
+        "type": "large-card",
+        "card": {
+          "stableId": "resume-ux-large-02",
+          "idLabel": "001",
+          "title": "地方火电厂综合平台",
+          "description": "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。",
+          "category": "用户体验设计（主管）",
+          "tags": "PC端  |  SaaS平台  |  重业务",
+          "mediaUrl": "",
+          "mediaType": "image"
+        }
+      },
+      {
+        "stableId": "resume-ux-block-03",
+        "type": "card-group",
+        "leftCard": {
+          "stableId": "resume-ux-medium-01",
+          "idLabel": "002",
+          "title": "奥莱线上商城小程序",
+          "description": "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息。",
+          "category": "用户体验设计（主管）",
+          "image": "",
+          "actionLabel": "VIEW PROTOTYPE"
+        },
+        "rightCard": {
+          "stableId": "resume-ux-medium-02",
+          "idLabel": "003",
+          "title": "中升营销管理系统",
+          "description": "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字。",
+          "category": "产品经理 & UX设计",
+          "image": "",
+          "actionLabel": "VIEW PROTOTYPE"
+        }
+      },
+      {
+        "stableId": "resume-ux-block-01",
+        "type": "large-card",
+        "card": {
+          "stableId": "resume-ux-large-01",
+          "idLabel": "001",
+          "title": "地方火电厂综合平台",
+          "description": "文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息文字描述信息字描述信。",
+          "category": "用户体验设计（主管）",
+          "tags": "PC端  |  SaaS平台  |  重业务",
+          "mediaUrl": "/_videos/v1/2c856339829e11d00a0f250acad03dd9bed6253e",
+          "mediaType": "video"
+        }
+      }
+    ]
   }
 }

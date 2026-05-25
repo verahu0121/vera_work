@@ -1,7 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import HoverIcon from "../Icon-1/Icon-20-426";
+import type {
+  ResumeInformationContact,
+  ResumeInformationCopyright,
+} from "../../app/data/resumeContent";
 
 const copyToClipboard = async (text: string) => {
   try {
@@ -28,7 +32,14 @@ import ActiveIcon from "../Icon-2/Icon-24-618";
 import svgPaths from "./svg-ofgadpgjl9";
 import resumeSvgPaths from "../AsideSidebarNavigation-2/svg-bl31d4lqts";
 
-function Paragraph() {
+function Paragraph({
+  copyright,
+}: {
+  copyright?: ResumeInformationCopyright;
+}) {
+  const copyrightText =
+    copyright?.text || "© 2026 The Digital Curator. Built for stability.";
+
   return (
     <div
       className="content-stretch flex gap-[20.5px] h-[42px] items-center justify-center leading-[0] pb-[1.5px] pt-[2.5px] relative shrink-0 text-[#6c6c6c]"
@@ -38,41 +49,19 @@ function Paragraph() {
         <p className="leading-[20px]">Vera’s Libertisle</p>
       </div>
       <div className="flex flex-col font-['Inter:Regular',sans-serif] font-normal h-[17px] justify-center not-italic relative shrink-0 text-[11px] tracking-[1.1px] uppercase whitespace-nowrap">
-        <p className="leading-[16.5px]">
-          © 2026 The Digital Curator. Built for stability.
-        </p>
+        <p className="leading-[16.5px]">{copyrightText}</p>
       </div>
     </div>
   );
 }
 
-function Link() {
-  return (
-    <div
-      className="content-stretch flex flex-col items-start relative shrink-0"
-      data-name="Link"
-    >
-      <div className="flex flex-col font-['Inter:Regular',sans-serif] font-normal h-[17px] justify-center leading-[0] not-italic relative shrink-0 text-[#6c6c6c] text-[11px] tracking-[1.1px] uppercase w-[54.31px]">
-        <p className="leading-[16.5px]">Privacy</p>
-      </div>
-    </div>
-  );
-}
-
-function Link1() {
-  return (
-    <div
-      className="content-stretch flex flex-col items-start relative shrink-0"
-      data-name="Link"
-    >
-      <div className="flex flex-col font-['Inter:Regular',sans-serif] font-normal h-[17px] justify-center leading-[0] not-italic relative shrink-0 text-[#6c6c6c] text-[11px] tracking-[1.1px] uppercase w-[43.3px]">
-        <p className="leading-[16.5px]">Terms</p>
-      </div>
-    </div>
-  );
-}
-
-function Link2({ onClick }: { onClick?: () => void }) {
+function FooterAction({
+  label,
+  onClick,
+}: {
+  label: string;
+  onClick?: () => void;
+}) {
   return (
     <div
       className="content-stretch flex flex-col items-start relative shrink-0"
@@ -83,33 +72,49 @@ function Link2({ onClick }: { onClick?: () => void }) {
         onClick={onClick}
         className="flex flex-col font-['Inter:Regular',sans-serif] font-normal h-[17px] justify-center leading-[0] not-italic relative shrink-0 text-[#6c6c6c] text-[11px] tracking-[1.1px] uppercase whitespace-nowrap cursor-pointer transition-colors hover:text-[#004e8d]"
       >
-        <p className="leading-[16.5px]">Admin Dashboard</p>
+        <p className="leading-[16.5px]">{label}</p>
       </button>
     </div>
   );
 }
 
-function Container({ onAdminDashboardClick }: { onAdminDashboardClick?: () => void }) {
+function Container({
+  onAdminDashboardClick,
+  onLogoutClick,
+}: {
+  onAdminDashboardClick?: () => void;
+  onLogoutClick?: () => void;
+}) {
   return (
     <div
       className="content-stretch flex gap-[32px] h-[42px] items-center justify-center relative shrink-0"
       data-name="Container"
     >
-      <Link />
-      <Link1 />
-      <Link2 onClick={onAdminDashboardClick} />
+      <FooterAction label="Admin Dashboard" onClick={onAdminDashboardClick} />
+      <FooterAction label="Logout" onClick={onLogoutClick} />
     </div>
   );
 }
 
-export function Footer({ onAdminDashboardClick }: { onAdminDashboardClick?: () => void }) {
+export function Footer({
+  onAdminDashboardClick,
+  onLogoutClick,
+  copyright,
+}: {
+  onAdminDashboardClick?: () => void;
+  onLogoutClick?: () => void;
+  copyright?: ResumeInformationCopyright;
+}) {
   return (
     <div
       className="absolute bottom-0 content-stretch flex h-[138px] items-center justify-between left-[256px] px-[80px] py-[48px] right-0"
       data-name="Footer"
     >
-      <Paragraph />
-      <Container onAdminDashboardClick={onAdminDashboardClick} />
+      <Paragraph copyright={copyright} />
+      <Container
+        onAdminDashboardClick={onAdminDashboardClick}
+        onLogoutClick={onLogoutClick}
+      />
     </div>
   );
 }
@@ -728,13 +733,13 @@ function ListItem({
           <span className="leading-[14px]">{label}</span>
         </li>
       </ul>
-      <p className="font-['OPPOSans:Regular',sans-serif] lowercase not-italic relative shrink-0 text-[14px]">
-        <span className="leading-[14px] text-[14px]">
+      <p className="font-['Manrope:Light',sans-serif] font-light not-italic relative shrink-0 text-[12px] tracking-[0.48px]">
+        <span className="leading-[14px] text-[12px]">
           {value.split("0121").map((part, i, arr) => (
             <React.Fragment key={i}>
               {part}
               {i < arr.length - 1 && (
-                <span className="text-[13px]">0121</span>
+                <span className="text-[12px]">0121</span>
               )}
             </React.Fragment>
           ))}
@@ -762,12 +767,19 @@ const LIST_DATA = [
   ],
 ];
 
+export type Frame5ListItemData = {
+  label: string;
+  value: string;
+};
+
 export function Frame5({
   activeIndex = 0,
+  items,
 }: {
   activeIndex?: number;
+  items?: Frame5ListItemData[];
 }) {
-  const data = LIST_DATA[activeIndex] || LIST_DATA[0];
+  const data = items ?? LIST_DATA[activeIndex] ?? LIST_DATA[0];
   return (
     <div className="-translate-y-1/2 absolute content-stretch flex flex-col gap-[33px] items-start leading-[0] left-[1057px] text-[#1d1d1d] top-[calc(50%+0.5px)] w-[183px] whitespace-nowrap">
       {data.map((item, idx) => (
@@ -1597,16 +1609,18 @@ export function MainSidebar({
   onHomeClick,
   activeResumeSubItem,
   onResumeSubItemClick,
+  contact,
 }: {
   currentView: "home" | "resume" | "ai-product" | "ux-design";
   onViewChange?: (
     view: "home" | "resume" | "ai-product" | "ux-design",
   ) => void;
   isContactActive?: boolean;
-  onContactClick?: () => void;
+  onContactClick?: () => void | Promise<void>;
   onHomeClick?: () => void;
   activeResumeSubItem?: string;
   onResumeSubItemClick?: (item: string) => void;
+  contact?: ResumeInformationContact;
 }) {
   const isResumeView = currentView === "resume";
   const isAIProductView = currentView === "ai-product";
@@ -1614,6 +1628,89 @@ export function MainSidebar({
   const isLightMode = true;
   const [showContactPopup, setShowContactPopup] =
     useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const contactContent = contact ?? {
+    wechat: "-vera0121-",
+    email: "vera0121@126.com",
+  };
+
+  const handleCopyContact = (text: string, message: string) => {
+    copyToClipboard(text);
+    toast.custom(
+      () => (
+        <div className="bg-[#e6e6e6] relative rounded-[24px]">
+          <div className="content-stretch flex gap-[10px] items-center px-[24px] py-[10px] relative rounded-[inherit]">
+            <div className="relative shrink-0 size-[12px]">
+              <svg
+                className="absolute block inset-0 size-full"
+                fill="none"
+                viewBox="0 0 12 12"
+              >
+                <path
+                  clipRule="evenodd"
+                  d="M12 6C12 9.31371 9.31371 12 6 12C2.68629 12 0 9.31371 0 6C0 2.68629 2.68629 0 6 0C9.31371 0 12 2.68629 12 6ZM8.4182 4.1818C8.59393 4.35754 8.59393 4.64246 8.4182 4.8182L5.4182 7.8182C5.24246 7.99393 4.95754 7.99393 4.7818 7.8182L3.5818 6.6182C3.40607 6.44246 3.40607 6.15754 3.5818 5.9818C3.75754 5.80607 4.04246 5.80607 4.2182 5.9818L5.1 6.8636L6.4409 5.5227L7.7818 4.1818C7.95754 4.00607 8.24246 4.00607 8.4182 4.1818Z"
+                  fill="#5E5E5E"
+                  fillRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="flex flex-col font-['OPPOSans:Regular',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[#5e5e5e] text-[14px] uppercase whitespace-nowrap">
+              <p className="leading-[20px]">{message}</p>
+            </div>
+          </div>
+          <div
+            aria-hidden="true"
+            className="absolute border border-[#b1b1b1] border-solid inset-0 pointer-events-none rounded-[24px]"
+          />
+        </div>
+      ),
+      { duration: 2000 },
+    );
+  };
+
+  const handleCopyContactKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    text: string,
+    message: string,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleCopyContact(text, message);
+  };
+
+  useEffect(() => {
+    if (!isLightMode || !showContactPopup) {
+      return;
+    }
+
+    const handleDocumentMouseMove = (event: MouseEvent) => {
+      const sidebarRect = sidebarRef.current?.getBoundingClientRect();
+      if (!sidebarRect) {
+        return;
+      }
+
+      const isInsideSidebar =
+        event.clientX >= sidebarRect.left &&
+        event.clientX <= sidebarRect.right &&
+        event.clientY >= sidebarRect.top &&
+        event.clientY <= sidebarRect.bottom;
+
+      if (!isInsideSidebar) {
+        setShowContactPopup(false);
+      }
+    };
+
+    document.addEventListener("mousemove", handleDocumentMouseMove);
+    return () => {
+      document.removeEventListener(
+        "mousemove",
+        handleDocumentMouseMove,
+      );
+    };
+  }, [isLightMode, showContactPopup]);
 
   const handleViewChange = (
     view: "home" | "resume" | "ai-product" | "ux-design",
@@ -1630,11 +1727,19 @@ export function MainSidebar({
     }
   };
 
-  const handleContactClick = () => {
+  const handleContactClick = async () => {
+    await onContactClick?.();
+
     if (isLightMode) {
       setShowContactPopup(!showContactPopup);
     } else {
-      onContactClick?.();
+      // Non-light mode uses the parent-level popup state.
+    }
+  };
+
+  const handleSidebarMouseLeave = () => {
+    if (isLightMode && showContactPopup) {
+      setShowContactPopup(false);
     }
   };
 
@@ -1647,8 +1752,10 @@ export function MainSidebar({
 
   return (
     <div
+      ref={sidebarRef}
       className="content-stretch flex flex-col h-full items-start left-0 pt-[64px] top-0 w-[256px] relative z-20"
       data-name="Aside - Sidebar Navigation"
+      onMouseLeave={handleSidebarMouseLeave}
     >
       <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-h-px min-w-px relative w-full">
         <NavItem
@@ -1758,18 +1865,39 @@ export function MainSidebar({
                     <p className="font-['Manrope:Light',sans-serif] font-light leading-[14px] text-[#838383] text-[12px] tracking-[0.48px] uppercase">
                       WECHAT
                     </p>
-                    <div className="flex items-center justify-between w-[160px]">
+                    <div
+                      className="flex items-center justify-between w-[160px] cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        if (
+                          (event.target as HTMLElement).closest(
+                            "[data-contact-copy-icon]",
+                          )
+                        ) {
+                          return;
+                        }
+                        handleCopyContact(
+                          contactContent.wechat,
+                          "微信号已复制",
+                        );
+                      }}
+                      onKeyDown={(event) =>
+                        handleCopyContactKeyDown(
+                          event,
+                          contactContent.wechat,
+                          "微信号已复制",
+                        )
+                      }
+                    >
                       <p className="font-['OPPOSans:Regular',sans-serif] leading-[14px] lowercase text-[#1d1d1d] text-[14px]">
-                        -vera
-                        <span className="text-[13px]">
-                          0121
-                        </span>
-                        -
+                        {contactContent.wechat}
                       </p>
                       <div
+                        data-contact-copy-icon
                         className="size-[12px] opacity-50 cursor-pointer hover:opacity-100 transition-opacity"
                         onClick={() => {
-                          copyToClipboard("-vera0121-");
+                          copyToClipboard(contactContent.wechat);
                           toast.custom(
                             () => (
                               <div className="bg-[#e6e6e6] relative rounded-[24px]">
@@ -1830,14 +1958,39 @@ export function MainSidebar({
                     <p className="font-['Manrope:Light',sans-serif] font-light leading-[14px] text-[#838383] text-[12px] tracking-[0.48px] uppercase">
                       E-MAIL
                     </p>
-                    <div className="flex items-center justify-between w-[160px]">
+                    <div
+                      className="flex items-center justify-between w-[160px] cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        if (
+                          (event.target as HTMLElement).closest(
+                            "[data-contact-copy-icon]",
+                          )
+                        ) {
+                          return;
+                        }
+                        handleCopyContact(
+                          contactContent.email,
+                          "邮箱号已复制",
+                        );
+                      }}
+                      onKeyDown={(event) =>
+                        handleCopyContactKeyDown(
+                          event,
+                          contactContent.email,
+                          "邮箱号已复制",
+                        )
+                      }
+                    >
                       <p className="font-['OPPOSans:Regular',sans-serif] leading-[14px] lowercase text-[#1d1d1d] text-[14px]">
-                        vera0121@126.com
+                        {contactContent.email}
                       </p>
                       <div
+                        data-contact-copy-icon
                         className="size-[12px] opacity-50 cursor-pointer hover:opacity-100 transition-opacity"
                         onClick={() => {
-                          copyToClipboard("vera0121@126.com");
+                          copyToClipboard(contactContent.email);
                           toast.custom(
                             () => (
                               <div className="bg-[#e6e6e6] relative rounded-[24px]">

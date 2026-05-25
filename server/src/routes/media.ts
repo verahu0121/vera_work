@@ -112,4 +112,56 @@ export async function registerMediaRoutes(app: FastifyInstance, mediaService: Me
 
     return reply.send(image)
   })
+
+  app.post('/api/admin/upload-resume-ux-case-media', async (request, reply) => {
+    const file = await request.file({
+      limits: {
+        files: 1,
+        fileSize: 10 * 1024 * 1024,
+      },
+    })
+
+    if (!file) {
+      return reply.status(400).send({ error: 'No file received.' })
+    }
+
+    if (!file.mimetype?.startsWith('image/') && !file.mimetype?.startsWith('video/')) {
+      return reply.status(400).send({ error: 'Only image or video files are supported.' })
+    }
+
+    const fileBuffer = await file.toBuffer()
+    const media = await mediaService.uploadResumeUxCaseMedia({
+      fileBuffer,
+      mimeType: file.mimetype || 'application/octet-stream',
+      filename: file.filename || 'ux-media',
+    })
+
+    return reply.send(media)
+  })
+
+  app.post('/api/admin/upload-resume-education-award-image', async (request, reply) => {
+    const file = await request.file({
+      limits: {
+        files: 1,
+        fileSize: 10 * 1024 * 1024,
+      },
+    })
+
+    if (!file) {
+      return reply.status(400).send({ error: 'No file received.' })
+    }
+
+    if (!file.mimetype?.startsWith('image/')) {
+      return reply.status(400).send({ error: 'Only image files are supported.' })
+    }
+
+    const fileBuffer = await file.toBuffer()
+    const image = await mediaService.uploadResumeEducationAwardImage({
+      fileBuffer,
+      mimeType: file.mimetype || 'application/octet-stream',
+      filename: file.filename || 'award-image',
+    })
+
+    return reply.send(image)
+  })
 }

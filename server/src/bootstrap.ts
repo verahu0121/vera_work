@@ -76,7 +76,14 @@ export async function createServerDependencies(): Promise<ServerDependencies> {
   const env = getServerEnv()
 
   if (env.databaseUrl) {
-    return createPostgresDependencies(env.databaseUrl)
+    try {
+      return await createPostgresDependencies(env.databaseUrl)
+    } catch (error) {
+      console.warn(
+        '[server] Failed to connect to Postgres, falling back to local bootstrap data.',
+        error,
+      )
+    }
   }
 
   return createBootstrapDependencies()

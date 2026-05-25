@@ -313,6 +313,97 @@
   }
 }
 
+@layer utilities {
+  /*
+   * Keep Figma-exported design-time font names working after Tailwind compiles
+   * arbitrary font utilities. These rules live in utilities so they win over
+   * classes such as font-['OPPOSans:Regular'], which are not real font-family
+   * names in the browser.
+   */
+  [class*="Noto_Sans_SC"] {
+    font-family: 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
+  }
+
+  [class*="Noto_Sans_JP"] {
+    font-family: 'Noto Sans JP', 'Noto Sans SC', sans-serif !important;
+  }
+
+  [class*="font-['Quantum:"] {
+    font-family: 'Quantum', sans-serif !important;
+  }
+
+  [class*="font-['OPPOSans:"] {
+    font-family: 'OPPOSans', 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
+  }
+
+  [class*="font-['Inter:"] {
+    font-family: 'Inter', 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
+  }
+
+  [class*="font-['DINOT:"] {
+    font-family: 'DINOT', 'Inter', 'Manrope', 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
+  }
+
+  [class*="font-['Manrope:"] {
+    font-family: 'Manrope', 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
+  }
+
+  [class*="font-['Quantum',sans-serif]"] {
+    font-family: 'Quantum', sans-serif !important;
+  }
+
+  [class*="font-['OPPOSans:Light"],
+  [class*="font-['Manrope:Light"] {
+    font-weight: 300 !important;
+  }
+
+  [class*="font-['OPPOSans:Regular"],
+  [class*="font-['Inter:Regular"],
+  [class*="font-['Manrope:Regular"],
+  [class*="Noto_Sans_SC:Regular"],
+  [class*="Noto_Sans_JP:Regular"],
+  [class*="font-['Noto_Sans:Regular"] {
+    font-weight: 400 !important;
+  }
+
+  [class*="font-['OPPOSans:Medium"],
+  [class*="font-['Inter:Medium"],
+  [class*="font-['Manrope:Medium"],
+  [class*="Noto_Sans_SC:Medium"],
+  [class*="Noto_Sans_JP:Medium"],
+  [class*="font-['Noto_Sans:Medium"] {
+    font-weight: 500 !important;
+  }
+
+  [class*="font-['Inter:Semi_Bold"] {
+    font-weight: 600 !important;
+  }
+
+  [class*="font-['OPPOSans:Bold"],
+  [class*="font-['Inter:Bold"],
+  [class*="font-['DINOT:Bold"],
+  [class*="font-['Manrope:Bold"],
+  [class*="Noto_Sans_SC:Bold"],
+  [class*="Noto_Sans_JP:Bold"],
+  [class*="font-['Noto_Sans:Bold"] {
+    font-weight: 700 !important;
+  }
+
+  [class*="font-['OPPOSans:Heavy"],
+  [class*="font-['Manrope:ExtraBold"] {
+    font-weight: 800 !important;
+  }
+
+  [class*="Noto_Sans_SC:Black"],
+  [class*="Noto_Sans_JP:Black"] {
+    font-weight: 900 !important;
+  }
+
+  [class*="font-['Inter:Italic"] {
+    font-style: italic !important;
+  }
+}
+
 @keyframes shake {
   0%,
   100% {

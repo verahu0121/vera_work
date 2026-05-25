@@ -288,7 +288,7 @@ export function ResumeContent({
         />
       </div>
       <div ref={uxCaseRef} className="w-full">
-        <UxCase content={content.uxCase} />
+        <UxCase content={content.uxCase} onOpenLinkedProject={onOpenLinkedProject} />
       </div>
       <div ref={educationRef} className="w-full">
         <Education content={content.education} />
