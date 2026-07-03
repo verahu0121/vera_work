@@ -1,5 +1,11 @@
 @custom-variant dark (&:is(.dark *));
 
+@property --strategy-gradient-stop {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0.01%;
+}
+
 :root {
   --font-size: 16px;
   --background: #ffffff;
@@ -198,6 +204,46 @@
     font-weight: 700;
   }
 
+  [class*="font-['Alimama_ShuHeiTi:"] {
+    font-family: 'Alimama ShuHeiTi', 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+  }
+
+  [class*="font-['Alimama_ShuHeiTi:Bold"] {
+    font-weight: 700;
+  }
+
+  [class*="font-['Alibaba_PuHuiTi_2.0:"] {
+    font-family: 'Alibaba PuHuiTi 2.0', 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+  }
+
+  [class*="font-['Alibaba_PuHuiTi_2.0:115_Black"] {
+    font-weight: 900;
+  }
+
+  .ai-project-outline-text {
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px rgba(71, 71, 71, 0.1);
+    text-stroke: 1px rgba(71, 71, 71, 0.1);
+  }
+
+  .ai-project-workflow-card::before {
+    border: 12px solid #e6e6e6;
+    border-radius: 200px;
+    box-sizing: border-box;
+    content: "";
+    inset: -6px;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .ai-project-workflow-ghost-text {
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px #474747;
+    text-stroke: 1px #474747;
+  }
+
   [class*="font-['Manrope:"]:not([class*="Noto_Sans_"]) {
     font-family: 'Manrope', sans-serif;
   }
@@ -344,6 +390,14 @@
     font-family: 'DINOT', 'Inter', 'Manrope', 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
   }
 
+  [class*="font-['Alimama_ShuHeiTi:"] {
+    font-family: 'Alimama ShuHeiTi', 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
+  }
+
+  [class*="font-['Alibaba_PuHuiTi_2.0:"] {
+    font-family: 'Alibaba PuHuiTi 2.0', 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
+  }
+
   [class*="font-['Manrope:"] {
     font-family: 'Manrope', 'Noto Sans SC', 'Noto Sans JP', sans-serif !important;
   }
@@ -382,6 +436,7 @@
   [class*="font-['OPPOSans:Bold"],
   [class*="font-['Inter:Bold"],
   [class*="font-['DINOT:Bold"],
+  [class*="font-['Alimama_ShuHeiTi:Bold"],
   [class*="font-['Manrope:Bold"],
   [class*="Noto_Sans_SC:Bold"],
   [class*="Noto_Sans_JP:Bold"],
@@ -396,6 +451,10 @@
 
   [class*="Noto_Sans_SC:Black"],
   [class*="Noto_Sans_JP:Black"] {
+    font-weight: 900 !important;
+  }
+
+  [class*="font-['Alibaba_PuHuiTi_2.0:115_Black"] {
     font-weight: 900 !important;
   }
 
@@ -424,5 +483,179 @@
 
   80% {
     transform: translateX(4px);
+  }
+}
+
+@layer components {
+  .ai-product-footer-nav {
+    position: relative;
+  }
+
+  .ai-product-footer-nav::before {
+    border-top: 1px dashed rgba(94, 94, 94, 0.25);
+    content: "";
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
+  .ai-product-footer-row {
+    position: relative;
+  }
+
+  .ai-product-footer-row::after {
+    border-bottom: 1px solid rgba(198, 198, 198, 0.1);
+    bottom: 0;
+    content: "";
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+  }
+
+  .ai-product-project-card-frame {
+    width: 864px;
+    height: 452px;
+  }
+
+  .ai-product-project-card-shadow {
+    transform: translate(0, 0);
+    transition: transform 200ms ease-out;
+    will-change: transform;
+  }
+
+  .ai-product-project-card-surface {
+    background-color: #e2e2e2;
+    box-sizing: border-box;
+    height: 452px;
+    overflow: clip;
+    transform: translate(0, 0);
+    transition: transform 200ms ease-out, background-color 200ms ease-out;
+    will-change: transform, background-color;
+  }
+
+  .ai-product-project-card-tag-rail {
+    background-color: #e6e6e6;
+    transition: background-color 200ms ease-out;
+    will-change: background-color;
+  }
+
+  .ai-product-project-card-frame:hover .ai-product-project-card-shadow,
+  .ai-product-project-card-frame:focus-within .ai-product-project-card-shadow {
+    transform: translate(-2px, 2px);
+  }
+
+  .ai-product-project-card-frame:hover .ai-product-project-card-surface,
+  .ai-product-project-card-frame:focus-within .ai-product-project-card-surface {
+    transform: translate(2px, -2px);
+    background-color: #e9e9e9;
+  }
+
+  .ai-product-project-card-frame:hover .ai-product-project-card-tag-rail,
+  .ai-product-project-card-frame:focus-within .ai-product-project-card-tag-rail {
+    background-color: #eeeeee;
+  }
+
+  .ai-workflow-phase-tab[aria-selected="false"]:hover,
+  .ai-workflow-phase-tab[aria-selected="false"]:focus-visible {
+    opacity: 0.8;
+  }
+
+  .ai-project-architecture-shell {
+    color: #d9d9d9;
+  }
+
+  .ai-project-architecture-rail,
+  .ai-project-architecture-platform-surface,
+  .ai-project-architecture-data-layer,
+  .ai-project-architecture-feature-chip {
+    transition: background-color 160ms ease-out, color 160ms ease-out, filter 160ms ease-out;
+    will-change: background-color, color, filter;
+  }
+
+  .ai-project-architecture-rail-hover-gradient {
+    background-image: linear-gradient(90deg, #000000 0%, rgba(102, 102, 102, 0) 100%);
+    opacity: 0;
+    transition: opacity 160ms ease-out;
+    will-change: opacity;
+  }
+
+  .ai-project-architecture-rail-data-gradient {
+    background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.1) 0%, rgba(255, 255, 255, 0.024) 100%);
+    opacity: 0;
+    transition: opacity 160ms ease-out;
+    will-change: opacity;
+  }
+
+  [data-architecture-hover-target]:focus-visible {
+    outline: 1px solid rgba(71, 71, 71, 0.22);
+    outline-offset: -1px;
+  }
+
+  [data-architecture-hover-target="task"][data-architecture-active="true"] ~ .ai-project-architecture-platforms [data-architecture-panel="task"],
+  [data-architecture-hover-target="task"]:hover ~ .ai-project-architecture-platforms [data-architecture-panel="task"],
+  [data-architecture-hover-target="task"]:focus-within ~ .ai-project-architecture-platforms [data-architecture-panel="task"] {
+    background-color: #ececec;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.25));
+    filter: none;
+  }
+
+  [data-architecture-hover-target="create"][data-architecture-active="true"] ~ .ai-project-architecture-platforms [data-architecture-panel="create"],
+  [data-architecture-hover-target="create"]:hover ~ .ai-project-architecture-platforms [data-architecture-panel="create"],
+  [data-architecture-hover-target="create"]:focus-within ~ .ai-project-architecture-platforms [data-architecture-panel="create"] {
+    background-color: #ececec;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.25));
+    filter: none;
+  }
+
+  [data-architecture-hover-target="data"][data-architecture-active="true"] ~ .ai-project-architecture-platforms [data-architecture-panel="data"],
+  [data-architecture-hover-target="data"]:hover ~ .ai-project-architecture-platforms [data-architecture-panel="data"],
+  [data-architecture-hover-target="data"]:focus-within ~ .ai-project-architecture-platforms [data-architecture-panel="data"] {
+    background-color: #e2e2e2;
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.5) 100%);
+    filter: none;
+  }
+
+  [data-architecture-hover-target="data"][data-architecture-active="true"] ~ .ai-project-architecture-platforms [data-architecture-panel="task"],
+  [data-architecture-hover-target="data"][data-architecture-active="true"] ~ .ai-project-architecture-platforms [data-architecture-panel="create"],
+  [data-architecture-hover-target="data"]:hover ~ .ai-project-architecture-platforms [data-architecture-panel="task"],
+  [data-architecture-hover-target="data"]:hover ~ .ai-project-architecture-platforms [data-architecture-panel="create"],
+  [data-architecture-hover-target="data"]:focus-within ~ .ai-project-architecture-platforms [data-architecture-panel="task"],
+  [data-architecture-hover-target="data"]:focus-within ~ .ai-project-architecture-platforms [data-architecture-panel="create"] {
+    background-color: #ececec;
+    background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.05) 100%);
+    filter: none;
+  }
+
+  [data-architecture-hover-target="task"][data-architecture-active="true"] ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="task"] .ai-project-architecture-rail-hover-gradient,
+  [data-architecture-hover-target="task"]:hover ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="task"] .ai-project-architecture-rail-hover-gradient,
+  [data-architecture-hover-target="task"]:focus-within ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="task"] .ai-project-architecture-rail-hover-gradient {
+    opacity: 0.05;
+  }
+
+  [data-architecture-hover-target="create"][data-architecture-active="true"] ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="create"] .ai-project-architecture-rail-hover-gradient,
+  [data-architecture-hover-target="create"]:hover ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="create"] .ai-project-architecture-rail-hover-gradient,
+  [data-architecture-hover-target="create"]:focus-within ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="create"] .ai-project-architecture-rail-hover-gradient {
+    opacity: 0.05;
+  }
+
+  [data-architecture-hover-target="data"][data-architecture-active="true"] ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="data"] .ai-project-architecture-rail-data-gradient,
+  [data-architecture-hover-target="data"]:hover ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="data"] .ai-project-architecture-rail-data-gradient,
+  [data-architecture-hover-target="data"]:focus-within ~ .ai-project-architecture-platforms [data-architecture-rail-hover-target~="data"] .ai-project-architecture-rail-data-gradient {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ai-product-project-card-shadow,
+    .ai-product-project-card-surface,
+    .ai-product-project-card-tag-rail,
+    .ai-project-architecture-rail,
+    .ai-project-architecture-platform-surface,
+    .ai-project-architecture-data-layer,
+    .ai-project-architecture-feature-chip {
+      transition: none;
+    }
   }
 }

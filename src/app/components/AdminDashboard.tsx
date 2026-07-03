@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { Frame6, Icon } from "../../imports/VerasLibertisle/VerasLibertisle";
 import { PasswordAccessCard } from "./PasswordAccessCard";
@@ -15,6 +16,11 @@ import {
 } from "../data/portfolioProjects";
 import { DEFAULT_AUTH_SETTINGS, type AuthSettings } from "../data/authSettings";
 import { type ResumeContentData } from "../data/resumeContent";
+import { PROJECT_EDITOR_BASIC_INFORMATION_CONTROLS } from "../data/adminProjectEditorForm";
+import {
+  PROJECT_COVER_IMAGE_EDITOR,
+  isProjectCoverVideo,
+} from "../data/projectCoverImageEditor";
 import { ResumeModuleEditor } from "./ResumeModuleEditor";
 import { InformationModuleEditor } from "./InformationModuleEditor";
 
@@ -390,6 +396,30 @@ async function uploadSectionImageAsset(projectId: string, sectionId: string, fil
   return payload as ProjectSectionImage;
 }
 
+async function uploadProjectCoverImageAsset(projectId: string, file: File) {
+  const formData = new FormData();
+  formData.append("projectId", projectId);
+  formData.append("sectionId", PROJECT_COVER_IMAGE_EDITOR.uploadSectionId);
+  formData.append("file", file);
+
+  const response = await fetch(PROJECT_COVER_IMAGE_EDITOR.uploadEndpoint, {
+    method: "POST",
+    body: formData,
+  });
+
+  const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error(payload?.error || "Cover upload failed.");
+  }
+
+  if (typeof payload?.src !== "string" || payload.src.length === 0) {
+    throw new Error("Cover upload did not return an image URL.");
+  }
+
+  return payload as { src: string; key?: string };
+}
+
 export function AdminDashboard({
   onBack,
   projects,
@@ -423,6 +453,7 @@ export function AdminDashboard({
   const [draftProject, setDraftProject] = useState<PortfolioProject | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [uploadingSectionIds, setUploadingSectionIds] = useState<string[]>([]);
+  const [uploadingProjectCoverId, setUploadingProjectCoverId] = useState<string | null>(null);
   const [platformWelcomeDraft, setPlatformWelcomeDraft] = useState(authSettings.platformWelcomeText);
   const [platformOriginalPassword, setPlatformOriginalPassword] = useState("");
   const [platformNewPassword, setPlatformNewPassword] = useState("");
@@ -733,6 +764,26 @@ export function AdminDashboard({
     }
   };
 
+  const handleUploadProjectCoverImage = async (file: File) => {
+    if (!editableProject) return;
+
+    setUploadingProjectCoverId(editableProject.id);
+
+    try {
+      const uploadedImage = await uploadProjectCoverImageAsset(editableProject.id, file);
+      updateDraftProject((project) => ({
+        ...project,
+        coverImage: uploadedImage.src,
+        updatedAt: new Date().toISOString(),
+      }));
+      toast.success("Cover image uploaded");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Cover upload failed.");
+    } finally {
+      setUploadingProjectCoverId(null);
+    }
+  };
+
   const handleRemoveSectionImage = (sectionIndex: number, imageId: string) => {
     updateDraftProject((project) => {
       const targetSection = project.sections[sectionIndex];
@@ -798,6 +849,12 @@ export function AdminDashboard({
   const securityUpdatedLabel = formatSecurityUpdateDate(authSettings.updatedAt);
   const dashboardProject = selectedProject ?? filteredProjects[0] ?? projects[0] ?? null;
   const editableProject = draftProject ?? dashboardProject;
+  const coverPreviewSrc = editableProject?.coverImage || editableProject?.images[0] || "";
+  const isCoverPreviewVideo = isProjectCoverVideo(coverPreviewSrc);
+  const isUploadingProjectCover = Boolean(
+    editableProject && uploadingProjectCoverId === editableProject.id,
+  );
+  const basicInfoControls = PROJECT_EDITOR_BASIC_INFORMATION_CONTROLS;
   const previewCards = Array.from({ length: 4 }, (_, index) => index);
   const previewSections = Array.from({ length: 3 }, (_, index) => index);
   const showPreviewSkeleton = false;
@@ -1333,27 +1390,41 @@ export function AdminDashboard({
                           <div className="grid gap-4">
                             <label className="flex flex-col gap-2">
                               <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Category</span>
-                              <select
-                                value={editableProject.category}
-                                disabled={preview}
-                                onChange={(event) => handleCategoryChange(event.target.value as ProjectCategory)}
-                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[13px] outline-none focus:border-[#03c9c3]/50 disabled:pointer-events-none"
-                              >
-                                <option value="ai-product">AI Product</option>
-                                <option value="ux-design">UX Design</option>
-                              </select>
+                              <div className="relative">
+                                <select
+                                  value={editableProject.category}
+                                  disabled={preview}
+                                  onChange={(event) => handleCategoryChange(event.target.value as ProjectCategory)}
+                                  className={basicInfoControls.selectClassName}
+                                >
+                                  <option value="ai-product">AI Product</option>
+                                  <option value="ux-design">UX Design</option>
+                                </select>
+                                <ChevronsUpDown
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-[#1a1c1c]"
+                                  strokeWidth={2.2}
+                                />
+                              </div>
                             </label>
                             <label className="flex flex-col gap-2">
                               <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Status</span>
-                              <select
-                                value={editableProject.status}
-                                disabled={preview}
-                                onChange={(event) => handleStatusChange(event.target.value as ProjectStatus)}
-                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[13px] outline-none focus:border-[#03c9c3]/50 disabled:pointer-events-none"
-                              >
-                                <option value="draft">Draft</option>
-                                <option value="published">Published</option>
-                              </select>
+                              <div className="relative">
+                                <select
+                                  value={editableProject.status}
+                                  disabled={preview}
+                                  onChange={(event) => handleStatusChange(event.target.value as ProjectStatus)}
+                                  className={basicInfoControls.selectClassName}
+                                >
+                                  <option value="draft">Draft</option>
+                                  <option value="published">Published</option>
+                                </select>
+                                <ChevronsUpDown
+                                  aria-hidden="true"
+                                  className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-[#1a1c1c]"
+                                  strokeWidth={2.2}
+                                />
+                              </div>
                             </label>
                             <label className="flex flex-col gap-2">
                               <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">Title</span>
@@ -1361,7 +1432,7 @@ export function AdminDashboard({
                                 value={editableProject.title}
                                 readOnly={preview}
                                 onChange={(event) => handleFieldChange("title", event.target.value)}
-                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                                className={basicInfoControls.textInputClassName}
                               />
                             </label>
                             <label className="flex flex-col gap-2">
@@ -1370,7 +1441,7 @@ export function AdminDashboard({
                                 value={editableProject.englishTitle}
                                 readOnly={preview}
                                 onChange={(event) => handleFieldChange("englishTitle", event.target.value)}
-                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                                className={basicInfoControls.textInputClassName}
                               />
                             </label>
                             <label className="flex flex-col gap-2">
@@ -1379,7 +1450,7 @@ export function AdminDashboard({
                                 value={editableProject.date}
                                 readOnly={preview}
                                 onChange={(event) => handleFieldChange("date", event.target.value)}
-                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                                className={basicInfoControls.textInputClassName}
                               />
                             </label>
                             <label className="flex flex-col gap-2">
@@ -1396,7 +1467,7 @@ export function AdminDashboard({
                                       .filter(Boolean),
                                   )
                                 }
-                                className="rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                                className={basicInfoControls.textInputClassName}
                               />
                             </label>
                             <label className="flex flex-col gap-2">
@@ -1409,6 +1480,59 @@ export function AdminDashboard({
                                 className="resize-none rounded-[20px] border border-black/8 bg-white px-4 py-4 text-[14px] leading-[28px] outline-none focus:border-[#03c9c3]/50"
                               />
                             </label>
+                            <div className="flex flex-col gap-2">
+                              <span className="text-[11px] uppercase tracking-[1.8px] text-[#7d7d84]">
+                                {PROJECT_COVER_IMAGE_EDITOR.label}
+                              </span>
+                              <label
+                                className={`group relative block w-full overflow-hidden rounded-[20px] border border-black/8 bg-white ${
+                                  preview || isUploadingProjectCover
+                                    ? "cursor-not-allowed opacity-70"
+                                    : "cursor-pointer hover:border-[#03c9c3]/50"
+                                }`}
+                                style={{ aspectRatio: PROJECT_COVER_IMAGE_EDITOR.aspectRatio }}
+                                aria-label={isUploadingProjectCover ? "Uploading cover media" : "Upload cover media"}
+                                title={isUploadingProjectCover ? "Uploading cover media" : "Upload cover media"}
+                              >
+                                {coverPreviewSrc && isCoverPreviewVideo ? (
+                                  <video
+                                    aria-label={`${editableProject.title} cover video`}
+                                    src={coverPreviewSrc}
+                                    className="absolute inset-0 size-full object-cover"
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                  />
+                                ) : coverPreviewSrc ? (
+                                  <img
+                                    alt={`${editableProject.title} cover`}
+                                    src={coverPreviewSrc}
+                                    className="absolute inset-0 size-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-[#f4f1ec] text-[11px] uppercase tracking-[2px] text-[#9a9aa0]">
+                                    {PROJECT_COVER_IMAGE_EDITOR.label}
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/18" />
+                                <div className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-1.5 text-[10px] uppercase tracking-[1.6px] text-[#1a1c1c] shadow-[0_8px_22px_rgba(26,28,28,0.12)]">
+                                  {isUploadingProjectCover ? "Uploading" : "Replace"}
+                                </div>
+                                <input
+                                  type="file"
+                                  accept={PROJECT_COVER_IMAGE_EDITOR.accept}
+                                  className="hidden"
+                                  disabled={preview || isUploadingProjectCover}
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    if (!file) return;
+                                    void handleUploadProjectCoverImage(file);
+                                    event.currentTarget.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
                           </div>
                         </section>
 

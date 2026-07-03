@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import HoverIcon from "../Icon-1/Icon-20-426";
+import aiProductSubnavThesisIcon from "../../assets/ai-product-page/subnav-thesis.svg?raw";
+import aiProductSubnavConnectionIcon from "../../assets/ai-product-page/subnav-connection.svg?raw";
+import aiProductSubnavMethodIcon from "../../assets/ai-product-page/subnav-method.svg?raw";
 import type {
   ResumeInformationContact,
   ResumeInformationCopyright,
@@ -1725,6 +1728,91 @@ function ResumeSubItem({
   );
 }
 
+const AI_PRODUCT_SUB_NAV_ITEMS = [
+  {
+    label: "共同命题",
+    iconMarkup: aiProductSubnavThesisIcon,
+    iconHeight: 12,
+  },
+  {
+    label: "路径连接",
+    iconMarkup: aiProductSubnavConnectionIcon,
+    iconHeight: 13,
+  },
+  {
+    label: "AI 产品方法",
+    iconMarkup: aiProductSubnavMethodIcon,
+    iconHeight: 12,
+  },
+] as const;
+
+type AiProductSubItemLabel = (typeof AI_PRODUCT_SUB_NAV_ITEMS)[number]["label"];
+
+const colorizeAiProductSubnavIcon = (svgMarkup: string, color: string) =>
+  svgMarkup.replace(
+    /fill="(?:#(?:969696|1D1D1D)|var\(--fill-0, #[0-9A-Fa-f]{6}\))"/g,
+    `fill="${color}"`,
+  );
+
+function AiProductSubItem({
+  iconMarkup,
+  iconHeight,
+  label,
+  isActive,
+  onClick,
+}: {
+  iconMarkup: string;
+  iconHeight: number;
+  label: AiProductSubItemLabel;
+  isActive?: boolean;
+  onClick?: () => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const itemColor = isActive ? "#1D1D1D" : isHovered ? "#939393" : "#B1B1B1";
+  const activeIconMarkup = colorizeAiProductSubnavIcon(iconMarkup, itemColor);
+
+  return (
+    <div
+      className="relative shrink-0 w-full group cursor-pointer"
+      data-name="Item → Link"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+    >
+      {isActive && (
+        <div
+          aria-hidden="true"
+          className="absolute border-[#1d1d1d] border-l-2 border-solid inset-0 pointer-events-none"
+        />
+      )}
+      <div className="flex flex-row items-center size-full">
+        <div className="content-stretch flex gap-[12px] items-center pl-[48px] py-[8px] relative w-full">
+          <div
+            className="relative shrink-0 w-[12px]"
+            style={{ height: `${iconHeight}px` }}
+          >
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 block size-full [&_svg]:block [&_svg]:size-full"
+              dangerouslySetInnerHTML={{ __html: activeIconMarkup }}
+            />
+          </div>
+          <div
+            className={`flex flex-col h-[16px] justify-center leading-[0] not-italic relative shrink-0 text-[12px] uppercase transition-colors duration-300 ${
+              isActive
+                ? "font-['OPPOSans:Medium',sans-serif] font-medium"
+                : "font-['OPPOSans:Regular',sans-serif] font-normal"
+            }`}
+            style={{ color: itemColor }}
+          >
+            <p className="leading-[16px]">{label}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function MainSidebar({
   currentView,
   onViewChange,
@@ -1733,6 +1821,8 @@ export function MainSidebar({
   onHomeClick,
   activeResumeSubItem,
   onResumeSubItemClick,
+  activeAiProductSubItem,
+  onAiProductSubItemClick,
   contact,
 }: {
   currentView: "home" | "resume" | "ai-product" | "ux-design";
@@ -1744,6 +1834,8 @@ export function MainSidebar({
   onHomeClick?: () => void;
   activeResumeSubItem?: string;
   onResumeSubItemClick?: (item: string) => void;
+  activeAiProductSubItem?: AiProductSubItemLabel;
+  onAiProductSubItemClick?: (item: AiProductSubItemLabel) => void;
   contact?: ResumeInformationContact;
 }) {
   const isResumeView = currentView === "resume";
@@ -1895,6 +1987,27 @@ export function MainSidebar({
           isResumeView={isLightMode}
           onClick={() => handleViewChange("ai-product")}
         />
+        {isAIProductView && (
+          <div className="content-stretch flex flex-col gap-[24px] items-start pb-[48px] relative shrink-0 w-full animate-in fade-in slide-in-from-top-4 duration-500">
+            {AI_PRODUCT_SUB_NAV_ITEMS.map((item) => (
+              <AiProductSubItem
+                key={item.label}
+                label={item.label}
+                iconMarkup={item.iconMarkup}
+                iconHeight={item.iconHeight}
+                isActive={activeAiProductSubItem === item.label}
+                onClick={() => {
+                  onAiProductSubItemClick?.(item.label);
+                  window.dispatchEvent(
+                    new CustomEvent("ai-product-nav-click", {
+                      detail: { tab: item.label },
+                    }),
+                  );
+                }}
+              />
+            ))}
+          </div>
+        )}
         <NavItem
           title="UX Design"
           subtitle="ux设计项目"

@@ -7,6 +7,7 @@ import {
   getProjectSectionStableId,
   type PortfolioProject,
 } from "../data/portfolioProjects";
+import { ProjectDetailRightNav } from "./ProjectDetailRightNav";
 
 // Icons are passed as paths or raw SVG strings
 const ICONS = {
@@ -65,36 +66,6 @@ function GalleryNav({ current, total, onPrev, onNext }: { current: number, total
   );
 }
 
-function RightNavLink({
-  num,
-  title,
-  subtitle,
-  active,
-  onClick,
-}: {
-  num: string;
-  title: string;
-  subtitle: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex items-start gap-4 cursor-pointer group text-left ${active ? 'opacity-100' : 'opacity-50 hover:opacity-80 transition-opacity'}`}
-    >
-      <div className="w-[56px] h-[56px] flex items-center justify-center text-[21px] font-bold text-white/80">
-        {num}
-      </div>
-      <div className="py-2">
-        <div className={`text-[16px] font-bold ${active ? 'text-white' : 'text-white/50'}`}>{title}</div>
-        <div className={`text-[12px] ${active ? 'text-white/50' : 'text-white/30'}`}>{subtitle}</div>
-      </div>
-    </button>
-  );
-}
-
 export function ProjectDetailModal({ projects, initialProjectId, onClose }: ProjectDetailModalProps) {
   const [currentIndex, setCurrentIndex] = useState(() => {
     const idx = projects.findIndex(p => p.id === initialProjectId);
@@ -139,7 +110,7 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
   }, [currentIndex]);
 
   useEffect(() => {
-    setActiveSectionId(gallerySections[0]?.id ?? "");
+    setActiveSectionId(gallerySections[0]?.stableId ?? gallerySections[0]?.id ?? "");
   }, [gallerySections, currentIndex]);
 
   useEffect(() => {
@@ -160,7 +131,7 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
           })
           .filter((section): section is { id: string; offset: number } => Boolean(section))
           .filter((section) => section.offset <= 120)
-          .sort((a, b) => b.offset - a.offset)[0]?.id ?? gallerySections[0].id;
+          .sort((a, b) => b.offset - a.offset)[0]?.id ?? (gallerySections[0].stableId ?? gallerySections[0].id);
 
       setActiveSectionId(nextActiveSection);
     };
@@ -192,7 +163,7 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
       </div>
 
       {/* Main Content Area */}
-      <div id="project-modal-content" className="flex-1 min-w-[768px] h-full overflow-y-auto bg-[#e6e6e6] scrollbar-hide scroll-smooth">
+      <div id="project-modal-content" className="flex-1 min-w-[768px] h-full overflow-y-auto bg-[#e6e6e6] scrollbar-hide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth">
         {/* Header inside content */}
         <div className="px-12 py-24" style={{ backgroundColor: detailHero.backgroundColor }}>
           <div className="text-[10px] tracking-[3px] mb-2 uppercase" style={{ color: detailHero.eyebrowColor }}>
@@ -229,38 +200,20 @@ export function ProjectDetailModal({ projects, initialProjectId, onClose }: Proj
         </div>
       </div>
 
-      {/* Right Sidebar */}
-      <div className="w-[256px] shrink-0 h-full bg-[rgba(0,0,0,0.01)] backdrop-blur-[24px] p-8 flex flex-col gap-9">
-        {/* Back Button */}
-        <button 
-          onClick={onClose}
-          className="flex items-start gap-4 group cursor-pointer text-left w-full"
-        >
-          <div className="w-10 h-10 bg-white/20 rounded flex items-center justify-center group-hover:bg-white/30 transition-colors shrink-0">
-            {ICONS.PREV}
-          </div>
-          <div className="py-1">
-            <div className="text-[16px] font-bold text-white/50 group-hover:text-white/80 transition-colors">返回</div>
-            <div className="text-[12px] text-white/30 uppercase tracking-tighter">GO BACK</div>
-          </div>
-        </button>
-
-        <div className="h-px bg-white/10 w-full" />
-
-        {/* Module Navigation */}
-        <div className="flex flex-col gap-4">
-          {gallerySections.map((section, sectionIndex) => (
-            <RightNavLink
-              key={section.stableId ?? section.id} 
-              num={String(sectionIndex + 1).padStart(2, "0")} 
-              title={section.title} 
-              subtitle={section.subtitle} 
-              active={activeSectionId === (section.stableId ?? section.id)}
-              onClick={() => handleSectionClick(section.stableId ?? section.id)}
-            />
-          ))}
-        </div>
-      </div>
+      <ProjectDetailRightNav
+        onBack={onClose}
+        items={gallerySections.map((section, sectionIndex) => {
+          const sectionId = section.stableId ?? section.id;
+          return {
+            id: sectionId,
+            num: String(sectionIndex + 1).padStart(2, "0"),
+            title: section.title,
+            subtitle: section.subtitle,
+            active: activeSectionId === sectionId,
+            onClick: () => handleSectionClick(sectionId),
+          };
+        })}
+      />
     </div>,
     document.body
   );

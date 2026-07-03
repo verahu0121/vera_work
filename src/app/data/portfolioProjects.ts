@@ -73,6 +73,20 @@ export function getProjectDetailHero(project: PortfolioProject): ProjectDetailHe
   };
 }
 
+function getProjectListCode(project: PortfolioProject, displayIndex?: number) {
+  const codePrefix = project.category === "ai-product" ? "AI" : "UX";
+  const listPosition = typeof displayIndex === "number" ? displayIndex + 1 : project.order;
+  const safePosition = Number.isFinite(listPosition) && listPosition > 0 ? Math.floor(listPosition) : 1;
+
+  return `${codePrefix}-${String(safePosition).padStart(2, "0")}`;
+}
+
+export function getProjectListEyebrow(project: PortfolioProject, displayIndex?: number) {
+  const startDate = project.date.split("-")[0]?.trim() || project.date.trim();
+
+  return `PROJECT ${getProjectListCode(project, displayIndex)} / ${startDate}`;
+}
+
 export function getProjectSectionImages(project: PortfolioProject, sectionIndex: number): ProjectSectionImage[] {
   const section = project.sections[sectionIndex];
   if (!section) return [];

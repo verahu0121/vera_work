@@ -7,14 +7,7 @@ import {
   getProjectSectionStableId,
   type PortfolioProject,
 } from "../data/portfolioProjects";
-
-const ICONS = {
-  PREV: (
-    <svg width="15" height="12" viewBox="0 0 15 12" fill="none">
-      <path d="M6.24595 12L0 6L6.24595 0H8.89968L3.60841 5.04935H15V6.96623H3.60841L8.89968 12H6.24595Z" fill="white" fillOpacity="0.7" />
-    </svg>
-  ),
-};
+import { ProjectDetailRightNav } from "./ProjectDetailRightNav";
 
 function ProjectInfo({ project }: { project: PortfolioProject }) {
   return (
@@ -28,36 +21,6 @@ function ProjectInfo({ project }: { project: PortfolioProject }) {
         {project.description}
       </p>
     </div>
-  );
-}
-
-function RightNavLink({
-  num,
-  title,
-  subtitle,
-  active,
-  onClick,
-}: {
-  num: string;
-  title: string;
-  subtitle: string;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group flex cursor-pointer items-start gap-4 text-left ${active ? "opacity-100" : "opacity-50 transition-opacity hover:opacity-80"}`}
-    >
-      <div className="flex h-[56px] w-[56px] items-center justify-center text-[21px] font-bold text-white/80">
-        {num}
-      </div>
-      <div className="py-2">
-        <div className={`text-[16px] font-bold ${active ? "text-white" : "text-white/50"}`}>{title}</div>
-        <div className={`text-[12px] ${active ? "text-white/50" : "text-white/30"}`}>{subtitle}</div>
-      </div>
-    </button>
   );
 }
 
@@ -146,7 +109,7 @@ export function ResumeProjectDetailView({
 
       <div
         id="resume-project-detail-content"
-        className="min-w-[768px] flex-1 overflow-y-auto bg-[#e6e6e6] scrollbar-hide scroll-smooth"
+        className="min-w-[768px] flex-1 overflow-y-auto bg-[#e6e6e6] scrollbar-hide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden scroll-smooth"
       >
         <div className="px-12 py-24" style={{ backgroundColor: detailHero.backgroundColor }}>
           <div className="mb-2 text-[10px] uppercase tracking-[3px]" style={{ color: detailHero.eyebrowColor }}>
@@ -185,35 +148,20 @@ export function ResumeProjectDetailView({
         </div>
       </div>
 
-      <div className="flex h-full w-[256px] shrink-0 flex-col gap-9 bg-[rgba(0,0,0,0.01)] p-8 backdrop-blur-[24px]">
-        <button onClick={onClose} className="group flex w-full cursor-pointer items-start gap-4 text-left">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded bg-white/20 transition-colors group-hover:bg-white/30">
-            {ICONS.PREV}
-          </div>
-          <div className="py-1">
-            <div className="text-[16px] font-bold text-white/50 transition-colors group-hover:text-white/80">返回</div>
-            <div className="text-[12px] uppercase tracking-tighter text-white/30">GO BACK</div>
-          </div>
-        </button>
-
-        <div className="h-px w-full bg-white/10" />
-
-        <div className="flex flex-col gap-4">
-          {gallerySections.map((section, sectionIndex) => {
-            const sectionId = section.stableId ?? section.id;
-            return (
-              <RightNavLink
-                key={sectionId}
-                num={String(sectionIndex + 1).padStart(2, "0")}
-                title={section.title}
-                subtitle={section.subtitle}
-                active={activeSectionId === sectionId}
-                onClick={() => handleSectionClick(sectionId)}
-              />
-            );
-          })}
-        </div>
-      </div>
+      <ProjectDetailRightNav
+        onBack={onClose}
+        items={gallerySections.map((section, sectionIndex) => {
+          const sectionId = section.stableId ?? section.id;
+          return {
+            id: sectionId,
+            num: String(sectionIndex + 1).padStart(2, "0"),
+            title: section.title,
+            subtitle: section.subtitle,
+            active: activeSectionId === sectionId,
+            onClick: () => handleSectionClick(sectionId),
+          };
+        })}
+      />
     </div>,
     document.body,
   );

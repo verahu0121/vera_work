@@ -4,6 +4,7 @@ import { MainSidebar, Footer, Frame6, Frame5, Icon } from "../imports/VerasLiber
 import { ContactPopup } from "./components/ContactPopup";
 import { ResumeContent } from "./components/ResumeContent";
 import { AIProductContent } from "./components/AIProductContent";
+import { AIProjectDetailOverlay } from "./components/AIProjectDetailOverlay";
 import { UXDesignContent } from "./components/UXDesignContent";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { PasswordAccessCard } from "./components/PasswordAccessCard";
@@ -24,6 +25,10 @@ import {
   type ResumeInformationHomeModule,
   type ResumeInformationHomeModuleKey,
 } from "./data/resumeContent";
+import {
+  hasAiProductDetail,
+  type AiProductFeaturedProject,
+} from "./data/aiProductPage";
 
 const SITE_SUCCESS_TRANSITION_MS = 850;
 const SITE_WELCOME_EXIT_START_MS = 80;
@@ -31,6 +36,7 @@ const SITE_LOGOUT_TRANSITION_MS = 520;
 const SITE_WELCOME_FADE_DURATION = 0.72;
 const SITE_WELCOME_GRID_ITEMS = Array.from({ length: 30 }, (_, index) => index);
 type AppView = 'home' | 'resume' | 'ai-product' | 'ux-design' | 'admin-dashboard';
+type AiProductSidebarSection = "共同命题" | "路径连接" | "AI 产品方法";
 
 const VIEW_PATHS: Record<AppView, string> = {
   home: '/',
@@ -254,12 +260,14 @@ export default function App() {
     typeof window === 'undefined' ? 'home' : getViewFromPath(window.location.pathname),
   );
   const [activeResumeSubItem, setActiveResumeSubItem] = useState<string>('about me');
+  const [activeAiProductSubItem, setActiveAiProductSubItem] = useState<AiProductSidebarSection>("共同命题");
   const [transitionDirection, setTransitionDirection] = useState<1 | -1>(1);
   const [portfolioProjects, setPortfolioProjects] = useState<PortfolioProject[]>([]);
   const [projectsHydrated, setProjectsHydrated] = useState(false);
   const [authSettings, setAuthSettings] = useState<AuthSettings>(DEFAULT_AUTH_SETTINGS);
   const [resumeContent, setResumeContent] = useState<ResumeContentData>(DEFAULT_RESUME_CONTENT);
   const [resumeLinkedProjectId, setResumeLinkedProjectId] = useState<string | null>(null);
+  const [selectedAiProjectDetailId, setSelectedAiProjectDetailId] = useState<AiProductFeaturedProject["id"] | null>(null);
 
   const refreshResumeContent = useCallback(async () => {
     const response = await fetch("/api/admin/resume", {
@@ -548,9 +556,15 @@ export default function App() {
   };
 
   const navigateToView = (nextView: AppView, options?: { replace?: boolean }) => {
+    const isEnteringAiProduct = nextView === 'ai-product' && currentView !== 'ai-product';
+
     if (nextView !== currentView) {
       setTransitionDirection(viewOrder[nextView] >= viewOrder[currentView] ? 1 : -1);
       setCurrentView(nextView);
+    }
+
+    if (isEnteringAiProduct) {
+      setActiveAiProductSubItem("共同命题");
     }
 
     const nextPath = VIEW_PATHS[nextView];
@@ -560,6 +574,7 @@ export default function App() {
     }
 
     setIsContactPopupOpen(false);
+    setSelectedAiProjectDetailId(null);
     if (nextView !== 'home') {
       setIsIconHovered(false);
     }
@@ -573,7 +588,11 @@ export default function App() {
         setTransitionDirection(viewOrder[nextView] >= viewOrder[previousView] ? 1 : -1);
         return nextView;
       });
+      if (nextView === 'ai-product') {
+        setActiveAiProductSubItem("共同命题");
+      }
       setIsContactPopupOpen(false);
+      setSelectedAiProjectDetailId(null);
       if (nextView !== 'home') {
         setIsIconHovered(false);
       }
@@ -590,8 +609,10 @@ export default function App() {
   const handleSiteLogout = () => {
     setIsContactPopupOpen(false);
     setResumeLinkedProjectId(null);
+    setSelectedAiProjectDetailId(null);
     navigateToView("home", { replace: true });
     setActiveResumeSubItem("about me");
+    setActiveAiProductSubItem("共同命题");
     setSitePassword("");
     setSitePasswordError(false);
     setIsSitePasswordFocused(false);
@@ -613,6 +634,7 @@ export default function App() {
 
   const openAIProductFromHome = () => {
     navigateToView('ai-product');
+    setActiveAiProductSubItem("共同命题");
     setActiveIndex(0);
   };
 
@@ -647,6 +669,20 @@ export default function App() {
     }
 
     setResumeLinkedProjectId(projectId);
+  };
+
+  const openAiProjectDetail = (projectId: AiProductFeaturedProject["id"]) => {
+    if (!hasAiProductDetail(projectId)) {
+      toast.error("Project detail unavailable");
+      return;
+    }
+
+    setIsContactPopupOpen(false);
+    setSelectedAiProjectDetailId(projectId);
+  };
+
+  const closeAiProjectDetail = () => {
+    setSelectedAiProjectDetailId(null);
   };
 
   const returnHomeFromAdmin = () => {
@@ -785,6 +821,8 @@ export default function App() {
               }}
               activeResumeSubItem={activeResumeSubItem}
               onResumeSubItemClick={setActiveResumeSubItem}
+              activeAiProductSubItem={activeAiProductSubItem}
+              onAiProductSubItemClick={setActiveAiProductSubItem}
             />
           </motion.div>
         )}
@@ -883,7 +921,13 @@ export default function App() {
               transition={primarySectionTransition.transition}
               className="absolute inset-0 z-10 pl-[256px] overflow-y-auto scrollbar-hide bg-[#e6e6e6]"
             >
-              <AIProductContent projects={aiProductProjects} />
+              <AIProductContent
+                projects={aiProductProjects}
+                onActiveSectionChange={setActiveAiProductSubItem}
+                onNavigateToResume={() => navigateToView('resume')}
+                onNavigateToUxDesign={() => navigateToView('ux-design')}
+                onOpenProjectDetail={openAiProjectDetail}
+              />
             </motion.div>
           ) : currentView === 'ux-design' ? (
             <motion.div
@@ -938,6 +982,12 @@ export default function App() {
           onClose={() => setResumeLinkedProjectId(null)}
         />
       )}
+      {selectedAiProjectDetailId ? (
+        <AIProjectDetailOverlay
+          projectId={selectedAiProjectDetailId}
+          onClose={closeAiProjectDetail}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import svgPaths from "../../imports/SelectCases-2/svg-dzdmc49l85";
+import { getProjectListEyebrow } from "../data/portfolioProjects";
+import { isProjectCoverVideo } from "../data/projectCoverImageEditor";
 import { ProjectDetailModal, ProjectData } from "./ProjectDetailModal";
 
 function Heading() {
@@ -85,11 +87,13 @@ function Link({ onClick }: { onClick?: () => void }) {
   );
 }
 
-function ProjectItem({ project, reverse, onOpen }: { project: ProjectData, reverse?: boolean, onOpen: (id: string) => void }) {
+function ProjectItem({ project, projectIndex, reverse, onOpen }: { project: ProjectData, projectIndex: number, reverse?: boolean, onOpen: (id: string) => void }) {
+  const coverSrc = project.coverImage || project.images[0];
+  const isCoverVideo = isProjectCoverVideo(coverSrc);
   const content = (
     <div className="content-stretch flex flex-[1_0_0] flex-col gap-[24px] items-start min-w-px relative">
       <div className="flex flex-col font-['Manrope:Bold',sans-serif] font-bold justify-center leading-[0] relative shrink-0 text-[#5e5e5e] text-[12px] tracking-[2.4px] uppercase w-full">
-        <p className="leading-[16px]">{`PROJECT ${project.id} / ${project.date.split('-')[0]}`}</p>
+        <p className="leading-[16px]">{getProjectListEyebrow(project, projectIndex)}</p>
       </div>
       <div className="flex flex-col font-['OPPOSans:Heavy',sans-serif] justify-center leading-[0] not-italic relative shrink-0 text-[32px] text-black w-full">
         <p className="leading-[40px]">{project.title}</p>
@@ -110,7 +114,19 @@ function ProjectItem({ project, reverse, onOpen }: { project: ProjectData, rever
 
   const image = (
     <div className="h-[290px] overflow-clip relative rounded-[2px] shrink-0 w-[464px] bg-[#f5f5f5]">
-      <img alt={project.title} className="absolute inset-0 max-w-none object-cover size-full" src={project.coverImage || project.images[0]} />
+      {isCoverVideo ? (
+        <video
+          aria-label={`${project.title} cover video`}
+          className="absolute inset-0 max-w-none object-cover size-full"
+          src={coverSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      ) : (
+        <img alt={project.title} className="absolute inset-0 max-w-none object-cover size-full" src={coverSrc} />
+      )}
     </div>
   );
 
@@ -160,6 +176,7 @@ export function UXDesignContent({
             <ProjectItem 
               key={project.id} 
               project={project} 
+              projectIndex={idx}
               reverse={idx % 2 !== 0} 
               onOpen={setSelectedProjectId} 
             />
