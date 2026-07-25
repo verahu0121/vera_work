@@ -4,6 +4,7 @@ import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "motion/r
 import { ArrowLeft } from "lucide-react";
 
 import type { AiProductFeaturedProject } from "../data/aiProductPage";
+import { PetMindProjectDetailOverlay } from "./PetMindProjectDetailOverlay";
 
 const AI_PROJECT_OVERVIEW_HEADING_SRC = "/figma-assets/ai-project-overview-heading.svg";
 const AI_PROJECT_OVERVIEW_DIVIDER_SRC = "/figma-assets/ai-project-overview-divider.svg";
@@ -3620,7 +3621,7 @@ function IterationSection({ sectionRef }: { sectionRef: (node: HTMLElement | nul
   );
 }
 
-export function AIProjectDetailOverlay({
+function GeoAIProjectDetailOverlay({
   projectId,
   onClose,
 }: {
@@ -3784,4 +3785,18 @@ export function AIProjectDetailOverlay({
     </div>,
     document.body,
   );
+}
+
+export function AIProjectDetailOverlay({
+  projectId,
+  onClose,
+}: {
+  projectId: AiProductFeaturedProject["id"];
+  onClose: () => void;
+}) {
+  if (projectId === "pet-saas") {
+    return <PetMindProjectDetailOverlay onClose={onClose} />;
+  }
+
+  return <GeoAIProjectDetailOverlay projectId={projectId} onClose={onClose} />;
 }

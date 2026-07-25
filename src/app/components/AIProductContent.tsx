@@ -886,7 +886,7 @@ function PrinciplesMedia({
                 >
                   {project.id === "geo-platform"
                     ? "GEO平台：展示AI能力如何被组织为可复用的产品机制"
-                    : "宠物AI SaaS平台：展示这些产品机制如何进入垂直行业工作流"}
+                    : "宠物AI经营中枢 PetMind：展示这些产品机制如何进入垂直行业工作流"}
                 </p>
                 <ViewLink
                   disabled={!canOpenProjectDetail}

@@ -88,7 +88,7 @@ export const AI_PRODUCT_PAGE_CONTENT = {
     },
     {
       id: "pet-saas",
-      matchTitle: "宠物AI SaaS平台",
+      matchTitle: "宠物AI经营中枢 PetMind",
       pathLabel: "路径二：重构垂直业务闭环",
       title: "从记录工具到智能运营",
       eyebrow: "PROJECT 02 / 垂类AI · SaaS产品",
@@ -101,7 +101,7 @@ export const AI_PRODUCT_PAGE_CONTENT = {
       insight: "AI不应停留在独立聊天入口，而应嵌入具体经营任务；对话只是完成任务的一种交互方式。",
       outputTitle: "关键产出",
       output: "设计“业务数据—机会识别—AI建议—人工确认与执行—效果反馈”的产品架构，并定义核心运营场景。",
-      imageAlt: "宠物AI SaaS平台界面预览",
+      imageAlt: "宠物AI经营中枢 PetMind界面预览",
       imageSrc: "/src/assets/ai-product-pet-saas.png",
     },
   ] satisfies AiProductFeaturedProject[],
@@ -274,7 +274,7 @@ function normalizeTitle(title: string) {
   return title.replace(/\s+/g, "").toLowerCase();
 }
 
-export const AI_PRODUCT_DETAIL_PROJECT_IDS = ["geo-platform"] as const;
+export const AI_PRODUCT_DETAIL_PROJECT_IDS = ["geo-platform", "pet-saas"] as const;
 
 export function hasAiProductDetail(projectId: AiProductFeaturedProject["id"]) {
   return AI_PRODUCT_DETAIL_PROJECT_IDS.some((availableProjectId) => availableProjectId === projectId);

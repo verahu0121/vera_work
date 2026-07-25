@@ -36,7 +36,7 @@ test("AI Product featured project helper matches the GEO project by title", () =
   });
   const petProject = createProject({
     id: "ai-pet",
-    title: "宠物AI SaaS平台",
+    title: "宠物AI经营中枢 PetMind",
     order: 1,
   });
 
@@ -62,7 +62,7 @@ test("AI Product featured project helper returns null when the target project is
   assert.equal(result, null);
 });
 
-test("AI Product detail availability only exposes implemented detail pages", () => {
+test("AI Product detail availability exposes implemented detail pages", () => {
   assert.equal(hasAiProductDetail("geo-platform"), true);
-  assert.equal(hasAiProductDetail("pet-saas"), false);
+  assert.equal(hasAiProductDetail("pet-saas"), true);
 });

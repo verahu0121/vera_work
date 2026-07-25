@@ -10,6 +10,30 @@ const overlaySource = () => {
   const path = "src/app/components/AIProjectDetailOverlay.tsx";
   return existsSync(path) ? readFileSync(path, "utf8") : "";
 };
+const petMindOverlaySource = () => {
+  const path = "src/app/components/PetMindProjectDetailOverlay.tsx";
+  return existsSync(path) ? readFileSync(path, "utf8") : "";
+};
+const petMindRelationshipSource = () => {
+  const path = "src/app/components/PetMindRelationshipSection.tsx";
+  return existsSync(path) ? readFileSync(path, "utf8") : "";
+};
+const petMindProductEntrySource = () => {
+  const path = "src/app/components/PetMindProductEntrySection.tsx";
+  return existsSync(path) ? readFileSync(path, "utf8") : "";
+};
+const petMindGrowthLoopSource = () => {
+  const path = "src/app/components/PetMindGrowthLoopSection.tsx";
+  return existsSync(path) ? readFileSync(path, "utf8") : "";
+};
+const petMindSectionTransitionSource = () => {
+  const path = "src/app/components/PetMindSectionTransition.tsx";
+  return existsSync(path) ? readFileSync(path, "utf8") : "";
+};
+const pngDimensions = (path: string) => {
+  const png = readFileSync(path);
+  return { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
+};
 
 test("AI product project cards open an app-level full-screen project detail layer", () => {
   const app = appSource();
@@ -23,6 +47,1040 @@ test("AI product project cards open an app-level full-screen project detail laye
   assert.ok(app.includes("hasAiProductDetail(projectId)"));
   assert.ok(app.includes("onOpenProjectDetail={openAiProjectDetail}"));
   assert.ok(app.includes("<AIProjectDetailOverlay"));
+  assert.ok(app.includes("<PetMindProjectDetailOverlay"));
+});
+
+test("PetMind project detail uses its own full-screen placeholder overlay", () => {
+  const app = appSource();
+  const overlay = petMindOverlaySource();
+
+  assert.ok(app.includes('selectedAiProjectDetailId === "pet-saas"'));
+  assert.ok(overlay.includes("fixed inset-0 z-[99999]"));
+  assert.ok(overlay.includes("role=\"dialog\""));
+  assert.ok(overlay.includes("aria-modal=\"true\""));
+  assert.ok(overlay.includes("宠物AI经营中枢 PetMind"));
+  assert.ok(overlay.includes("Research Foundation"));
+  assert.ok(overlay.includes("市场机会"));
+  assert.ok(overlay.includes("关键界面"));
+  assert.ok(overlay.includes("效果指标"));
+  assert.ok(overlay.includes("项目回顾"));
+  assert.ok(overlay.includes("PetMind 项目内容占位"));
+  assert.equal(overlay.includes("GEO 共享创作平台"), false);
+});
+
+test("PetMind project detail renders the Figma 2286 overview section at the top of the right content", () => {
+  const overlay = petMindOverlaySource();
+
+  [
+    'data-node-id="2286:23645"',
+    'data-name="Section - Project List: Nebula Financial"',
+    "宠物 AI 经营中枢",
+    "PetMind",
+    "一个面向宠物服务商家的 AI 经营中枢",
+    "项目概述",
+    "它通过商户服务场景沉淀连续的人宠事件数据，用宠物护照承接 C 端关系资产，并通过 AI Agent 与 GEO 能力把数据转化为服务复购、本地获客和长期经营增长。",
+    "项目范围",
+    "产品触点：商户端、员工小程序、平台运营端、宠物护照",
+    "智能能力：AI 服务报告、经营 Agent、生成式搜索优化（GEO）",
+    "数据能力：人宠服务事件数据底座",
+    "我的角色",
+    "产品与体验负责人",
+    "市场与竞品研究",
+    "产品机会定义",
+    "多角色产品架构",
+    "核心体验设计",
+    "MVP 范围规划",
+    "落地推进",
+    "项目状态",
+    "26.05 市场研究 → 26.06 产品细化 → ",
+    "26.07 MVP构建（当前）",
+    " → 26.08 门店试点（计划于2026年8月底完成首版上线并启动门店试点）",
+    "rounded-bl-[48px]",
+    "rounded-br-[48px]",
+    "pt-[128px]",
+    "pb-[84px]",
+    "w-[864px]",
+  ].forEach((snippet) => {
+    assert.ok(overlay.includes(snippet), `missing ${snippet}`);
+  });
+});
+
+test("PetMind overview matches the exact Figma 2286 and 2396 layout details", () => {
+  const overlay = petMindOverlaySource();
+  const overviewStart = overlay.indexOf("function PetMindOverviewHeading");
+  const overviewEnd = overlay.indexOf("function PetMindSectionTitleDecor", overviewStart);
+  const overview = overlay.slice(overviewStart, overviewEnd);
+
+  [
+    'data-node-id="2286:23648"',
+    'data-node-id="2286:23649"',
+    'data-node-id="2286:23653"',
+    'data-node-id="2396:14351"',
+    'frameNodeId="2396:14328"',
+    'data-node-id="2396:14388"',
+    'data-node-id="2552:21976"',
+    'data-node-id="2552:21932"',
+    'data-node-id="2552:21936"',
+    'data-node-id="2552:21821"',
+    'data-node-id="2552:21854"',
+    'data-node-id="2552:21858"',
+    'data-node-id="2552:21862"',
+    'data-node-id="2552:21906"',
+    'data-node-id="2552:21939"',
+    "items-end",
+    "h-[72px]",
+    "w-[515px]",
+    "h-[48px]",
+    "w-[235.569px]",
+    "gap-[48px]",
+    "gap-[24px]",
+    "h-[44px]",
+    "w-[232px]",
+    "h-[140px]",
+    "h-[128px]",
+    "h-[84px]",
+    "h-[72px]",
+    "h-[36px]",
+    "bg-[rgba(221,221,221,0.8)]",
+    "px-[12px] py-[6px]",
+    "font-['Manrope:ExtraBold',sans-serif]",
+    "text-[20px]",
+    "leading-[24px]",
+    "tracking-[1.2px]",
+    "font-['Alimama_ShuHeiTi:Bold',sans-serif]",
+    "opacity-10",
+    "text-transparent",
+    "mb-[-16px]",
+    "tracking-[4px]",
+    "font-['OPPOSans:Regular',sans-serif]",
+    "text-justify",
+    "PET_MIND_OVERVIEW_ROLE_TITLE_DIVIDER_SRC",
+    "PET_MIND_OVERVIEW_GRID_VERTICAL_DIVIDER_SRC",
+    "PET_MIND_OVERVIEW_GRID_HORIZONTAL_DIVIDER_SRC",
+  ].forEach((snippet) => {
+    assert.ok(overlay.includes(snippet), `missing ${snippet}`);
+  });
+
+  assert.equal(overview.includes("mb-[12px]"), false);
+  assert.equal(overview.includes("min-h-[184px]"), false);
+  assert.equal(overview.includes("min-h-[576px]"), false);
+  assert.equal(overview.includes("bg-[#181818]"), false);
+  assert.equal(overview.includes("PET_MIND_PROJECT_SCOPE"), false);
+  assert.equal(overview.includes("PET_MIND_ROLE_SCOPE"), false);
+  assert.ok(existsSync("public/figma-assets/petmind-overview-title-cn.svg"));
+  assert.ok(existsSync("public/figma-assets/petmind-overview-title-en.svg"));
+  assert.ok(existsSync("public/figma-assets/petmind-overview-role-title-divider.svg"));
+  assert.ok(existsSync("public/figma-assets/petmind-overview-grid-divider-vertical.svg"));
+  assert.ok(existsSync("public/figma-assets/petmind-overview-grid-divider-horizontal.svg"));
+});
+
+test("PetMind updated scope, role grid, and status preserve the Figma typography", () => {
+  const overlay = petMindOverlaySource();
+  const overviewStart = overlay.indexOf("function PetMindOverviewHeading");
+  const overviewEnd = overlay.indexOf("function PetMindSectionTitleDecor", overviewStart);
+  const overview = overlay.slice(overviewStart, overviewEnd);
+
+  assert.ok(overviewStart > -1);
+  assert.ok(overviewEnd > overviewStart);
+  assert.ok(overview.includes("font-['OPPOSans:Regular',sans-serif]"));
+  assert.ok(overview.includes("font-['OPPOSans:Medium',sans-serif]"));
+  assert.ok(overview.includes("opacity-80"));
+  assert.ok(overview.includes("text-[#474747]"));
+  assert.ok(overview.includes("text-[12px]"));
+  assert.ok(overview.includes('className="leading-[24px] list-disc list-inside"'));
+  assert.ok(overview.includes("tracking-[1px]"));
+  assert.ok(overview.includes('className="leading-[16px]"'));
+  assert.ok(overview.includes('className="leading-[28px]"'));
+});
+
+test("PetMind project detail appends the updated Figma 01 market opportunity research module", () => {
+  const overlay = petMindOverlaySource();
+  const marketStart = overlay.indexOf("function PetMindMarketPromptCard");
+  const marketEnd = overlay.indexOf("function PetMindRelationshipQuoteCard", marketStart);
+  const market = overlay.slice(marketStart, marketEnd);
+
+  [
+    "<PetMindOverviewSection",
+    "<PetMindMarketOpportunitySection",
+    'data-node-id="2285:23469"',
+    'data-name="Section Container 01"',
+    'data-node-id="2396:14435"',
+    'data-name="Section Divider"',
+    "gap-[84px]",
+    "py-[48px]",
+    "01 · 在成熟 SaaS 之外，寻找新增长",
+    "门店 SaaS、本地生活平台与私域工具已经覆盖经营、交易和触达，但服务信息从留存到再次使用，再到转化为后续行动，仍需要大量人工衔接。",
+    "当门店 SaaS、本地生活平台和私域工具已经广泛存在，PetMind AI 的产品机会究竟在哪里？",
+    "在提出新产品方案之前，我首先需要确认：市场缺少的究竟是更多功能，还是现有工具尚未连接的经营环节。",
+    "现有工具已经解决了什么",
+    "工具类型",
+    "已覆盖的主要能力",
+    "为商户解决的问题",
+    "门店SaaS",
+    "本地生活平台",
+    "CRM／私域工具",
+    "宠物门店的基础经营能力已经被广泛覆盖",
+    "把一笔订单拉长看，断点发生在哪里",
+    "判断依据：具体竞品功能梳理、产品实操及门店经营访谈／观察。",
+    "服务预约",
+    "到店服务",
+    "信息记录",
+    "订单归档",
+    "历史调取",
+    "状态判断",
+    "回访提醒",
+    "再次预约",
+    "调取与整理成本",
+    "理解与比较成本",
+    "配置与执行成本",
+    "断点01：需要使用历史信息时，员工能否快速找到并整理出来？",
+    "断点02：找到记录后，能否快速判断宠物发生了什么变化？",
+    "断点03：形成判断后，能否低成本转化为具体的回访或提醒？",
+    "问题并非信息没有被记录，而是“留存—调取—理解—行动”之间仍依赖大量人工操作。",
+    "机会不在增加更多功能，而在让服务信息进入下一次行动",
+    "PET_MIND_SECTION_TITLE_DECOR_ASSETS",
+    "PET_MIND_MARKET_ASSETS",
+  ].forEach((snippet) => {
+    assert.ok(overlay.includes(snippet), `missing ${snippet}`);
+  });
+
+  assert.ok(overlay.indexOf("<PetMindOverviewSection") < overlay.indexOf("<PetMindMarketOpportunitySection"));
+  assert.ok(marketStart > -1);
+  assert.ok(marketEnd > marketStart);
+  assert.equal(market.includes("activeMarketRowIndex"), false);
+  assert.equal(market.includes("旧机会"), false);
+  assert.equal(market.includes("新机会"), false);
+  assert.equal(overlay.includes("flex min-w-[992px] flex-col items-center gap-"), false);
+  [
+    "petmind-market-section-decor-01.svg",
+    "petmind-market-section-triangle.svg",
+    "petmind-market-question.svg",
+    "petmind-market-insight.svg",
+    "petmind-market-insight-strong.svg",
+    "petmind-market-answer.svg",
+    "petmind-market-role-owner.png",
+    "petmind-market-role-staff.png",
+    "petmind-market-role-system.png",
+  ].forEach((asset) => {
+    assert.ok(existsSync(`public/figma-assets/${asset}`), `missing ${asset}`);
+  });
+});
+
+test("PetMind market opportunity section divider keeps the exact Figma title geometry and caret transform", () => {
+  const overlay = petMindOverlaySource();
+  const dividerStart = overlay.indexOf("function PetMindSectionTitleDecor");
+  const dividerEnd = overlay.indexOf("function PetMindMarketPromptCard");
+  const dividerSource = overlay.slice(dividerStart, dividerEnd);
+
+  assert.ok(dividerStart > -1);
+  assert.ok(dividerEnd > dividerStart);
+  [
+    'data-node-id="2396:14467"',
+    'data-node-id="2285:23475"',
+    'data-node-id="2285:23476"',
+    'className="-scale-y-100 flex-none rotate-180"',
+    'className="relative size-[18px]"',
+    "PET_MIND_SECTION_TITLE_DECOR_ASSETS[sectionNumber].triangleSrc",
+    "min-w-full",
+    "w-[min-content]",
+    "mb-0",
+  ].forEach((snippet) => {
+    assert.ok(dividerSource.includes(snippet), `missing ${snippet}`);
+  });
+
+  assert.equal(dividerSource.includes('data-node-id="2396:14439"'), false);
+  assert.equal(dividerSource.includes('data-node-id="2285:23477"'), false);
+  assert.equal(dividerSource.includes('relative shrink-0 w-full" data-node-id="2285:23473"'), false);
+});
+
+test("PetMind updated market opportunity matches the Figma research-table geometry", () => {
+  const overlay = petMindOverlaySource();
+  const marketStart = overlay.indexOf("function PetMindMarketPromptCard");
+  const marketEnd = overlay.indexOf("function PetMindRelationshipQuoteCard", marketStart);
+  const market = overlay.slice(marketStart, marketEnd);
+  const coverageStart = market.indexOf("function PetMindMarketCoverageTable");
+  const coverageEnd = market.indexOf("function PetMindMarketInsight", coverageStart);
+  const coverage = market.slice(coverageStart, coverageEnd);
+  const capabilityStart = market.indexOf("function PetMindMarketStepBadge");
+  const capabilityEnd = market.indexOf("function PetMindMarketBreakpointCards", capabilityStart);
+  const capability = market.slice(capabilityStart, capabilityEnd);
+
+  [
+    '"2553:22197"',
+    'data-node-id="2553:22205"',
+    'data-node-id="2553:22207"',
+    'data-node-id="2553:22283"',
+    'data-node-id="2553:22522"',
+    'data-node-id="2568:23968"',
+    '"2571:24298"',
+    "h-[145px]",
+    "h-[168px]",
+    "h-[354px]",
+    "h-[301px]",
+    "w-[48px]",
+    "w-[164px]",
+    "w-[400px]",
+    "h-[40px]",
+    "h-[78px]",
+    "h-[42px]",
+    "tracking-[-0.48px]",
+    "font-['DINOT:Bold',sans-serif]",
+    "PET_MIND_MARKET_COVERAGE_ROWS",
+    "PET_MIND_MARKET_CHAIN_STEPS",
+    "PET_MIND_MARKET_BREAKPOINT_CARDS",
+  ].forEach((snippet) => {
+    assert.ok(market.includes(snippet), `missing ${snippet}`);
+  });
+
+  assert.ok(marketStart > -1);
+  assert.ok(marketEnd > marketStart);
+  assert.ok(coverageStart > -1);
+  assert.ok(coverageEnd > coverageStart);
+  assert.ok(capabilityStart > -1);
+  assert.ok(capabilityEnd > capabilityStart);
+  assert.ok(coverage.includes('absolute border border-[#d2d2d2] border-solid inset-0'));
+  assert.ok(coverage.includes('border-r border-[#d2d2d2] border-solid'));
+  assert.ok(coverage.includes('border-b border-[#d2d2d2] border-solid'));
+  assert.equal(coverage.includes('className={`bg-[#e0e0e0] border border-[#d2d2d2]'), false);
+  assert.equal(coverage.includes('className={`border border-[#d2d2d2] border-solid content-stretch flex flex-col h-[44px]'), false);
+  assert.ok(capability.includes('h-[6px] items-center justify-center leading-[6px]'));
+  assert.ok(capability.includes('text-center translate-y-px w-full'));
+  assert.ok(capability.includes('shadow-[inset_-1px_0_0_#d2d2d2]'));
+  assert.ok(capability.includes('shadow-[inset_0_-1px_0_#d2d2d2]'));
+  assert.equal(
+    (capability.match(/border border-\[#d2d2d2\] border-solid/g) ?? []).length,
+    1,
+    "only the capability table perimeter may use a four-sided border",
+  );
+  assert.equal(market.includes("onMouseEnter"), false);
+  assert.equal(market.includes("tabIndex={0}"), false);
+});
+
+test("PetMind inserts the updated Figma 2591 transition layer between market opportunity and relationship", () => {
+  const overlay = petMindOverlaySource();
+  const transitionStart = overlay.indexOf("function PetMindMarketToRelationshipTransition");
+  const transitionEnd = overlay.indexOf("function PetMindRelationshipQuoteCard", transitionStart);
+  const transition = overlay.slice(transitionStart, transitionEnd);
+
+  [
+    'data-node-id="2591:25254"',
+    'data-name="Frame 1321319434"',
+    'data-node-id="2591:25255"',
+    'data-name="Conclusion Text"',
+    "h-[264px]",
+    "w-[864px]",
+    "px-[48px]",
+    "py-[84px]",
+    "w-[768px]",
+    "font-['OPPOSans:Light',sans-serif]",
+    "text-[24px]",
+    "leading-[48px]",
+    "tracking-[0px]",
+    "text-[#474747]",
+    "text-center",
+    "下一步，我从一只金渐层猫咪 Luna 的真实服务过程出发，",
+    "<br />",
+    "将观察单位从“一笔订单”转向“同一只宠物”。",
+  ].forEach((snippet) => {
+    assert.ok(transition.includes(snippet), `missing ${snippet}`);
+  });
+
+  const marketRender = overlay.indexOf('<PetMindMarketOpportunitySection sectionId="market"');
+  const transitionRender = overlay.indexOf("<PetMindMarketToRelationshipTransition />");
+  const relationshipRender = overlay.indexOf('<PetMindRelationshipSectionV2 sectionId="relationship"');
+
+  assert.ok(transitionStart > -1);
+  assert.ok(transitionEnd > transitionStart);
+  assert.ok(marketRender < transitionRender);
+  assert.ok(transitionRender < relationshipRender);
+});
+
+test("PetMind project detail appends the expanded Figma 02 relationship-data module after market opportunity", () => {
+  const overlay = petMindOverlaySource();
+
+  [
+    "<PetMindMarketOpportunitySection",
+    "<PetMindRelationshipSection",
+    'data-node-id="2465:20740"',
+    'data-name="Section Container 7"',
+    'data-node-id="2399:26310"',
+    'data-name="Quote Details"',
+    "02 · 从交易，走向长期关系资产",
+    "宠物行业真正有价值的不是传统 SaaS 沉淀的经营交易数据，而是连续的、可理解的、可行动的人宠事件链数据。",
+    "机会观察",
+    "AI 陪伴和 AI 助手产品让用户产生依赖",
+    "判断迁移",
+    "宠主不是单纯在“养动物”，而是在维系一种家庭关系、陪伴关系和情绪关系。",
+    "沉淀了长期对话、偏好、共同记忆、被理解的感觉",
+    "事件性数据影响情感连结",
+    "PET_MIND_RELATIONSHIP_ASSETS",
+    "petmind-section-title-decor-02.svg",
+    "petmind-relationship-intersect.svg",
+    "petmind-relationship-quote-title.svg",
+    "petmind-relationship-arrow-left.svg",
+    "petmind-relationship-arrow-right.svg",
+    "petmind-relationship-connector.svg",
+    "w-[281px]",
+    "w-[467px]",
+    "left-[194px]",
+    "left-[549px]",
+    "left-[444px]",
+  ].forEach((snippet) => {
+    assert.ok(overlay.includes(snippet), `missing ${snippet}`);
+  });
+
+  assert.ok(overlay.indexOf("<PetMindMarketOpportunitySection") < overlay.indexOf("<PetMindRelationshipSection"));
+  [
+    "petmind-section-title-decor-02.svg",
+    "petmind-relationship-intersect.svg",
+    "petmind-relationship-quote-title.svg",
+    "petmind-relationship-arrow-left.svg",
+    "petmind-relationship-arrow-right.svg",
+    "petmind-relationship-connector.svg",
+  ].forEach((asset) => {
+    assert.ok(existsSync(`public/figma-assets/${asset}`), `missing ${asset}`);
+  });
+});
+
+test("PetMind relationship section renders the expanded Figma event-chain data story", () => {
+  const overlay = petMindOverlaySource();
+
+  [
+    "02 · 从交易，走向长期关系资产",
+    "连续的、可理解的、可行动的人宠事件链数据",
+    "散点数据",
+    "人宠事件链数据",
+    "传统宠物SaaS能收集到不少数据",
+    "当不同端产生的数据持续汇聚到同一只宠物上",
+    "散点&事件链数据 对角色的影响",
+    "事件链驱动的人宠关系增长飞轮",
+    "真实事件持续积累",
+    "AI 理解不断深化",
+    "主动照护形成留存",
+    "宠主价值持续增长",
+    "商户获得经营收益",
+    "更多商户加入循环",
+    "PetMind AI 的核心资产不是“商户数据量大”",
+  ].forEach((snippet) => {
+    assert.ok(overlay.includes(snippet), `missing ${snippet}`);
+  });
+});
+
+test("PetMind relationship data comparison uses the exact Figma 2465:20766 resources", () => {
+  const overlay = petMindOverlaySource();
+
+  [
+    'data-node-id="2465:20766"',
+    "petmind-relationship-scattered-panel.png",
+    "petmind-relationship-event-chain-panel.png",
+    "petmind-relationship-decision-intersect.svg",
+    "petmind-relationship-decision-divider.svg",
+    "text-[20px]",
+    "leading-[32px]",
+    "text-[12px]",
+    "leading-[20px]",
+    "w-[365px]",
+    "w-[475px]",
+    "h-[402px]",
+    "h-[72px]",
+    "w-[254px]",
+    'textWrapper: "2465:20778"',
+    "absolute border border-[#d2d2d2] border-solid inset-0",
+  ].forEach((snippet) => {
+    assert.ok(overlay.includes(snippet), `missing ${snippet}`);
+  });
+
+  const comparisonStart = overlay.indexOf('data-node-id="2465:20766"');
+  const comparisonEnd = overlay.indexOf("function PetMindRelationshipImpactMatrix", comparisonStart);
+  const comparison = overlay.slice(comparisonStart, comparisonEnd);
+  assert.equal(comparison.includes('bg-[#e2e2e2] border border-[#d2d2d2]'), false);
+
+  assert.equal(overlay.includes("PetMindEventChainMockup"), false);
+  assert.equal(overlay.includes("PET_MIND_SCATTERED_DATA_PANEL_SRC"), false);
+  [
+    "petmind-relationship-scattered-panel.png",
+    "petmind-relationship-event-chain-panel.png",
+    "petmind-relationship-decision-intersect.svg",
+    "petmind-relationship-decision-divider.svg",
+  ].forEach((asset) => {
+    assert.ok(existsSync(`public/figma-assets/${asset}`), `missing ${asset}`);
+  });
+});
+
+test("PetMind role impact matrix matches the exact Figma 2465:20792 table and assets", () => {
+  const overlay = petMindOverlaySource();
+  const matrixStart = overlay.indexOf('data-node-id="2465:20792"');
+  const matrixEnd = overlay.indexOf("function PetMindFlywheelCard", matrixStart);
+  const matrix = overlay.slice(matrixStart, matrixEnd);
+
+  [
+    'data-node-id="2465:20792"',
+    'data-node-id="2465:20795"',
+    "petmind-impact-pet.svg",
+    "petmind-impact-owner.svg",
+    "petmind-impact-merchant.svg",
+    "petmind-impact-platform.svg",
+    "w-[76px]",
+    "w-[202px]",
+    "w-[168px]",
+    "w-[204px]",
+    "h-[220px]",
+    "h-[36px]",
+    "h-[92px]",
+    "p-[6px]",
+    "pl-[4px]",
+    "pr-[12px]",
+    "py-[16px]",
+    "text-[12px]",
+    "text-[rgba(71,71,71,0.8)]",
+    "tracking-[0px]",
+    'style={{ letterSpacing: "0px" }}',
+    "list-disc",
+  ].forEach((snippet) => {
+    assert.ok(overlay.includes(snippet), `missing ${snippet}`);
+  });
+
+  [
+    "petmind-impact-pet.svg",
+    "petmind-impact-owner.svg",
+    "petmind-impact-merchant.svg",
+    "petmind-impact-platform.svg",
+  ].forEach((asset) => {
+    assert.ok(existsSync(`public/figma-assets/${asset}`), `missing ${asset}`);
+  });
+
+  assert.ok(matrix.includes("shadow-[inset_0_-1px_0_#d2d2d2]"), "missing non-sizing horizontal grid rules");
+  assert.ok(matrix.includes("shadow-[inset_-1px_0_0_#d2d2d2]"), "missing non-sizing vertical grid rules");
+  assert.equal(matrix.includes('border-b border-[#d2d2d2]'), false, "horizontal dividers must not reduce row height");
+  assert.equal(matrix.includes('border-r border-[#d2d2d2]'), false, "vertical dividers must not reduce text width");
+  assert.equal(
+    (matrix.match(/border border-\[#d2d2d2\] border-solid/g) ?? []).length,
+    1,
+    "only the table perimeter may use a four-sided border",
+  );
+});
+
+test("PetMind relationship flywheel matches the exact Figma 2465:20837 geometry and assets", () => {
+  const overlay = petMindOverlaySource();
+  const flywheelStart = overlay.indexOf("function PetMindFlywheelCard");
+  const flywheelEnd = overlay.indexOf("function PetMindRelationshipSection", flywheelStart);
+  const flywheel = overlay.slice(flywheelStart, flywheelEnd);
+
+  [
+    'data-node-id="2465:20837"',
+    'data-node-id="2465:20840"',
+    'data-node-id="2465:20849"',
+    'nodeId="2465:20850"',
+    'nodeId="2465:20885"',
+    'nodeId="2465:20900"',
+    'nodeId="2465:20933"',
+    'nodeId="2465:20948"',
+    'data-node-id="2465:20981"',
+    "PET_MIND_FLYWHEEL_ASSETS.topConnector",
+    "PET_MIND_FLYWHEEL_ASSETS.metricInactive",
+    "PET_MIND_FLYWHEEL_ASSETS.metricActive",
+    "PET_MIND_FLYWHEEL_ASSETS.cardDividerVertical",
+    "PET_MIND_FLYWHEEL_ASSETS.cardDividerHorizontal",
+    "PET_MIND_FLYWHEEL_ASSETS.arrow1137",
+    "PET_MIND_FLYWHEEL_ASSETS.arrow1138",
+    "PET_MIND_FLYWHEEL_ASSETS.arrow1141",
+    "PET_MIND_FLYWHEEL_ASSETS.arrow1142",
+    "PET_MIND_FLYWHEEL_ASSETS.metricSpacer",
+    "h-[535px]",
+    "h-[64px]",
+    "h-[471px]",
+    "p-[32px]",
+    "gap-[4px]",
+    "h-[109px]",
+    "h-[32px]",
+    "w-[184px]",
+    "w-[171px]",
+    "tracking-[0.48px]",
+    "tracking-[1.44px]",
+    "text-[10px]",
+    "text-[12px]",
+    "leading-[18px]",
+    "leading-[24px]",
+  ].forEach((snippet) => {
+    assert.ok(flywheel.includes(snippet), `missing ${snippet}`);
+  });
+
+  assert.equal(flywheel.includes("ChevronRight"), false);
+  assert.equal(flywheel.includes("ChevronDown"), false);
+  [
+    "petmind-flywheel-top-connector.svg",
+    "petmind-flywheel-metric-inactive.svg",
+    "petmind-flywheel-metric-active.svg",
+    "petmind-flywheel-card-divider-vertical.svg",
+    "petmind-flywheel-card-divider-horizontal.svg",
+    "petmind-flywheel-arrow-1137.svg",
+    "petmind-flywheel-arrow-1138.svg",
+    "petmind-flywheel-arrow-1139.svg",
+    "petmind-flywheel-arrow-1140.svg",
+    "petmind-flywheel-arrow-1141.svg",
+    "petmind-flywheel-arrow-1142.svg",
+    "petmind-flywheel-metric-spacer.svg",
+  ].forEach((asset) => {
+    assert.ok(existsSync(`public/figma-assets/${asset}`), `missing ${asset}`);
+  });
+});
+
+test("PetMind renders the replacement Figma 2655 relationship module after the transition", () => {
+  const overlay = petMindOverlaySource();
+  const relationship = petMindRelationshipSource();
+
+  [
+    'data-node-id="2655:30228"',
+    'data-name="Section Container 6"',
+    "h-[1597px]",
+    "w-[864px]",
+    "gap-[84px]",
+    "py-[48px]",
+    'data-node-id="2655:30229"',
+    '"2655:30230"',
+    'data-node-id="2655:30237"',
+    'data-node-id="2655:30267"',
+    '"2655:30439"',
+  ].forEach((snippet) => {
+    assert.ok(relationship.includes(snippet), `missing ${snippet}`);
+  });
+
+  const sectionRender = relationship.slice(relationship.indexOf("export function PetMindRelationshipSection"));
+  const divider = sectionRender.indexOf("<PetMindRelationshipSectionDivider />");
+  const question = sectionRender.indexOf('<PetMindRelationshipPrompt kind="question" />');
+  const signal = sectionRender.indexOf("<PetMindCrossIndustrySignals />");
+  const comparison = sectionRender.indexOf("<PetMindRelationshipComparison />");
+  const answer = sectionRender.indexOf('<PetMindRelationshipPrompt kind="answer" />');
+
+  assert.ok(divider < question);
+  assert.ok(question < signal);
+  assert.ok(signal < comparison);
+  assert.ok(comparison < answer);
+  assert.ok(overlay.includes('import { PetMindRelationshipSection as PetMindRelationshipSectionV2 }'));
+  assert.ok(overlay.indexOf("<PetMindMarketToRelationshipTransition />") < overlay.indexOf('<PetMindRelationshipSectionV2 sectionId="relationship"'));
+});
+
+test("PetMind replacement relationship story matches the Figma 2655 content and geometry", () => {
+  const relationship = petMindRelationshipSource();
+
+  [
+    "02 · 从交易，走向长期关系资产",
+    "当交易记录已被充分沉淀，下一层价值来自围绕同一只宠物持续连接、可理解并可触发行动的服务事件。",
+    "当预约、订单和服务记录都已存在，为什么系统仍难以理解同一只宠物，并判断下一步？",
+    "跨行业信号",
+    "部分 AI 陪伴产品用户在长期互动后形成明显的情感依恋",
+    "长期记忆与持续上下文可能增强被理解感",
+    "同一只宠物的服务信息，能否跨越多次服务保持连续？",
+    "Luna：散点记录",
+    "围绕经营模块｜分别沉淀为可查询记录",
+    "Luna：连续事件链",
+    "围绕同一只宠物｜按时间连接为连续事件",
+    "创建预约｜03.01 10:00 洗护",
+    "完成洗护，发现毛发干燥，皮肤有轻微异常。",
+    "关联历史记录，判断可能存在皮肤问题，建议观察并预约检查。",
+    "调整洗护周期、推荐护理产品，并设置 30 日后复查提醒。",
+    "连续事件让系统能够回答三个问题",
+    "真正形成理解的，不是更多记录，而是事件足够连续。",
+    "单只宠物足够连续的事件数据",
+    "h-[121px]",
+    "h-[212px]",
+    "h-[593px]",
+    "h-[145px]",
+    "w-[316px]",
+    "w-[208px]",
+    "w-[400px]",
+    "h-[549px]",
+    "h-[475px]",
+    "h-[402px]",
+    "h-[72px]",
+    "w-[440px]",
+    'data-node-id="2619:27120"',
+    'data-node-id="2619:27135"',
+    "py-[16px]",
+    "px-[12px]",
+    "ASSETS.aiJudgment",
+    "ASSETS.aiPlan",
+    'data-name="Date Badge"',
+    "h-[14px]",
+    "w-[31px]",
+    'data-name="Date Badge Text"',
+    "w-[23px]",
+    "[transform:translateY(0.5px)]",
+    "text-[36px]",
+    "leading-[30px]",
+    "text-[12px]",
+    "leading-[24px]",
+    "bg-[#e2e2e2]",
+    "border-[#d2d2d2]",
+  ].forEach((snippet) => {
+    assert.ok(relationship.includes(snippet), `missing ${snippet}`);
+  });
+
+  assert.equal(relationship.includes("PetMindRelationshipImpactMatrix"), false);
+  assert.equal(relationship.includes("PetMindRelationshipFlywheel"), false);
+});
+
+test("PetMind replacement relationship module uses every supplied Figma resource", () => {
+  const relationship = petMindRelationshipSource();
+  const assets = [
+    "petmind-relationship-02-section-decor.svg",
+    "petmind-relationship-02-triangle.svg",
+    "petmind-relationship-02-question.svg",
+    "petmind-relationship-02-signal-observation.svg",
+    "petmind-relationship-02-signal-arrow.svg",
+    "petmind-relationship-02-signal-hypothesis.svg",
+    "petmind-relationship-02-signal-service.svg",
+    "petmind-relationship-02-note.svg",
+    "petmind-relationship-02-module-order.svg",
+    "petmind-relationship-02-module-product.svg",
+    "petmind-relationship-02-module-service.svg",
+    "petmind-relationship-02-module-reservation.svg",
+    "petmind-relationship-02-module-membership.svg",
+    "petmind-relationship-02-luna.png",
+    "petmind-relationship-02-event-wash.png",
+    "petmind-relationship-02-event-feedback.png",
+    "petmind-relationship-02-event-medical.png",
+    "petmind-relationship-02-event-followup.png",
+    "petmind-relationship-02-timeline-wash.svg",
+    "petmind-relationship-02-timeline-feedback.svg",
+    "petmind-relationship-02-timeline-ai.svg",
+    "petmind-relationship-02-timeline-medical.svg",
+    "petmind-relationship-02-timeline-followup.svg",
+    "petmind-relationship-02-timeline-plan.svg",
+    "petmind-relationship-02-ai-judgment.svg",
+    "petmind-relationship-02-ai-plan.svg",
+    "petmind-relationship-02-decision-intersect.svg",
+    "petmind-relationship-02-decision-divider.svg",
+    "petmind-relationship-02-event-divider.svg",
+    "petmind-relationship-02-comparison-note.svg",
+    "petmind-relationship-02-answer.svg",
+  ];
+
+  assets.forEach((asset) => {
+    assert.ok(relationship.includes(`/figma-assets/${asset}`), `unused ${asset}`);
+    assert.ok(existsSync(`public/figma-assets/${asset}`), `missing ${asset}`);
+  });
+});
+
+test("PetMind appends the Figma 2664 product-entry module after relationship", () => {
+  const overlay = petMindOverlaySource();
+  const productEntry = petMindProductEntrySource();
+
+  assert.ok(overlay.includes('import { PetMindProductEntrySection }'));
+  assert.ok(overlay.includes('<PetMindProductEntrySection sectionId="judgment" sectionRef={registerPetMindSection("judgment")} />'));
+  assert.ok(
+    overlay.indexOf('<PetMindRelationshipSectionV2 sectionId="relationship"') <
+      overlay.indexOf('<PetMindProductEntrySection sectionId="judgment"'),
+  );
+  assert.ok(productEntry.includes('data-node-id="2664:30806"'));
+  assert.ok(productEntry.includes('data-section-id={sectionId}'));
+});
+
+test("PetMind inserts the exact Figma transitions after sections 02, 03, and 04", () => {
+  const overlay = petMindOverlaySource();
+  const transitions = petMindSectionTransitionSource();
+  const relationship = overlay.indexOf('<PetMindRelationshipSectionV2 sectionId="relationship"');
+  const relationshipTransition = overlay.indexOf("<PetMindRelationshipToProductEntryTransition />");
+  const productEntry = overlay.indexOf('<PetMindProductEntrySection sectionId="judgment"');
+  const productEntryTransition = overlay.indexOf("<PetMindProductEntryToNextTransition />");
+  const growthLoop = overlay.indexOf('<PetMindGrowthLoopSection sectionId="growth"');
+  const growthLoopTransition = overlay.indexOf("<PetMindGrowthLoopToNextTransition />");
+
+  assert.ok(overlay.includes('from "./PetMindSectionTransition"'));
+  assert.ok(relationship < relationshipTransition);
+  assert.ok(relationshipTransition < productEntry);
+  assert.ok(productEntry < productEntryTransition);
+  assert.ok(productEntryTransition < growthLoop);
+  assert.ok(growthLoop < growthLoopTransition);
+
+  [
+    'nodeId="2655:30446"',
+    'textNodeId="2655:30447"',
+    'nodeId="2664:30838"',
+    'textNodeId="2664:30839"',
+    'nodeId="2765:22524"',
+    'textNodeId="2765:22525"',
+    "h-[312px]",
+    "w-[864px]",
+    "h-[144px]",
+    "w-[768px]",
+    "px-[48px]",
+    "py-[84px]",
+    "font-['OPPOSans:Light',sans-serif]",
+    "text-[24px]",
+    "leading-[48px]",
+    "text-[#474747]",
+    "text-center",
+    "tracking-[0px]",
+    "连续事件链回答了“什么数据值得积累”，但产品仍需一个明确的起点。",
+    "下一步，我将比较不同环节的信息密度、使用动机与经营价值，判断哪个环节适合作为第一切口。",
+    "入口确定后，下一步要验证：",
+    "员工、宠主、商户与 AI 能否围绕一次服务完成接力，",
+    "并触发下一次预约。",
+    "角色链路明确后，下一步的关键是将这套接力机制",
+    "落到具体产品交互中，形成可确认、可执行、可回写的 AI 工作流。",
+  ].forEach((snippet) => {
+    assert.ok(transitions.includes(snippet), `missing ${snippet}`);
+  });
+});
+
+test("PetMind product-entry module strictly matches the Figma 2664 content and geometry", () => {
+  const productEntry = petMindProductEntrySource();
+
+  [
+    "03 · 从连续关系到产品入口",
+    "连续关系是长期目标，但产品需要一个自然发生、数据真实且价值可见的第一入口。",
+    "发现“长期关系资产”这个机会后，PetMind AI 应该从哪里开始？",
+    "我比较了四条真实考虑过的候选路径，判断哪一条最适合作为产品起点。",
+    "入口选择",
+    "评估维度：信息密度 × 使用动机 × 经营价值",
+    "完整门店经营系统",
+    "独立 C 端 AI 助手",
+    "GEO 获客入口",
+    "服务履约入口",
+    "一次真实服务",
+    "作为产品的第一入口",
+    "PetMind AI 应该从一次真实宠物服务开始。",
+    "先让一次真实服务成为可被理解、被延续的最小事件单元",
+    "h-[1026px]",
+    "h-[94px]",
+    "h-[121px]",
+    "h-[318px]",
+    "h-[145px]",
+    "h-[244px]",
+    "h-[32px]",
+    "h-[60px]",
+    "h-[36px]",
+    "h-[56px]",
+    "w-[864px]",
+    "w-[124px]",
+    "w-[224px]",
+    "gap-[84px]",
+    "py-[48px]",
+    "text-[36px]",
+    "leading-[30px]",
+    "text-[11px]",
+    "leading-[20px]",
+    "shadow-[inset_0_-1px_0_#d2d2d2]",
+    "shadow-[inset_-1px_0_0_#d2d2d2]",
+  ].forEach((snippet) => {
+    assert.ok(productEntry.includes(snippet), `missing ${snippet}`);
+  });
+
+  ["2664:30807", "2664:30808", "2664:30815", "2664:30817", "2664:30827", "2664:30828", "2664:30829", "2664:30830", "2664:30831"].forEach((nodeId) => {
+    assert.ok(productEntry.includes(nodeId), `missing node ${nodeId}`);
+  });
+});
+
+test("PetMind product-entry module uses the exact Figma 2664 resources and single-width table rules", () => {
+  const productEntry = petMindProductEntrySource();
+  const tableStart = productEntry.indexOf("function PetMindProductEntryTableHeader");
+  const tableEnd = productEntry.indexOf("function PetMindProductEntryDecision", tableStart);
+  const table = productEntry.slice(tableStart, tableEnd);
+  const assets = [
+    "petmind-entry-03-section-decor.svg",
+    "petmind-entry-03-triangle.svg",
+    "petmind-entry-03-question.svg",
+    "petmind-entry-03-answer.svg",
+  ];
+
+  assets.forEach((asset) => {
+    assert.ok(productEntry.includes(`/figma-assets/${asset}`), `unused ${asset}`);
+    assert.ok(existsSync(`public/figma-assets/${asset}`), `missing ${asset}`);
+  });
+
+  assert.equal((table.match(/border border-\[#d2d2d2\] border-solid/g) ?? []).length, 1);
+  assert.equal(table.includes('border-r border-[#d2d2d2]'), false);
+  assert.equal(table.includes('border-b border-[#d2d2d2]'), false);
+});
+
+test("PetMind appends the exact Figma 2765 growth-loop module after section 03", () => {
+  const overlay = petMindOverlaySource();
+  const growth = petMindGrowthLoopSource();
+
+  assert.ok(overlay.includes('import { PetMindGrowthLoopSection } from "./PetMindGrowthLoopSection";'));
+  assert.ok(
+    overlay.includes(
+      '<PetMindGrowthLoopSection sectionId="growth" sectionRef={registerPetMindSection("growth")} />',
+    ),
+  );
+  assert.ok(
+    overlay.indexOf("<PetMindProductEntryToNextTransition />") <
+      overlay.indexOf("<PetMindGrowthLoopSection"),
+  );
+
+  [
+    'data-node-id="2765:22220"',
+    'data-node-id="2765:22221"',
+    'data-node-id="2765:22222"',
+    'data-node-id="2765:22245"',
+    'data-node-id="2765:22268"',
+    'data-node-id="2765:22368"',
+    'data-node-id="2765:22394"',
+    "h-[1867px]",
+    "h-[114px]",
+    "h-[373px]",
+    "h-[1116px]",
+    "h-[640px]",
+    "h-[288px]",
+    "gap-[84px]",
+    "py-[48px]",
+    "04 · 一次宠物服务，如何变成下一次收入",
+    "为角色接力做出的三项架构取舍",
+    "同一条链路下的角色接力",
+    "新服务事件",
+    "验证关口",
+    "商业价值可兑现：提醒→复约转化",
+  ].forEach((snippet) => {
+    assert.ok(growth.includes(snippet), `missing growth-loop detail ${snippet}`);
+  });
+});
+
+test("PetMind growth-loop uses the supplied Figma resources and one-layer matrix rules", () => {
+  const growth = petMindGrowthLoopSource();
+  const assets = [
+    "petmind-growth-04-section-decor.svg",
+    "petmind-growth-04-triangle.svg",
+    "petmind-growth-04-bullet.svg",
+    "petmind-growth-04-info.svg",
+    "petmind-growth-04-info-hover.svg",
+    "petmind-growth-04-info-tooltip-caret.svg",
+    "petmind-growth-04-source-arrow.svg",
+    "petmind-growth-04-booking.svg",
+    "petmind-growth-04-source-connector.svg",
+    "petmind-growth-04-role-stage-corner.svg",
+    "petmind-growth-04-avatar-owner.png",
+    "petmind-growth-04-avatar-employee.png",
+    "petmind-growth-04-avatar-merchant.png",
+    "petmind-growth-04-avatar-ai.png",
+    "petmind-growth-04-role-separator.svg",
+    "petmind-growth-04-step-employee-core.svg",
+    "petmind-growth-04-step-employee-confirm.svg",
+    "petmind-growth-04-step-owner-core.svg",
+    "petmind-growth-04-step-merchant-quality.svg",
+    "petmind-growth-04-step-merchant-core.svg",
+    "petmind-growth-04-step-ai-generate.svg",
+    "petmind-growth-04-event-bridge.svg",
+    "petmind-growth-04-event-grid-line.svg",
+    "petmind-growth-04-event-actors-left.png",
+    "petmind-growth-04-event-actors-right.png",
+    "petmind-growth-04-validation-record.svg",
+    "petmind-growth-04-validation-action.svg",
+    "petmind-growth-04-validation-relation.svg",
+    "petmind-growth-04-validation-business.svg",
+    "petmind-growth-04-validation-arrow.svg",
+    "petmind-growth-04-validation-divider-wide.svg",
+    "petmind-growth-04-validation-divider-medium-title.svg",
+    "petmind-growth-04-validation-divider-medium.svg",
+    "petmind-growth-04-validation-divider-relation-title.svg",
+    "petmind-growth-04-validation-divider-relation.svg",
+    "petmind-growth-04-validation-divider-business-title.svg",
+    "petmind-growth-04-validation-divider-business.svg",
+  ];
+
+  assets.forEach((asset) => {
+    assert.ok(growth.includes(`/figma-assets/${asset}`), `unused ${asset}`);
+    assert.ok(existsSync(`public/figma-assets/${asset}`), `missing ${asset}`);
+  });
+
+  assert.ok(growth.includes("const MATRIX_COLUMN_WIDTHS = [100, 96, 90, 90, 116, 90, 96, 96, 90]"));
+  assert.ok(growth.includes("const MATRIX_COLUMN_EDGES = [0, 100, 196, 286, 376, 492, 582, 678, 774, 864]"));
+  assert.ok(growth.includes("gridTemplateRows: \"64px 110px 110px 110px 136px\""));
+  assert.ok(growth.includes("bg-[#d2d2d2] top-0 w-px"));
+  assert.ok(growth.includes("function PetMindRoleAvatar"));
+  assert.ok(growth.includes("rounded-full size-[13px] shrink-0 object-cover"));
+  assert.ok(growth.includes("ASSETS.roleSeparator"));
+  assert.ok(growth.includes("content-stretch flex h-[20px] items-center"));
+  assert.ok(growth.includes('"rgba(255,255,255,0.25)"'));
+  assert.ok(growth.includes('"rgba(255,255,255,0.1)"'));
+  assert.ok(growth.includes("rgba(131,199,130,0.05)"));
+  assert.ok(growth.includes("rgba(0,0,0,0.01)"));
+  assert.ok(growth.includes('data-node-id={nodeId}'));
+  assert.ok(growth.includes("scale-x-[0.96]"));
+  assert.ok(growth.includes("text-justify tracking-[0px] uppercase w-[104.166667%]"));
+  assert.equal(growth.includes("h-[48px] leading-[24px]"), false);
+  assert.ok(growth.includes('data-node-id="2765:22249"'));
+  assert.ok(growth.includes("pl-[24px] pr-[16px] py-[12px]"));
+  assert.ok(growth.includes("group/geo"));
+  assert.ok(growth.includes("group-hover/geo:opacity-0"));
+  assert.ok(growth.includes("group-hover/geo:opacity-100"));
+  assert.equal(growth.includes("group-hover/geo:visible"), false);
+  assert.equal(growth.includes("transition-opacity duration-150 group-hover/geo"), false);
+  assert.ok(growth.includes('style={{ willChange: "opacity, backdrop-filter" }}'));
+  assert.ok(growth.includes("bottom-[28px]"));
+  assert.ok(growth.includes("w-[172px]"));
+  assert.ok(growth.includes("backdrop-blur-[6px]"));
+  assert.ok(growth.includes("此处仅标识首次预约来源，GEO获客机制将在后文展开。"));
+  assert.ok(growth.includes('data-node-id="2765:22262"'));
+  assert.ok(growth.includes("h-full items-center justify-center min-w-px px-[24px] py-[20px]"));
+  assert.ok(
+    growth.includes(
+      `font-['OPPOSans:Bold',sans-serif] leading-[24px] text-[#474747] text-[16px] whitespace-nowrap">
+          首次预约`,
+    ),
+  );
+  assert.ok(growth.includes("ASSETS.eventActorsLeft"));
+  assert.ok(growth.includes("ASSETS.eventActorsRight"));
+  assert.deepEqual(pngDimensions("public/figma-assets/petmind-growth-04-event-actors-left.png"), { width: 116, height: 68 });
+  assert.deepEqual(pngDimensions("public/figma-assets/petmind-growth-04-event-actors-right.png"), { width: 116, height: 68 });
+  assert.ok(growth.includes("function PetMindValidationBlank"));
+  assert.ok(growth.includes('data-node-id="2765:22403"'));
+  assert.ok(growth.includes('label: "服务员工"'));
+  assert.ok(growth.includes('{ role: "ai", label: "系统" }'));
+  assert.equal(growth.includes("function PetMindEventAvatar"), false);
+  assert.ok(growth.includes("MATRIX_COLUMN_EDGES.slice(1, -1)"));
+  assert.ok(growth.includes("horizontalEdges.slice(1)"));
+  assert.ok(growth.includes("absolute border border-[#d2d2d2] border-solid inset-0 pointer-events-none z-30"));
+  assert.ok(growth.includes("function PetMindValidationGridLines"));
+  assert.ok(growth.includes("const fullHeightEdges = [100, 196, 582]"));
+  assert.ok(growth.includes("const topRowEdges = [492, 774]"));
+  assert.ok(growth.includes("const bottomRowEdges = [292, 382, 644]"));
+  ["width={296}", "width={192}", "width={200}", "width={62}"].forEach((width) => {
+    assert.ok(growth.includes(width), `missing updated validation width ${width}`);
+  });
+  assert.ok(growth.includes("ASSETS.validationDividerRelationTitle"));
+  assert.ok(growth.includes("ASSETS.validationDividerRelation"));
+  assert.equal(growth.includes("border border-transparent border-solid content-stretch flex h-full"), false);
+  assert.ok(growth.includes('className="content-stretch flex h-full flex-col items-start relative shrink-0"'));
+  assert.equal(
+    growth.includes("border border-[#d2d2d2] border-solid content-stretch flex h-full flex-col"),
+    false,
+  );
+  assert.equal(growth.includes("border-collapse"), false);
+});
+
+test("PetMind left navigation is bound to the rendered right-side sections", () => {
+  const overlay = petMindOverlaySource();
+
+  [
+    "useRef",
+    "contentRef",
+    "sectionRefs",
+    "registerPetMindSection",
+    "scrollToPetMindSection",
+    "section.scrollIntoView({ behavior: \"smooth\", block: \"start\" })",
+    "content.addEventListener(\"scroll\", handleScroll, { passive: true })",
+    "content.removeEventListener(\"scroll\", handleScroll)",
+    "id={`petmind-detail-section-${sectionId}`}",
+    "data-section-id={sectionId}",
+    "sectionRef={registerPetMindSection(\"overview\")}",
+    "sectionRef={registerPetMindSection(\"market\")}",
+    "sectionRef={registerPetMindSection(\"relationship\")}",
+    "sectionRef={registerPetMindSection(\"judgment\")}",
+    "sectionRef={registerPetMindSection(\"growth\")}",
+    "onClick={() => scrollToPetMindSection(item.id)}",
+    "ref={contentRef}",
+    "scroll-smooth",
+  ].forEach((snippet) => {
+    assert.ok(overlay.includes(snippet), `missing ${snippet}`);
+  });
+});
+
+test("GEO detail overlay routes PetMind away before rendering GEO content", () => {
+  const overlay = overlaySource();
+
+  assert.ok(overlay.includes('projectId === "pet-saas"'));
+  assert.ok(overlay.includes("<PetMindProjectDetailOverlay onClose={onClose} />"));
 });
 
 test("AI project detail overlay matches the Figma shell and blocks the old page underneath", () => {

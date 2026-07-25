@@ -5,6 +5,7 @@ import { ContactPopup } from "./components/ContactPopup";
 import { ResumeContent } from "./components/ResumeContent";
 import { AIProductContent } from "./components/AIProductContent";
 import { AIProjectDetailOverlay } from "./components/AIProjectDetailOverlay";
+import { PetMindProjectDetailOverlay } from "./components/PetMindProjectDetailOverlay";
 import { UXDesignContent } from "./components/UXDesignContent";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { PasswordAccessCard } from "./components/PasswordAccessCard";
@@ -982,7 +983,9 @@ export default function App() {
           onClose={() => setResumeLinkedProjectId(null)}
         />
       )}
-      {selectedAiProjectDetailId ? (
+      {selectedAiProjectDetailId === "pet-saas" ? (
+        <PetMindProjectDetailOverlay onClose={closeAiProjectDetail} />
+      ) : selectedAiProjectDetailId ? (
         <AIProjectDetailOverlay
           projectId={selectedAiProjectDetailId}
           onClose={closeAiProjectDetail}
