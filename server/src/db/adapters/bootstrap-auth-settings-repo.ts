@@ -3,7 +3,7 @@ import path from 'node:path'
 import bcrypt from 'bcrypt'
 import type { AuthSettingsRecord } from '../types'
 import type { AuthSettingsRepository } from '../../repositories/auth-settings-repository'
-import { DEFAULT_AUTH_SETTINGS, DEFAULT_AUTH_SETTINGS_SEED } from '../../../../src/app/data/authSettings'
+import { DEFAULT_AUTH_SETTINGS } from '../../../../src/app/data/authSettings'
 
 const DATA_DIR = path.resolve(process.cwd(), '.data')
 const AUTH_SETTINGS_PATH = path.join(DATA_DIR, 'auth-settings.json')
@@ -60,8 +60,8 @@ async function readLegacySqliteSettings() {
     return {
       platformWelcomeText: map.platformWelcomeText ?? DEFAULT_AUTH_SETTINGS.platformWelcomeText,
       adminWelcomeText: map.adminWelcomeText ?? DEFAULT_AUTH_SETTINGS.adminWelcomeText,
-      platformPassword: map.platformPassword ?? DEFAULT_AUTH_SETTINGS_SEED.platformPassword,
-      adminPassword: map.adminPassword ?? DEFAULT_AUTH_SETTINGS_SEED.adminPassword,
+      platformPassword: map.platformPassword ?? process.env.INITIAL_PLATFORM_PASSWORD,
+      adminPassword: map.adminPassword ?? process.env.INITIAL_ADMIN_PASSWORD,
     }
   } catch {
     return null
@@ -70,8 +70,9 @@ async function readLegacySqliteSettings() {
 
 async function seedRecord() {
   const legacySettings = await readLegacySqliteSettings()
-  const platformPassword = legacySettings?.platformPassword ?? DEFAULT_AUTH_SETTINGS_SEED.platformPassword
-  const adminPassword = legacySettings?.adminPassword ?? DEFAULT_AUTH_SETTINGS_SEED.adminPassword
+  const platformPassword = legacySettings?.platformPassword ?? process.env.INITIAL_PLATFORM_PASSWORD
+  const adminPassword = legacySettings?.adminPassword ?? process.env.INITIAL_ADMIN_PASSWORD
+  if (!platformPassword || !adminPassword) throw new Error('New installations require INITIAL_PLATFORM_PASSWORD and INITIAL_ADMIN_PASSWORD. Existing password hashes are never reset.')
   const platformPasswordHash = await bcrypt.hash(platformPassword, BCRYPT_ROUNDS)
   const adminPasswordHash = await bcrypt.hash(adminPassword, BCRYPT_ROUNDS)
 

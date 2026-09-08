@@ -7,7 +7,9 @@
     "build": "vite build",
     "dev": "vite",
     "dev:keepalive": "node scripts/dev-keepalive.mjs",
-    "dev:server": "node --import tsx server/src/server.ts"
+    "dev:server": "node --import tsx server/src/server.ts",
+    "test:access": "node --import tsx --test server/src/services/access-service.test.ts",
+    "test:access:pg": "ACCESS_PG_TEST=1 node --import tsx --test server/test/access-pg.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1049.0",
@@ -85,6 +87,8 @@
     "@tailwindcss/vite": "4.1.12",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^25.9.1",
+    "@types/pg": "^8.23.1",
+    "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
     "tsx": "^4.22.3",

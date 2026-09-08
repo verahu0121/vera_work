@@ -1,4 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { apiFetch as fetch, ADMIN_CHANGED_EVENT } from './data/api';
+import { useAccessSession, announceSessionChange } from './data/useAccessSession';
 import { AnimatePresence, motion } from "motion/react";
 import { MainSidebar, Footer, Frame6, Frame5, Icon } from "../imports/VerasLibertisle/VerasLibertisle";
 import { ContactPopup } from "./components/ContactPopup";
@@ -248,7 +250,14 @@ function Labels({
 export default function App() {
   const [scale, setScale] = useState(1);
   const [isSiteUnlocked, setIsSiteUnlocked] = useState(false);
-  const [siteSessionChecked, setSiteSessionChecked] = useState(false);
+  const siteAccess = useAccessSession('platform');
+  const siteSessionChecked = siteAccess.checked;
+  const siteLoginAttempt = useRef<string | null>(null);
+  const siteLoginBusy = useRef(false);
+  const [siteLoginPending, setSiteLoginPending] = useState(false);
+  const siteLogoutBusy = useRef(false);
+  const [siteMessage, setSiteMessage] = useState('');
+  const [adminVersion, setAdminVersion] = useState(0);
   const [sitePassword, setSitePassword] = useState("");
   const [sitePasswordError, setSitePasswordError] = useState(false);
   const [isSitePasswordFocused, setIsSitePasswordFocused] = useState(false);
@@ -266,13 +275,16 @@ export default function App() {
   const [portfolioProjects, setPortfolioProjects] = useState<PortfolioProject[]>([]);
   const [projectsHydrated, setProjectsHydrated] = useState(false);
   const [authSettings, setAuthSettings] = useState<AuthSettings>(DEFAULT_AUTH_SETTINGS);
+  const [authSettingsHydrated, setAuthSettingsHydrated] = useState(false);
   const [resumeContent, setResumeContent] = useState<ResumeContentData>(DEFAULT_RESUME_CONTENT);
+  const [resumeContentHydrated, setResumeContentHydrated] = useState(false);
   const [resumeLinkedProjectId, setResumeLinkedProjectId] = useState<string | null>(null);
   const [selectedAiProjectDetailId, setSelectedAiProjectDetailId] = useState<AiProductFeaturedProject["id"] | null>(null);
 
-  const refreshResumeContent = useCallback(async () => {
+  const refreshResumeContent = useCallback(async (signal?: AbortSignal) => {
     const response = await fetch("/api/admin/resume", {
       cache: "no-store",
+      signal,
     });
 
     if (!response.ok) {
@@ -281,7 +293,7 @@ export default function App() {
 
     const nextContent = (await response.json()) as ResumeContentData;
     const normalizedContent = normalizeResumeContent(nextContent);
-    setResumeContent(normalizedContent);
+    if (!signal?.aborted) setResumeContent(normalizedContent);
     return normalizedContent;
   }, []);
 
@@ -317,7 +329,11 @@ export default function App() {
   }, []);
 
   const handleSiteUnlock = async () => {
+    if (siteLoginBusy.current) return;
+    siteLoginBusy.current = true;
+    setSiteLoginPending(true);
     const normalizedPassword = normalizePasswordInput(sitePassword);
+    siteLoginAttempt.current ??= crypto.randomUUID();
 
     try {
       const response = await fetch("/api/admin/verify-login", {
@@ -328,20 +344,32 @@ export default function App() {
         body: JSON.stringify({
           target: "platform",
           password: normalizedPassword,
+          attemptId: siteLoginAttempt.current,
         }),
       });
 
+      const result = await response.json();
+      siteLoginAttempt.current = null;
       if (!response.ok) {
         setSitePasswordError(true);
+        setSiteMessage(result.error ?? '密码不正确，请重试');
         return;
       }
 
+      siteAccess.accept(result.session, result.serverNow);
       setSitePasswordError(false);
+      setSiteMessage('');
+      setSitePassword('');
       setIsSitePasswordFocused(false);
       setSiteGatePhase("welcome");
+      announceSessionChange();
     } catch (error) {
       console.error("Failed to verify platform password", error);
       setSitePasswordError(true);
+      setSiteMessage('暂时无法验证，请稍后重试');
+    } finally {
+      siteLoginBusy.current = false;
+      setSiteLoginPending(false);
     }
   };
 
@@ -374,58 +402,55 @@ export default function App() {
   }, [siteGatePhase]);
 
   useEffect(() => {
-    let cancelled = false;
+    if (!siteAccess.checked) return;
+    if (siteAccess.session) {
+      if (siteGatePhase === 'locked') setIsSiteUnlocked(true);
+    } else {
+      setIsSiteUnlocked(false);
+      setSiteGatePhase('locked');
+      setPortfolioProjects([]);
+      setResumeContent(DEFAULT_RESUME_CONTENT);
+      setProjectsHydrated(false);
+      setResumeContentHydrated(false);
+      setSelectedAiProjectDetailId(null);
+      setResumeLinkedProjectId(null);
+      setIsContactPopupOpen(false);
+      if (siteAccess.ended) setSiteMessage('本次访问已结束，请重新输入有效密码');
+    }
+  }, [siteAccess.session, siteAccess.checked, siteAccess.ended]);
 
-    const loadPlatformSession = async () => {
-      try {
-        const response = await fetch("/api/admin/session");
-        if (!response.ok) {
-          throw new Error("Failed to fetch session state.");
-        }
-
-        const payload = (await response.json()) as {
-          platformAuthenticated?: boolean;
-        };
-
-        if (!cancelled && payload.platformAuthenticated) {
-          setIsSiteUnlocked(true);
-        }
-      } catch (error) {
-        console.error("Failed to read platform session", error);
-      } finally {
-        if (!cancelled) {
-          setSiteSessionChecked(true);
-        }
-      }
-    };
-
-    loadPlatformSession();
-
-    return () => {
-      cancelled = true;
-    };
+  useEffect(() => {
+    const handler = () => setAdminVersion(value => value + 1);
+    window.addEventListener(ADMIN_CHANGED_EVENT, handler);
+    return () => window.removeEventListener(ADMIN_CHANGED_EVENT, handler);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
 
     const loadResumeContent = async () => {
       try {
-        const normalizedContent = await refreshResumeContent();
+        const normalizedContent = await refreshResumeContent(controller.signal);
         if (!cancelled) {
           setResumeContent(normalizedContent);
         }
       } catch (error) {
-        console.error("Failed to read resume content from backend", error);
+        if (!controller.signal.aborted) console.error("Failed to read resume content from backend", error);
+      } finally {
+        if (!cancelled) {
+          setResumeContentHydrated(true);
+        }
       }
     };
 
-    loadResumeContent();
+    if (siteAccess.session) loadResumeContent();
 
     return () => {
       cancelled = true;
+      controller.abort();
     };
-  }, [refreshResumeContent]);
+  }, [refreshResumeContent, siteAccess.session?.expiresAt]);
 
   useEffect(() => {
     let cancelled = false;
@@ -446,6 +471,10 @@ export default function App() {
         }
       } catch (error) {
         console.error("Failed to read auth settings from backend", error);
+      } finally {
+        if (!cancelled) {
+          setAuthSettingsHydrated(true);
+        }
       }
     };
 
@@ -480,12 +509,12 @@ export default function App() {
       }
     };
 
-    loadProjects();
+    if (siteAccess.session) loadProjects();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [siteAccess.session?.expiresAt, adminVersion]);
 
   const persistProjects = useCallback(async (nextProjects: PortfolioProject[]) => {
     const response = await fetch("/api/admin/projects", {
@@ -607,7 +636,18 @@ export default function App() {
     navigateToView('admin-dashboard');
   };
 
-  const handleSiteLogout = () => {
+  const handleSiteLogout = async () => {
+    if (siteLogoutBusy.current) return;
+    siteLogoutBusy.current = true;
+    try {
+      const response = await fetch('/api/admin/logout', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({target:'platform'})});
+      if (!response.ok) throw new Error('Logout failed');
+    } catch {
+      siteLogoutBusy.current = false;
+      toast.error('退出请求未完成，请联网后重试');
+      return;
+    }
+    siteLogoutBusy.current = false;
     setIsContactPopupOpen(false);
     setResumeLinkedProjectId(null);
     setSelectedAiProjectDetailId(null);
@@ -618,19 +658,9 @@ export default function App() {
     setSitePasswordError(false);
     setIsSitePasswordFocused(false);
     setSiteGatePhase("goodbye");
+    setSiteMessage('');
 
-    void fetch("/api/admin/logout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        target: "platform",
-      }),
-    })
-      .catch((error) => {
-        console.error("Failed to logout platform session", error);
-      });
+    window.setTimeout(() => {siteAccess.accept(null); announceSessionChange();}, SITE_LOGOUT_TRANSITION_MS);
   };
 
   const openAIProductFromHome = () => {
@@ -690,7 +720,10 @@ export default function App() {
     navigateToView('home');
   };
 
-  if (!siteSessionChecked) {
+  const appDataHydrated =
+    siteSessionChecked && authSettingsHydrated && (!isSiteUnlocked || (resumeContentHydrated && projectsHydrated));
+
+  if (!appDataHydrated) {
     return <div className="h-screen w-full bg-[#e6e6e6]" />;
   }
 
@@ -726,7 +759,8 @@ export default function App() {
                   title={authSettings.platformWelcomeText}
                   value={sitePassword}
                   placeholder="Please Enter Your Password"
-                  helperText=""
+                  helperText={siteLoginPending ? '正在验证…' : siteMessage}
+                  inputReadOnly={siteLoginPending}
                   panelClassName="border-[#004e8d] bg-[#e6e6e6]/96 shadow-[8px_8px_24px_0_rgba(0,105,209,0.1)]"
                   titleClassName="leading-[14px] whitespace-nowrap"
                   inputClassName={inputStateClass}
@@ -737,6 +771,8 @@ export default function App() {
                   }
                   onChange={(value) => {
                     setSitePassword(value);
+                    siteLoginAttempt.current = null;
+                    setSiteMessage('');
                     if (sitePasswordError) setSitePasswordError(false);
                   }}
                   onFocus={() => setIsSitePasswordFocused(true)}
@@ -769,6 +805,7 @@ export default function App() {
 
   return (
     <div className="w-full h-screen flex overflow-hidden relative transition-colors duration-500 bg-[#E6E6E6]">
+      {siteAccess.session?.kind === 'guest' && currentView !== 'admin-dashboard' && <div className="fixed bottom-5 right-5 z-[90] flex items-center gap-3 rounded-full border border-[#bed9ca] bg-[#f5faf6]/95 px-4 py-2.5 text-[11px] text-[#4f7961] shadow-sm backdrop-blur" role="status" aria-live="off"><span className="size-1.5 rounded-full bg-[#6aae83]"/><span>{siteAccess.remaining <= 300000 ? '临时访问即将结束' : 'Temporary Access'}</span><span className="font-mono tabular-nums">{String(Math.floor(siteAccess.remaining / 3600000)).padStart(2,'0')}:{String(Math.floor(siteAccess.remaining / 60000) % 60).padStart(2,'0')}:{String(Math.floor(siteAccess.remaining / 1000) % 60).padStart(2,'0')}</span></div>}
       <Toaster
         position="top-left"
         expand={false}

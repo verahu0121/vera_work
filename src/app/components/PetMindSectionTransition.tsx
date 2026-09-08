@@ -4,18 +4,24 @@ function PetMindNarrativeTransition({
   nodeId,
   textNodeId,
   children,
+  frameHeightClassName = "h-[312px]",
+  textHeightClassName = "h-[144px]",
+  paddingClassName = "px-[48px] py-[84px]",
 }: {
   nodeId: string;
   textNodeId: string;
   children: React.ReactNode;
+  frameHeightClassName?: string;
+  textHeightClassName?: string;
+  paddingClassName?: string;
 }) {
   return (
     <div
-      className="content-stretch flex h-[312px] items-center justify-center px-[48px] py-[84px] relative shrink-0 w-[864px]"
+      className={`content-stretch flex items-center justify-center relative shrink-0 w-[864px] ${frameHeightClassName} ${paddingClassName}`}
       data-node-id={nodeId}
     >
       <div
-        className="[word-break:break-word] flex h-[144px] w-[768px] flex-col font-['OPPOSans:Light',sans-serif] justify-center leading-[0] min-w-px not-italic relative text-[#474747] text-[24px] text-center tracking-[0px]"
+        className={`[word-break:break-word] flex w-[768px] flex-col font-['OPPOSans:Light',sans-serif] justify-center leading-[0] min-w-px not-italic relative text-[#474747] text-[24px] text-center tracking-[0px] ${textHeightClassName}`}
         data-node-id={textNodeId}
         data-name="Conclusion Text"
       >
@@ -49,6 +55,20 @@ export function PetMindGrowthLoopToNextTransition() {
     <PetMindNarrativeTransition nodeId="2765:22524" textNodeId="2765:22525">
       <p className="leading-[48px] mb-0">角色链路明确后，下一步的关键是将这套接力机制</p>
       <p className="leading-[48px]">落到具体产品交互中，形成可确认、可执行、可回写的 AI 工作流。</p>
+    </PetMindNarrativeTransition>
+  );
+}
+
+export function PetMindAssistantToNextTransition() {
+  return (
+    <PetMindNarrativeTransition
+      frameHeightClassName="h-[264px]"
+      nodeId="3115:21977"
+      textHeightClassName="h-[96px]"
+      textNodeId="3115:21978"
+    >
+      <p className="leading-[48px] mb-0">AI 工作流将一次服务事件延伸为后续行动与复购，</p>
+      <p className="leading-[48px]">但增长不能只发生在已有关系内部。</p>
     </PetMindNarrativeTransition>
   );
 }

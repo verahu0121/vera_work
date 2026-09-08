@@ -57,7 +57,7 @@ export function PasswordAccessCard({
   onKeyDown,
 }: PasswordAccessCardProps) {
   return (
-    <div className={`relative h-[200px] w-[430px] overflow-hidden rounded-[32px] border bg-[#e6e6e6]/96 ${panelClassName}`}>
+    <div className={`relative h-[200px] w-[430px] rounded-[32px] border bg-[#e6e6e6]/96 ${panelClassName}`}>
       <div aria-hidden="true" className="absolute inset-0 rounded-[32px] bg-[#e6e6e6]" />
       <PasswordCornerDecoration className="left-0 top-0" />
       <PasswordCornerDecoration className="bottom-0 left-0" transform="scaleY(-1)" />
@@ -65,7 +65,7 @@ export function PasswordAccessCard({
       <PasswordCornerDecoration className="right-0 top-0" transform="scaleY(-1) rotate(180deg)" />
       <div aria-hidden="true" className="absolute inset-0 rounded-[32px] shadow-[inset_4px_4px_16px_0px_rgba(0,105,209,0.1)]" />
 
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0">
         <div className="absolute left-0 right-0 top-[24px] flex h-[64px] items-center justify-center px-[40px]">
           <p
             className={`w-full text-center font-['Manrope:Bold','Noto_Sans_JP:Bold',sans-serif] text-[12px] font-bold uppercase tracking-[1.44px] text-[#004e8d] ${titleClassName}`}
@@ -91,7 +91,8 @@ export function PasswordAccessCard({
             </div>
             {helperText ? (
               <p
-                className={`pointer-events-none absolute left-1/2 top-[calc(100%+28px)] -translate-x-1/2 text-center font-['Manrope:Light',sans-serif] text-[10px] tracking-[1.2px] uppercase whitespace-nowrap transition-all duration-300 ${helperClassName}`}
+                role="status"
+                className={`pointer-events-none absolute left-1/2 top-[calc(100%+56px)] w-[390px] -translate-x-1/2 text-center font-['Manrope:Light',sans-serif] text-[12px] leading-6 text-[#a25f66] transition-all duration-300 ${helperClassName}`}
               >
                 {helperText}
               </p>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { apiFetch as fetch } from '../data/api';
 import { toast } from "sonner";
 import {
   type ResumeAiProjectGroup,

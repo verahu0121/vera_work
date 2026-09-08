@@ -1,0 +1,32 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="55" height="55" viewBox="0 0 55 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+<foreignObject x="-20.4532" y="-20.4532" width="95.9064" height="95.9064"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(10.23px);clip-path:url(#bgblur_0_0_19_clip_path);height:100%;width:100%"></div></foreignObject><g id="Pet Interaction Icon" data-figma-bg-blur-radius="20.4532">
+<rect x="0.426108" y="0.426108" width="54.1478" height="54.1478" rx="27.0739" fill="#8CF97E" fill-opacity="0.25"/>
+<rect x="0.426108" y="0.426108" width="54.1478" height="54.1478" rx="27.0739" stroke="url(#paint0_linear_0_19)" stroke-width="0.852217"/>
+<g id="动态" filter="url(#filter1_d_0_19)">
+<path d="M19.5 19.5763C19.5 16.2662 23.2912 14.3885 25.9242 16.3946L37.368 25.1137C38.9438 26.3143 38.9438 28.6857 37.368 29.8863L25.9242 38.6054C23.2912 40.6115 19.5 38.7338 19.5 35.4237V19.5763Z" fill="#8CF97E"/>
+<path d="M19.7559 19.5762C19.756 16.4777 23.3049 14.7198 25.7695 16.5977L37.2129 25.3174C38.6544 26.4157 38.6544 28.5843 37.2129 29.6826L25.7695 38.4023C23.3049 40.2802 19.756 38.5223 19.7559 35.4238V19.5762Z" stroke="url(#paint1_linear_0_19)" stroke-opacity="0.4" stroke-width="0.51133"/>
+</g>
+</g>
+<defs>
+<clipPath id="bgblur_0_0_19_clip_path" transform="translate(20.4532 20.4532)"><rect x="0.426108" y="0.426108" width="54.1478" height="54.1478" rx="27.0739"/>
+</clipPath><filter id="filter1_d_0_19" x="16.0911" y="15.569" width="25.8676" height="30.6797" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="3.40887"/>
+<feGaussianBlur stdDeviation="1.70443"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_19"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_19" result="shape"/>
+</filter>
+<linearGradient id="paint0_linear_0_19" x1="27.5" y1="0" x2="27.5" y2="55" gradientUnits="userSpaceOnUse">
+<stop stop-color="#8CF97E" stop-opacity="0.6"/>
+<stop offset="0.5" stop-color="#467D3F" stop-opacity="0.05"/>
+<stop offset="1" stop-color="#4E644B"/>
+</linearGradient>
+<linearGradient id="paint1_linear_0_19" x1="30" y1="11.5" x2="30" y2="43.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="white" stop-opacity="0"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+</defs>
+</svg>

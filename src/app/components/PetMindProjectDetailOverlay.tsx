@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft } from "lucide-react";
 import { PetMindGrowthLoopSection } from "./PetMindGrowthLoopSection";
+import { PetMindAssistantSection } from "./PetMindAssistantSection";
 import { PetMindProductEntrySection } from "./PetMindProductEntrySection";
 import { PetMindRelationshipSection as PetMindRelationshipSectionV2 } from "./PetMindRelationshipSection";
 import {
+  PetMindAssistantToNextTransition,
   PetMindGrowthLoopToNextTransition,
   PetMindProductEntryToNextTransition,
   PetMindRelationshipToProductEntryTransition,
@@ -16,7 +18,7 @@ const PET_MIND_NAV_ITEMS = [
   { id: "relationship", num: "02", title: "从交易到关系", subtitle: "Strategic Synthesis" },
   { id: "judgment", num: "03", title: "产品判断", subtitle: "Product Strategy" },
   { id: "growth", num: "04", title: "增长闭环", subtitle: "Product Positioning" },
-  { id: "assistant", num: "05", title: "智能助手", subtitle: "MVP Loop" },
+  { id: "assistant", num: "05", title: "智能工作流", subtitle: "AI Workflow" },
   { id: "events", num: "06", title: "事件数据", subtitle: "Product Design" },
   { id: "local", num: "07", title: "本地获客", subtitle: "AI Capabilities" },
   { id: "trust", num: "08", title: "信任边界", subtitle: "Business Model" },
@@ -1936,6 +1938,8 @@ export function PetMindProjectDetailOverlay({ onClose }: { onClose: () => void }
           <PetMindProductEntryToNextTransition />
           <PetMindGrowthLoopSection sectionId="growth" sectionRef={registerPetMindSection("growth")} />
           <PetMindGrowthLoopToNextTransition />
+          <PetMindAssistantSection sectionId="assistant" sectionRef={registerPetMindSection("assistant")} />
+          <PetMindAssistantToNextTransition />
         </div>
       </main>
     </div>,

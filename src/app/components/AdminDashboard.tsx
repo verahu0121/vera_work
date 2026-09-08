@@ -1,4 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { apiFetch as fetch, ADMIN_CHANGED_EVENT } from '../data/api';
+import { useAccessSession, announceSessionChange } from '../data/useAccessSession';
+import { GuestLoginSettings } from './GuestLoginSettings';
 import { ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { Frame6, Icon } from "../../imports/VerasLibertisle/VerasLibertisle";
@@ -442,7 +445,12 @@ export function AdminDashboard({
   const [scale, setScale] = useState(1);
   const [password, setPassword] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [sessionChecked, setSessionChecked] = useState(false);
+  const adminAccess = useAccessSession('admin');
+  const sessionChecked = adminAccess.checked;
+  const loginAttempt = useRef<string | null>(null);
+  const loginBusy = useRef(false);
+  const [loginPending, setLoginPending] = useState(false);
+  const [loginMessage, setLoginMessage] = useState('');
   const [status, setStatus] = useState<"idle" | "error" | "success">("idle");
   const [shouldShake, setShouldShake] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -486,37 +494,15 @@ export function AdminDashboard({
   };
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadAdminSession = async () => {
-      try {
-        const response = await fetch("/api/admin/session");
-        if (!response.ok) {
-          throw new Error("Failed to fetch admin session.");
-        }
-
-        const payload = (await response.json()) as {
-          adminAuthenticated?: boolean;
-        };
-
-        if (!cancelled && payload.adminAuthenticated) {
-          setIsUnlocked(true);
-        }
-      } catch (error) {
-        console.error("Failed to read admin session", error);
-      } finally {
-        if (!cancelled) {
-          setSessionChecked(true);
-        }
-      }
-    };
-
-    loadAdminSession();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (!adminAccess.checked) return;
+    if (adminAccess.session) {
+      if (status !== 'success') setIsUnlocked(true);
+    } else {
+      setIsUnlocked(false);
+      setStatus('idle');
+      if (adminAccess.ended) setLoginMessage('后台登录已失效，请重新登录');
+    }
+  }, [adminAccess.session, adminAccess.checked, adminAccess.ended]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -586,7 +572,11 @@ export function AdminDashboard({
   }, [selectedProject]);
 
   const handleSubmit = async () => {
+    if (loginBusy.current) return;
+    loginBusy.current = true;
+    setLoginPending(true);
     const normalizedPassword = normalizePasswordInput(password);
+    loginAttempt.current ??= crypto.randomUUID();
 
     try {
       const response = await fetch("/api/admin/verify-login", {
@@ -597,16 +587,29 @@ export function AdminDashboard({
         body: JSON.stringify({
           target: "admin",
           password: normalizedPassword,
+          attemptId: loginAttempt.current,
         }),
       });
 
+      const result = await response.json();
+      loginAttempt.current = null;
       if (response.ok) {
+        adminAccess.accept(result.session, result.serverNow);
         setStatus("success");
         setShouldShake(false);
+        setLoginMessage('');
+        setPassword('');
+        window.dispatchEvent(new Event(ADMIN_CHANGED_EVENT));
+        announceSessionChange();
         return;
       }
+      setLoginMessage(result.error ?? '密码不正确，请重试');
     } catch (error) {
       console.error("Failed to verify admin password", error);
+      setLoginMessage('暂时无法验证，请稍后重试');
+    } finally {
+      loginBusy.current = false;
+      setLoginPending(false);
     }
 
     setStatus("error");
@@ -942,6 +945,8 @@ export function AdminDashboard({
       setAdminOriginalPassword("");
       setAdminNewPassword("");
       toast.success("Admin Login 密码已更新。");
+      adminAccess.accept(null);
+      announceSessionChange();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Admin Login 密码更新失败。");
     }
@@ -1028,6 +1033,13 @@ export function AdminDashboard({
                   )}
                 </div>
                 <div className="flex gap-3">
+                  <button type="button" disabled={preview} onClick={async () => {
+                    try {
+                      const response = await fetch('/api/admin/logout', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({target:'admin'})});
+                      if (!response.ok) throw new Error('退出失败，请重试');
+                      adminAccess.accept(null); announceSessionChange(); window.dispatchEvent(new Event(ADMIN_CHANGED_EVENT));
+                    } catch (e) {toast.error(e instanceof Error ? e.message : '退出失败，请重试');}
+                  }} className="rounded-full border border-black/10 px-4 py-3 text-[11px] text-[#717976] disabled:pointer-events-none">退出后台</button>
                   <button
                     type="button"
                     disabled={preview}
@@ -1679,7 +1691,7 @@ export function AdminDashboard({
 
           </div>
           ) : activeModule === "security" ? (
-            <section className="grid min-h-0 flex-1 grid-cols-2 gap-6">
+            <section className="grid min-h-0 flex-1 grid-cols-3 gap-6">
               <div className="flex min-h-0 flex-col rounded-[36px] border border-black/6 bg-white/88 p-6 shadow-[0_24px_72px_rgba(26,28,28,0.06)]">
                 <div className="text-[11px] uppercase tracking-[2px] text-[#7d7d84]">Update: {securityUpdatedLabel}</div>
                 <div className="mt-2 font-['Quantum',sans-serif] text-[24px] uppercase text-[#1a1c1c]">Platform Login</div>
@@ -1690,7 +1702,7 @@ export function AdminDashboard({
                       <input
                         value={platformWelcomeDraft}
                         onChange={(event) => setPlatformWelcomeDraft(event.target.value)}
-                        className="flex-1 rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                        className="min-w-0 flex-1 rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
                       />
                       <button
                         type="button"
@@ -1745,7 +1757,7 @@ export function AdminDashboard({
                       <input
                         value={adminWelcomeDraft}
                         onChange={(event) => setAdminWelcomeDraft(event.target.value)}
-                        className="flex-1 rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
+                        className="min-w-0 flex-1 rounded-[16px] border border-black/8 bg-white px-4 py-3 text-[14px] outline-none focus:border-[#03c9c3]/50"
                       />
                       <button
                         type="button"
@@ -1789,6 +1801,7 @@ export function AdminDashboard({
                   </button>
                 </div>
               </div>
+              <GuestLoginSettings enabled={!preview && isUnlocked} />
             </section>
           ) : activeModule === "resume" ? (
             <ResumeModuleEditor
@@ -1918,15 +1931,17 @@ export function AdminDashboard({
               title={authSettings.adminWelcomeText}
               value={password}
               placeholder="Please Enter Your Password"
-              helperText=""
+              helperText={loginPending ? '正在验证…' : loginMessage}
               panelClassName={`backdrop-blur-[24px] ${panelStateClass}`}
               titleClassName={status === "error" ? "text-[#ff9bb0]" : "text-[#004e8d]"}
               inputClassName={inputStateClass}
               inputFieldClassName={inputFieldStateClass}
-              inputReadOnly={status === "success"}
+              inputReadOnly={status === "success" || loginPending}
               onChange={(value) => {
                 if (status === "success") return;
                 setPassword(value);
+                loginAttempt.current = null;
+                setLoginMessage('');
                 if (status !== "idle") {
                   setStatus("idle");
                 }

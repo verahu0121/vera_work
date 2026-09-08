@@ -6,6 +6,7 @@ function buildPoolConfig(connectionString: string): PoolConfig {
 
   return {
     connectionString,
+    connectionTimeoutMillis: 8000,
     ssl: sslMode === 'require' ? { rejectUnauthorized: false } : undefined,
   }
 }

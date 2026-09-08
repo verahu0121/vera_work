@@ -1,133 +1,58 @@
-import type { FastifyInstance } from 'fastify'
-import { AuthSettingsService } from '../services/auth-settings-service'
+import type { FastifyInstance } from 'fastify';
+import type { AuthSettingsService } from '../services/auth-settings-service';
+import { AccessError, type AccessService } from '../services/access-service';
+import { CLIENT_COOKIE, SESSION_COOKIES, createLoginClient, createLoginLimiter, getLoginClient, sessionView } from '../auth-http';
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
-const PLATFORM_SESSION_COOKIE = 'vera_platform_session'
-const ADMIN_SESSION_COOKIE = 'vera_admin_session'
+export async function registerAuthSettingsRoutes(app: FastifyInstance, auth: AuthSettingsService, access: AccessService, secure = false) {
+  const cookieOptions = {httpOnly: true, sameSite: 'lax' as const, secure, path: '/'};
+  const limit = createLoginLimiter();
 
-function getSessionCookieName(target: 'platform' | 'admin') {
-  return target === 'platform' ? PLATFORM_SESSION_COOKIE : ADMIN_SESSION_COOKIE
-}
-
-function hasValidSessionCookie(
-  app: FastifyInstance,
-  rawCookieValue: string | undefined,
-) {
-  if (!rawCookieValue) return false
-
-  const decoded = decodeURIComponent(rawCookieValue)
-  return app.unsignCookie(decoded).valid
-}
-
-export async function registerAuthSettingsRoutes(
-  app: FastifyInstance,
-  authSettingsService: AuthSettingsService,
-) {
   app.get('/api/admin/session', async (request, reply) => {
-    const platformAuthenticated = hasValidSessionCookie(
-      app,
-      request.cookies[PLATFORM_SESSION_COOKIE],
-    )
-    const adminAuthenticated = hasValidSessionCookie(
-      app,
-      request.cookies[ADMIN_SESSION_COOKIE],
-    )
+    if (!getLoginClient(app, request)) reply.setCookie(CLIENT_COOKIE, createLoginClient(), {...cookieOptions, signed: true, maxAge: 30 * 86400});
+    const [platform, admin] = await Promise.all([
+      access.session(request.cookies[SESSION_COOKIES.platform], 'platform'),
+      access.session(request.cookies[SESSION_COOKIES.admin], 'admin'),
+    ]);
+    return {platformAuthenticated: !!platform, adminAuthenticated: !!admin, platformSession: sessionView(platform), adminSession: sessionView(admin), serverNow: new Date().toISOString()};
+  });
 
-    return reply.send({
-      platformAuthenticated,
-      adminAuthenticated,
-    })
-  })
-
-  app.get('/api/admin/auth-settings', async (_request, reply) => {
-    const settings = await authSettingsService.getPublicSettings()
-    return reply.send(settings)
-  })
-
-  app.put('/api/admin/auth-settings', async (request, reply) => {
-    const body = (request.body ?? {}) as Record<string, unknown>
-    const target =
-      body.target === 'platform' ? 'platform' : body.target === 'admin' ? 'admin' : null
-    const field =
-      body.field === 'welcomeText' ? 'welcomeText' : body.field === 'password' ? 'password' : null
-
-    if (!target || !field) {
-      return reply.status(400).send({ error: 'Target and field are required.' })
+  app.get('/api/admin/auth-settings', async () => auth.getPublicSettings());
+  app.put('/api/admin/auth-settings', {bodyLimit: 16384}, async (request) => {
+    const body = (request.body ?? {}) as Record<string, unknown>;
+    const target = body.target;
+    if (target !== 'platform' && target !== 'admin') throw new AccessError('INVALID_TARGET', '无效的配置目标');
+    if (body.field === 'welcomeText') {
+      const text = typeof body.welcomeText === 'string' ? body.welcomeText.trim() : '';
+      if (!text || text.length > 300) throw new AccessError('INVALID_CONFIG', '欢迎语须为 1–300 个字符');
+      return auth.updateWelcomeText(target, text);
     }
+    if (body.field !== 'password') throw new AccessError('INVALID_CONFIG', '无效的配置项');
+    return access.changePassword(target, String(body.originalPassword ?? ''), String(body.newPassword ?? ''));
+  });
 
-    if (field === 'welcomeText') {
-      const welcomeText = typeof body.welcomeText === 'string' ? body.welcomeText.trim() : ''
-      if (!welcomeText) {
-        return reply.status(400).send({ error: 'Welcome text is required.' })
-      }
-
-      const settings = await authSettingsService.updateWelcomeText(target, welcomeText)
-      return reply.send(settings)
-    }
-
-    const originalPassword =
-      typeof body.originalPassword === 'string' ? body.originalPassword : ''
-    const newPassword = typeof body.newPassword === 'string' ? body.newPassword.trim() : ''
-
-    if (!newPassword) {
-      return reply.status(400).send({ error: 'New password is required.' })
-    }
-
-    try {
-      const settings = await authSettingsService.updatePassword(
-        target,
-        originalPassword,
-        newPassword,
-      )
-      return reply.send(settings)
-    } catch (error) {
-      return reply.status(401).send({
-        error: error instanceof Error ? error.message : 'Password update failed.',
-      })
-    }
-  })
-
-  app.post('/api/admin/verify-login', async (request, reply) => {
-    const body = (request.body ?? {}) as Record<string, unknown>
-    const target =
-      body.target === 'platform' ? 'platform' : body.target === 'admin' ? 'admin' : null
-    const password = typeof body.password === 'string' ? body.password : ''
-
-    if (!target || !password) {
-      return reply.status(400).send({ error: 'Target and password are required.' })
-    }
-
-    const isValid = await authSettingsService.verifyLogin(target, password)
-
-    if (!isValid) {
-      return reply.status(401).send({ error: 'Password is incorrect.' })
-    }
-
-    reply.setCookie(getSessionCookieName(target), '1', {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,
-      signed: true,
-      path: '/',
-      maxAge: ONE_DAY_MS / 1000,
-    })
-
-    return reply.send({ ok: true })
-  })
+  app.post('/api/admin/verify-login', {bodyLimit: 16384}, async (request, reply) => {
+    const body = (request.body ?? {}) as Record<string, unknown>;
+    const target = body.target;
+    if (target !== 'platform' && target !== 'admin') throw new AccessError('INVALID_TARGET', '无效的登录目标');
+    const password = typeof body.password === 'string' ? body.password : '';
+    limit(request.ip, password);
+    const clientId = getLoginClient(app, request);
+    if (!clientId) throw new AccessError('SESSION_INIT_REQUIRED', '请启用浏览器 Cookie 并刷新后重试', 409);
+    const result = await access.login({target, password, attemptId: String(body.attemptId ?? ''), clientId, currentToken: request.cookies[SESSION_COOKIES[target]], browser: request.headers['user-agent'] ?? 'Unknown browser'});
+    reply.setCookie(SESSION_COOKIES[target], result.token, {...cookieOptions, maxAge: Math.max(1, Math.floor((Date.parse(result.session.expiresAt) - Date.now()) / 1000))});
+    request.log.info({event: 'access.login', kind: result.session.kind, sessionId: result.session.id}, 'Access session established');
+    return {ok: true, session: sessionView(result.session), serverNow: new Date().toISOString()};
+  });
 
   app.post('/api/admin/logout', async (request, reply) => {
-    const body = (request.body ?? {}) as Record<string, unknown>
-    const target =
-      body.target === 'platform' ? 'platform' : body.target === 'admin' ? 'admin' : null
-
-    if (!target) {
-      return reply.status(400).send({ error: 'Target is required.' })
+    const target = ((request.body ?? {}) as Record<string, unknown>).target;
+    if (target !== 'platform' && target !== 'admin') throw new AccessError('INVALID_TARGET', '无效的退出目标');
+    await access.logout(request.cookies[SESSION_COOKIES[target]]);
+    reply.clearCookie(SESSION_COOKIES[target], cookieOptions);
+    if (target === 'platform') {
+      await access.logout(request.cookies[SESSION_COOKIES.admin]);
+      reply.clearCookie(SESSION_COOKIES.admin, cookieOptions);
     }
-
-    reply.clearCookie(getSessionCookieName(target), {
-      path: '/',
-    })
-
-    return reply.send({ ok: true })
-  })
+    return {ok: true};
+  });
 }

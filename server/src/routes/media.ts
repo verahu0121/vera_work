@@ -30,7 +30,7 @@ export async function registerMediaRoutes(app: FastifyInstance, mediaService: Me
     if (object.lastModified) {
       reply.header('Last-Modified', object.lastModified.toUTCString())
     }
-    reply.header('Cache-Control', object.cacheControl || 'private, max-age=3600')
+    reply.header('Cache-Control', 'private, no-store')
 
     return reply.send(bodyBuffer)
   })

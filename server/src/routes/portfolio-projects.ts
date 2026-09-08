@@ -1,13 +1,18 @@
 import type { FastifyInstance } from 'fastify'
 import type { PortfolioProject } from '../../../src/app/data/portfolioProjects'
 import { PortfolioProjectsService } from '../services/portfolio-projects-service'
+import type { AccessService } from '../services/access-service'
+import { SESSION_COOKIES } from '../auth-http'
 
 export async function registerPortfolioProjectRoutes(
   app: FastifyInstance,
   portfolioProjectsService: PortfolioProjectsService,
+  accessService: AccessService,
 ) {
-  app.get('/api/admin/projects', async (_request, reply) => {
-    const projects = await portfolioProjectsService.getProjects()
+  app.get('/api/admin/projects', async (request, reply) => {
+    const allProjects = await portfolioProjectsService.getProjects()
+    const admin = await accessService.session(request.cookies[SESSION_COOKIES.admin], 'admin')
+    const projects = admin ? allProjects : allProjects.filter(project => project.status === 'published')
     return reply.send(
       projects.map((project) => ({
         ...project,
